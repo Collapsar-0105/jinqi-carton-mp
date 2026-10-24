@@ -1,0 +1,140 @@
+<view class="page {{fontClass}}">
+  <view wx:if="{{undoToast}}" class="undo-flash">{{undoToast}}</view>
+  <view class="card head">
+    <view class="flex-row">
+      <view class="flex-1">
+        <text class="cust">{{order.customer}}</text>
+        <text wx:if="{{order.isSample}}" class="tag tag-warn" style="margin-left:6px;">打样</text>
+      </view>
+      <view class="tag {{order.status === 'done' ? 'tag-done' : (order.status === 'paused' ? 'tag-warn' : 'tag-progress')}}">
+        {{order.status === 'done' ? '已完成' : (order.status === 'paused' ? '已暂缓' : (order.status === 'stocked' ? '已入库' : '进行中'))}}
+      </view>
+    </view>
+    <view class="head-sub">
+      <text>{{order.id}} · 下单 {{order.createdAt}}</text>
+    </view>
+    <view class="head-remain c-orange">已持续 {{elapsed}} 天</view>
+    <view wx:if="{{order.earlyFinish}}" class="paused-tip early">提前完成：{{order.earlyReason}}{{order.shortQty ? "（未送 " + order.shortQty + " 个）" : ""}}</view>
+    <view wx:if="{{order.status !== 'done'}}" class="urgent-row">
+      <text class="urgent-state {{order.urgent ? 'on' : ''}}">{{order.urgent ? '已加急' : '未加急'}}</text>
+      <view wx:if="{{!isWorker}}" class="btn btn-sm {{order.urgent ? 'btn-outline' : 'btn-primary'}}" bindtap="toggleUrgent">{{order.urgent ? '取消加急' : '标记加急'}}</view>
+    </view>
+    <view wx:if="{{order.status === 'paused'}}" class="paused-tip">暂缓中：不推进工序</view>
+  </view>
+
+  <block wx:for="{{items}}" wx:key="idx" wx:for-item="it" wx:for-index="ii">
+    <view class="card item">
+      <view class="flex-row">
+        <view class="flex-1">
+          <text class="it-id">{{it.productId}}</text>
+          <text class="it-name">{{it.productName}}</text>
+        </view>
+      </view>
+
+      <view wx:if="{{it.po}}" class="po-line">PO：{{it.po}}</view>
+
+      <view class="it-spec">
+        <view>{{it.craft}} · {{it.boxType}} · {{it.flute}}<text wx:if="{{it.paperColor}}"> · {{it.paperColor}}</text></view>
+        <view>尺寸：{{it._sizeText}} · {{(!order.isSub && it.originalQty > it.quantity) ? "剩余数量" : "数量"}} {{it.quantity}}</view>
+        <view wx:if="{{it.boardL}}">纸板：{{it.boardL}}×{{it.boardW}}mm（{{it.twoPiece ? '两片' : '一片'}}成型）· 箱舌 {{it.tang}}mm</view>
+
+        <view wx:if="{{it.pads.length > 0}}">
+          垫片：<text wx:for="{{it.pads}}" wx:key="index" wx:for-item="pd">{{pd.type}} {{pd.L}}×{{pd.W}} ×{{pd.qty}}；</text>
+        </view>
+        <view wx:if="{{it.note}}" class="it-note">备注：{{it.note}}</view>
+      </view>
+
+      <view wx:if="{{it.splitQty > 0 && !order.isSub}}" class="finished-tip">这一款已入库（在子单里），送货请到「已入库」页</view>
+      <view wx:if="{{it.canStockItem}}" class="split-row">
+        <view class="btn btn-sm btn-primary" bindtap="stockItem" data-item="{{ii}}">
+          入库这一款（已完成 {{it.itemRatioPct}}%）
+        </view>
+      </view>
+
+      <view wx:if="{{it.steps.length > 0}}" class="progress">
+        <view class="progress-bar"><view class="progress-in" style="width:{{it.progress}}%"></view></view>
+        <text class="progress-text">{{it.progress}}%</text>
+      </view>
+
+      <view class="steps">
+        <view wx:for="{{it.steps}}" wx:key="i" wx:for-item="st" wx:for-index="si" class="step">
+          <view class="step-dot {{st.status}}"></view>
+          <view class="step-main">
+            <text class="step-name">{{st.name}}</text>
+            <text class="step-status">{{st._statusText}}</text>
+          </view>
+          <view wx:if="{{st.status === 'pending'}}" class="step-actions">
+            <view wx:if="{{st.name === '代工'}}" class="btn btn-sm btn-outline" bindtap="copyProductInfo" data-item="{{ii}}">复制产品信息</view>
+            <view class="btn btn-sm btn-primary" bindtap="startStep" data-item="{{ii}}" data-step="{{st.i}}">开始</view>
+          </view>
+          <view wx:elif="{{st.status === 'in_progress'}}" class="step-actions">
+            <view wx:if="{{st.name === '纸板到货'}}" class="btn btn-sm btn-outline" bindtap="copyInfo" data-item="{{ii}}">复制纸板信息</view>
+            <view wx:if="{{st.name === '代工'}}" class="btn btn-sm btn-outline" bindtap="copyProductInfo" data-item="{{ii}}">复制产品信息</view>
+            <view class="btn btn-sm bg-green" style="color:#fff;" bindtap="doneStep" data-item="{{ii}}" data-step="{{st.i}}">完成</view>
+          </view>
+        </view>
+      </view>
+
+      <view wx:if="{{it.shipments.length}}" class="ship-list">
+        <text class="ship-title">已送货记录</text>
+        <view wx:for="{{it.shipments}}" wx:key="index" class="ship-row">
+          <view class="ship-main">
+            <text class="ship-date">{{item.date}}</text>
+            <text wx:if="{{item.addrText}}" class="ship-addr">{{item.addrText}}</text>
+          </view>
+          <text class="ship-qty">{{item.qty}} 个</text>
+        </view>
+      </view>
+
+      <view wx:if="{{it.stocked}}" class="deliver-box">
+        <view class="deliver-head">
+          <text class="deliver-text">已入库 · 已送 {{it.delivered}} / {{it.quantity}}</text>
+          <text wx:if="{{it.remainQty <= 0 && !(it.splitQty > 0 && !order.isSub)}}" class="tag tag-done">已送完</text>
+        </view>
+
+        <!-- 一个地址：保持原来的单个送货按钮 -->
+        <block wx:if="{{it.addrList.length <= 1}}">
+          <view class="deliver-row">
+            <text class="addr-line-text" wx:if="{{it.addrList[0].address}}">收货：{{it.addrList[0].address}}</text>
+            <block wx:if="{{it.remainQty > 0}}">
+              <view class="btn btn-sm btn-outline" bindtap="copyDelivery" data-item="{{ii}}" data-ai="0">复制送货信息</view>
+              <view class="btn btn-sm btn-primary" bindtap="deliver" data-item="{{ii}}" data-ai="0">送货</view>
+            </block>
+          </view>
+        </block>
+
+        <!-- 多个地址：每个地址一行，各自送货、各自复制 -->
+        <block wx:else>
+          <view wx:for="{{it.addrList}}" wx:key="index" wx:for-item="a" wx:for-index="ai" class="addr-deliver">
+            <view class="addr-deliver-main">
+              <text class="addr-deliver-name">{{a.address}}</text>
+              <text class="addr-deliver-qty">分配 {{a.qty}} · 已送 {{a.delivered}}</text>
+            </view>
+            <view wx:if="{{it.remainQty > 0}}" class="addr-deliver-btns">
+              <view class="btn btn-sm btn-outline" bindtap="copyDelivery" data-item="{{ii}}" data-ai="{{ai}}">复制</view>
+              <view class="btn btn-sm btn-primary" bindtap="deliver" data-item="{{ii}}" data-ai="{{ai}}">送货</view>
+            </view>
+          </view>
+          <text class="text-xs c-gray">送货数量不限死每个地址，按实际发多少记多少</text>
+        </block>
+      </view>
+    </view>
+  </block>
+
+  <view class="bottom-bar">
+    <view wx:if="{{canUndo}}" class="btn btn-outline" bindtap="undoLast">撤销上一步</view>
+    <view wx:if="{{!isWorker}}" class="btn btn-outline" bindtap="deleteOrder">删除订单</view>
+    <view wx:if="{{!isWorker && (order.status === 'active' || order.status === 'paused')}}" class="btn pause-btn" bindtap="togglePause">
+      {{order.status === 'paused' ? '恢复订单' : '暂缓订单'}}
+    </view>
+    <view wx:if="{{canStock}}" class="btn btn-primary" bindtap="stockIn">
+      {{stockEarly ? '提前入库（已完成 ' + completedRatio + '%）' : '标记为已入库'}}
+    </view>
+    <view wx:if="{{!canStock && order.status !== 'done'}}" class="bar-status">
+      {{order.status === 'stocked' ? '已入库，可按产品分批发货' : (order.status === 'paused' ? '已暂缓' : '生产中（已完成 ' + completedRatio + '%）')}}
+    </view>
+    <view wx:if="{{order.status === 'done'}}" class="bar-status done">
+      {{order.earlyFinish ? '已提前完成' : '已全部完成'}}
+    </view>
+  </view>
+</view>

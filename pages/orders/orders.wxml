@@ -1,0 +1,106 @@
+<view class="page {{fontClass}}">
+  <view wx:if="{{undoFlash}}" class="undo-flash">{{undoFlash}}</view>
+  <view wx:if="{{undoLabel}}" class="undo-bar" bindtap="undoLast">↩ 撤销：{{undoLabel}}</view>
+
+  <view class="card home-card">
+    <view class="period-row">
+      <view class="period {{periodType === 0 ? 'on' : ''}}" bindtap="setPeriod" data-index="0">按月</view>
+      <view class="period {{periodType === 1 ? 'on' : ''}}" bindtap="setPeriod" data-index="1">工作年</view>
+      <view class="flex-1"></view>
+      <picker wx:if="{{periodType === 0}}" mode="date" fields="month" value="{{monthValue}}" bindchange="onMonthChange">
+        <view class="period-pick">{{monthValue}} ▾</view>
+      </picker>
+      <picker wx:else mode="selector" range="{{years}}" value="{{yearIndex}}" bindchange="onYearChange">
+        <view class="period-pick">{{years[yearIndex]}} 年 ▾</view>
+      </picker>
+      <view class="gear-btn" bindtap="goBackup">设置</view>
+    </view>
+    <view wx:if="{{periodType === 1}}" class="workyear-tip">
+      <text>{{yearRangeText}}</text>
+      <text class="wy-edit" bindtap="goWorkYear">设置</text>
+    </view>
+
+
+  <view class="chip-grid">
+    <view wx:for="{{chipsTop}}" wx:key="key"
+          class="chip chip-{{item.key}} chip-top {{filterKey === item.key ? 'on' : ''}}"
+          bindtap="setFilter" data-key="{{item.key}}">
+      <text class="chip-count">{{item.count}}</text>
+      <text class="chip-label">{{item.label}}</text>
+    </view>
+  </view>
+  <view class="chip-grid-main">
+    <view wx:for="{{chipsMain}}" wx:key="key"
+          class="chip chip-{{item.key}} chip-main {{filterKey === item.key ? 'on' : ''}}"
+          bindtap="setFilter" data-key="{{item.key}}">
+      <text class="chip-count">{{item.count}}</text>
+      <text class="chip-label">{{item.label}}</text>
+    </view>
+  </view>
+  </view>
+
+  <view class="search-bar">
+    <input placeholder-style="color:#555;font-weight:600" class="input search-input" placeholder="搜订单号 / 客户 / 产品" value="{{keyword}}" bindinput="onSearch" />
+  </view>
+
+  <view wx:if="{{hasMore}}" class="more-row" bindtap="showMore">显示更多（已显示 {{shownCount}} / 共 {{totalCount}}）</view>
+  <view wx:if="{{!workerMode}}" class="bottom-actions">
+    <view class="btn btn-primary new-order-btn" bindtap="goNew">＋ 新建订单</view>
+    <view class="btn btn-outline sample-btn" bindtap="goSamples">打样单</view>
+  </view>
+
+  <block wx:for="{{list}}" wx:key="id">
+    <view class="card order {{item.cls}} {{item.urgent ? 'is-urgent' : ''}}" style="{{item.ageStyle}}" bindtap="goDetail" data-id="{{item.id}}">
+      <view class="band band-head">
+      <view class="row1">
+        <view class="head-left">
+          <text class="cust">{{item.customer}}</text>
+          <text class="oid">{{item.id}}</text>
+          <text wx:if="{{item.isSub}}" class="subtag">子单</text>
+          <text wx:if="{{item.urgent && item.status !== 'done'}}" class="urgent-tag">加急</text>
+          <text wx:if="{{item.stockTag}}" class="stock-tag">库存</text>
+        </view>
+        <view class="head-right">
+          <text class="remain">{{item.statusText}}</text>
+          <text class="odate-line">{{item.createdAt}}</text>
+        </view>
+      </view>
+      </view>
+
+      <view class="band band-body">
+
+      <view class="prods">
+        <view wx:for="{{item.items}}" wx:key="index" wx:for-item="it" class="prod">
+          <view class="prod-main">
+            <text class="pid">{{it.productId}}</text>
+            <text class="pname">{{it.productName}}</text>
+          </view>
+          <view class="prod-meta">
+            <text wx:if="{{it.stockedTag}}" class="ptag done">已入库 {{it.stockedQty}}</text>
+            <text wx:if="{{it.finished}}" class="ptag">已完成</text>
+            <text wx:if="{{it.lowStock}}" class="ptag warn">库存不足</text>
+            <text wx:if="{{it.overQty > 0}}" class="ptag over">超 {{it.overQty}}</text>
+            <text class="pqty {{it.overQty > 0 ? 'over' : ''}}">{{it.doneQtyProd}} / {{it.quantity}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view wx:if="{{item.poText}}" class="po-line">PO：{{item.poText}}</view>
+      </view>
+
+
+    </view>
+  </block>
+
+  <view wx:if="{{loadError}}" class="empty-state">
+    <text class="c-red text-bold">数据读取出错</text>
+    <text class="c-gray text-xs mt-8">{{loadError}}</text>
+    <view class="btn btn-outline mt-12" bindtap="retryLoad">重新加载</view>
+    <view class="btn btn-outline mt-8" bindtap="goBackup">去设置里清缓存</view>
+  </view>
+
+  <view wx:if="{{list.length === 0}}" class="empty-state">
+    <text class="c-gray">这个分类下还没有订单</text>
+    <text class="c-gray text-sm mt-8">点下方「＋ 新建订单」开始</text>
+  </view>
+</view>

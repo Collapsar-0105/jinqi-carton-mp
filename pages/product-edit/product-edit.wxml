@@ -1,0 +1,270 @@
+<view class="page {{fontClass}}">
+  <view wx:if="{{mode === 'sample'}}" class="card">
+    <text class="section-title">打样信息</text>
+
+    <view class="field">
+      <text class="label">客户</text>
+      <input placeholder-style="color:#555;font-weight:600" class="input" placeholder="可留空" value="{{customer}}" bindinput="onField" data-field="customer" />
+    </view>
+
+    <view class="flex-row gap-8">
+      <view class="field flex-1">
+        <text class="label">数量</text>
+        <input placeholder-style="color:#555;font-weight:600" class="input" type="number" placeholder="如：5" value="{{quantity}}" bindinput="onField" data-field="quantity" />
+      </view>
+
+    </view>
+    <text class="text-xs c-gray">打样过程可随时保存草稿，确定尺寸后再转成产品档案</text>
+  </view>
+
+  <view class="card">
+    <text class="section-title">{{mode === 'sample' ? '样品档案' : (isEdit ? '编辑产品' : '新增产品')}}</text>
+
+    <view class="field">
+      <text class="label">产品编号 *</text>
+      <input placeholder-style="color:#555;font-weight:600" class="input" placeholder="如：P001" value="{{id}}" disabled="{{isEdit && mode === 'product'}}" bindinput="onId" />
+      <text wx:if="{{isEdit && mode === 'product'}}" class="text-xs c-gray">编号是产品的唯一标识，已下单后不可修改</text>
+    </view>
+
+    <view class="field">
+      <text class="label">{{mode === 'sample' ? '样品名称 *' : '产品名称 *'}}</text>
+      <input placeholder-style="color:#555;font-weight:600" class="input" placeholder="如：美的 KFR-35W 彩箱" value="{{name}}" bindinput="onName" />
+    </view>
+
+    <view class="field">
+      <view class="flex-row">
+        <text class="label flex-1">适用客户（可多选）</text>
+        <text class="link" bindtap="goCustomers">管理客户</text>
+      </view>
+      <view wx:if="{{customerOptions.length > 0}}" class="chip-list">
+        <view wx:for="{{customerOptions}}" wx:key="name"
+              class="chip {{item.checked ? 'on' : ''}}"
+              bindtap="toggleCustomer" data-name="{{item.name}}">
+          {{item.name}}
+        </view>
+      </view>
+      <text wx:else class="text-xs c-gray">还没有客户，点「管理客户」先添加</text>
+
+      <view wx:if="{{addrOptions.length > 0}}" class="field" style="margin-top:10px;">
+        <text class="label">默认收货地址</text>
+        <picker mode="selector" range="{{addrOptions}}" range-key="label" value="{{addrIndex}}" bindchange="onAddrPreset">
+          <view class="input picker-value">
+            <text>{{addrOptions[addrIndex].label}}</text>
+            <text class="picker-arrow">›</text>
+          </view>
+        </picker>
+        <text class="text-xs c-gray">下单时会自动带出这个地址，可在订单里改（只对本单有效）</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="card spec-card outsource-card">
+    <text class="section-title">库存与代工</text>
+
+    <view class="field half row-between">
+      <text class="label flex-1" style="margin-bottom:0;">常备款（库存预警）</text>
+      <switch checked="{{stockItem}}" color="#e94560" bindchange="onStockItem" />
+    </view>
+
+    <view class="field half row-between">
+      <text class="label flex-1" style="margin-bottom:0;">代工</text>
+      <switch checked="{{outsourceEnabled}}" color="#e94560" bindchange="onOutsourceEnabled" />
+    </view>
+
+    <view wx:if="{{outsourceEnabled && craft === '草箱'}}" class="field half">
+      <text class="label">代工模式</text>
+      <picker mode="selector" range="{{outModes}}" value="{{outModeIndex}}" bindchange="onOutsourceMode">
+        <view class="input picker-value">
+          <text>{{outsourceMode}}</text>
+          <text class="picker-arrow">›</text>
+        </view>
+      </picker>
+    </view>
+
+    <view wx:if="{{outsourceEnabled}}" class="field half">
+      <text class="label">代工方（{{outsourceMode}}）</text>
+      <picker mode="selector" range="{{supplierNames}}" value="{{supplierIndex}}" bindchange="onOutsourceSupplier">
+        <view class="input picker-value">
+          <text>{{outsource.supplier || '暂不选择'}}</text>
+          <text class="picker-arrow">›</text>
+        </view>
+      </picker>
+    </view>
+  </view>
+
+  <view class="card spec-card">
+    <text class="section-title">规格</text>
+
+    <view class="field half">
+      <text class="label">工艺</text>
+      <picker mode="selector" range="{{crafts}}" value="{{craftIndex}}" bindchange="onCraft">
+        <view class="input picker-value">
+          <text>{{crafts[craftIndex]}}</text>
+          <text class="picker-arrow">›</text>
+        </view>
+      </picker>
+    </view>
+
+    <view wx:if="{{crafts[craftIndex] === '草箱'}}" class="field half">
+      <text class="label">面纸颜色</text>
+      <picker mode="selector" range="{{paperColors}}" value="{{paperColorIndex}}" bindchange="onPaperColor">
+        <view class="input picker-value">
+          <text>{{paperColors[paperColorIndex]}}</text>
+          <text class="picker-arrow">›</text>
+        </view>
+      </picker>
+    </view>
+
+    <view class="field half">
+      <text class="label">箱型</text>
+      <picker mode="selector" range="{{boxTypes}}" value="{{boxTypeIndex}}" bindchange="onBoxType">
+        <view class="input picker-value">
+          <text>{{boxTypes[boxTypeIndex]}}</text>
+          <text class="picker-arrow">›</text>
+        </view>
+      </picker>
+    </view>
+
+    <view class="field half">
+      <text class="label">楞型</text>
+      <picker mode="selector" range="{{flutes}}" value="{{fluteIndex}}" bindchange="onFlute">
+        <view class="input picker-value">
+          <text>{{flutes[fluteIndex]}}</text>
+          <text class="picker-arrow">›</text>
+        </view>
+      </picker>
+    </view>
+
+    <view class="field">
+      <text class="label">纸箱制作尺寸（mm）</text>
+      <view wx:if="{{!isTrapezoid}}" class="flex-row gap-8">
+        <input placeholder-style="color:#555;font-weight:600" class="input flex-1" type="number" placeholder="长" value="{{sizeL}}" bindinput="onSize" data-field="sizeL" />
+        <text class="size-x">×</text>
+        <input placeholder-style="color:#555;font-weight:600" class="input flex-1" type="number" placeholder="宽" value="{{sizeW}}" bindinput="onSize" data-field="sizeW" />
+        <text class="size-x">×</text>
+        <input placeholder-style="color:#555;font-weight:600" class="input flex-1" type="number" placeholder="高" value="{{sizeH}}" bindinput="onSize" data-field="sizeH" />
+      </view>
+      <view wx:else class="trap-grid">
+        <input placeholder-style="color:#555;font-weight:600" class="input" type="number" placeholder="上长" value="{{sizeTL}}" bindinput="onSize" data-field="sizeTL" />
+        <input placeholder-style="color:#555;font-weight:600" class="input" type="number" placeholder="上宽" value="{{sizeTW}}" bindinput="onSize" data-field="sizeTW" />
+        <input placeholder-style="color:#555;font-weight:600" class="input" type="number" placeholder="中高" value="{{sizeH2}}" bindinput="onSize" data-field="sizeH2" />
+        <input placeholder-style="color:#555;font-weight:600" class="input" type="number" placeholder="下长" value="{{sizeBL}}" bindinput="onSize" data-field="sizeBL" />
+        <input placeholder-style="color:#555;font-weight:600" class="input" type="number" placeholder="下宽" value="{{sizeBW}}" bindinput="onSize" data-field="sizeBW" />
+      </view>
+      <text wx:if="{{isTrapezoid}}" class="text-xs c-gray">梯形箱填五个尺寸，纸板尺寸手动填写，成型方式固定两片</text>
+    </view>
+
+    <view class="board-panel">
+      <view class="bp-title">纸板尺寸<text class="bp-reset" bindtap="recomputeForce">按公式重算</text></view>
+      <view class="bp-row">
+        <text class="bp-k">纸板长</text>
+        <input placeholder-style="color:#555;font-weight:600" class="bp-input" type="number" value="{{boardL}}" bindinput="onBoard" data-field="boardL" />
+        <text class="bp-unit">mm</text>
+      </view>
+      <view class="bp-row">
+        <text class="bp-k">纸板宽</text>
+        <input placeholder-style="color:#555;font-weight:600" class="bp-input" type="number" value="{{boardW}}" bindinput="onBoard" data-field="boardW" />
+        <text class="bp-unit">mm</text>
+      </view>
+      <view class="bp-row">
+        <text class="bp-k">箱舌</text>
+        <input placeholder-style="color:#555;font-weight:600" class="bp-input" type="number" value="{{tang}}" bindinput="onTang" />
+        <text class="bp-unit">mm</text>
+      </view>
+      <view class="bp-row">
+        <text class="bp-k">楞型</text>
+        <text class="bp-v">{{flutes[fluteIndex]}}</text>
+      </view>
+      <view class="bp-row">
+        <text class="bp-k">成型方式</text>
+        <text class="bp-v {{twoPiece ? 'c-red text-bold' : ''}}">{{twoPiece ? '两片成型' : '一片成型'}}</text>
+      </view>
+    </view>
+
+
+    <view class="field">
+      <view class="flex-row">
+        <text class="label flex-1">垫片（可多种规格）</text>
+        <text class="link" bindtap="addPad">+ 添加垫片</text>
+      </view>
+      <view wx:for="{{pads}}" wx:key="index" class="pad-row">
+        <picker mode="selector" range="{{padTypes}}" value="{{item.typeIndex}}" bindchange="onPadType" data-index="{{index}}">
+          <view class="input picker-value pad-type">{{padTypes[item.typeIndex]}}</view>
+        </picker>
+        <input placeholder-style="color:#555;font-weight:600" class="input" style="width:58px;" type="number" placeholder="长" value="{{item.L}}" bindinput="onPadField" data-index="{{index}}" data-field="L" />
+        <input placeholder-style="color:#555;font-weight:600" class="input" style="width:58px;" type="number" placeholder="宽" value="{{item.W}}" bindinput="onPadField" data-index="{{index}}" data-field="W" />
+        <view class="stepper">
+          <view class="step-btn" bindtap="addPadQty" data-index="{{index}}" data-n="-1">−</view>
+          <input placeholder-style="color:#555;font-weight:600" class="step-input" type="number" value="{{item.qty}}" bindinput="onPadField" data-index="{{index}}" data-field="qty" />
+          <view class="step-btn" bindtap="addPadQty" data-index="{{index}}" data-n="1">＋</view>
+        </view>
+        <text class="del" bindtap="removePad" data-index="{{index}}">✕</text>
+      </view>
+      <text wx:if="{{pads.length === 0}}" class="text-xs c-gray">不用垫片可不加</text>
+    </view>
+
+    <view class="field">
+      <text class="label">参考单价（元/个）</text>
+      <input placeholder-style="color:#555;font-weight:600" class="input" type="digit" placeholder="如：3.50" value="{{price}}" bindinput="onPrice" />
+    </view>
+
+
+    <view wx:if="{{history.length > 0}}" class="field">
+      <text class="label">历史单价</text>
+      <view wx:for="{{history}}" wx:key="price" class="hist-row">
+        <text class="hist-price">¥{{item.price}}</text>
+        <text class="hist-meta">{{item.date}} · {{item.orderId}}</text>
+      </view>
+    </view>
+
+    <view class="field">
+      <text class="label">备注</text>
+      <input placeholder-style="color:#555;font-weight:600" class="input" placeholder="如：客户指定用纸" value="{{note}}" bindinput="onNote" />
+    </view>
+  </view>
+
+  <view class="card">
+
+    <view class="card-divider"></view>
+    <text class="section-title">工序</text>
+    <view class="chip-list">
+      <view wx:for="{{stepOptions}}" wx:key="name"
+            class="chip {{item.checked ? 'on' : ''}}"
+            bindtap="toggleStep" data-name="{{item.name}}">
+        {{item.name}}
+      </view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="flex-row mb-8">
+      <text class="section-title flex-1">采购物料</text>
+      <view class="btn btn-outline btn-sm" bindtap="addMaterial">+ 添加</view>
+    </view>
+
+    <view wx:for="{{materials}}" wx:key="index" class="material-row">
+      <picker mode="selector" range="{{materialTypes}}" value="{{item.typeIndex}}" bindchange="onMaterialType" data-index="{{index}}">
+        <view class="input picker-value mat-type">{{materialTypes[item.typeIndex]}}</view>
+      </picker>
+      <input placeholder-style="color:#555;font-weight:600" class="input flex-1" placeholder="物料名称" value="{{item.name}}" bindinput="onMaterialName" data-index="{{index}}" />
+      <input placeholder-style="color:#555;font-weight:600" class="input" style="width:64px;" type="digit" placeholder="单价" value="{{item.price}}" bindinput="onMaterialPrice" data-index="{{index}}" />
+      <text class="del" bindtap="removeMaterial" data-index="{{index}}">✕</text>
+    </view>
+
+    <view wx:if="{{materials.length === 0}}" class="text-xs c-gray" style="padding:6px 0;">
+      还没绑定物料，下单时要手动加
+    </view>
+  </view>
+
+
+  <view wx:if="{{mode === 'sample'}}" class="footer" style="bottom:{{footerBottom}}px;">
+    <view wx:if="{{draftId}}" class="btn btn-outline flex-1" bindtap="remove">删除草稿</view>
+    <view class="btn btn-outline flex-1" bindtap="saveDraft">保存草稿</view>
+    <view class="btn btn-primary flex-1" bindtap="convert">转为产品档案</view>
+  </view>
+
+  <view wx:else class="footer" style="bottom:{{footerBottom}}px;">
+    <view wx:if="{{isEdit}}" class="btn btn-outline flex-1" bindtap="remove">删除</view>
+    <view class="btn btn-primary flex-1" bindtap="save">保存</view>
+  </view>
+</view>

@@ -1,0 +1,38 @@
+.page {
+  padding-bottom: 20px;
+}
+.section-title {
+  font-weight: bold;
+  font-size: 15px;
+}
+.sample {
+  padding: 12px 14px;
+}
+.sample:active {
+  background: #fafafa;
+}
+.s-name {
+  font-size: 15px;
+  font-weight: bold;
+  color: #222;
+}
+.s-sub {
+  font-size: 14px;
+  color: #999;
+  margin-top: 3px;
+}
+.s-del {
+  font-size: 14px;
+  color: #e94560;
+}
+.s-prod {
+  font-size: 14px;
+  color: #2ecc71;
+  margin-left: 12px;
+}
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 60px 20px;
+}

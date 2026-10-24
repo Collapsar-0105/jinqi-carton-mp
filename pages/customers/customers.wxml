@@ -1,0 +1,24 @@
+<view class="page {{fontClass}}">
+  <view wx:if="{{undoLabel}}" class="undo-bar" bindtap="undoLast">↩ 撤销：{{undoLabel}}</view>
+
+  <view class="card">
+    <view class="flex-row">
+      <text class="section-title flex-1">客户（{{list.length}}）</text>
+      <view class="btn btn-primary btn-sm" bindtap="goNew">+ 新增</view>
+    </view>
+
+    <view wx:for="{{list}}" wx:key="name" class="row">
+      <view class="flex-1" bindtap="goDetail" data-name="{{item.name}}">
+        <view class="flex-row">
+          <text class="row-name">{{item.name}}</text>
+          <text wx:if="{{item.contact}}" class="row-contact">{{item.contact}}</text>
+        </view>
+        <view class="row-sub">{{item.phone || '未填电话'}} · {{item.doneCount}} 单已完成</view>
+      </view>
+      <text class="edit" bindtap="goEdit" data-name="{{item.name}}">编辑</text>
+      <text class="del" bindtap="remove" data-name="{{item.name}}">删除</text>
+    </view>
+
+    <view wx:if="{{list.length === 0}}" class="text-xs c-gray" style="padding:10px 0;">还没有客户，点「+ 新增」</view>
+  </view>
+</view>

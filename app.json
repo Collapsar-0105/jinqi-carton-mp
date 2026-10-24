@@ -1,0 +1,56 @@
+{
+  "entryPagePath": "pages/orders/orders",
+  "pages": [
+    "pages/orders/orders",
+    "pages/samples/samples",
+    "pages/workyear/workyear",
+    "pages/stock-alerts/stock-alerts",
+    "pages/backup/backup",
+    "pages/users/users",
+    "pages/order/order",
+    "pages/detail/detail",
+    "pages/purchase/purchase",
+    "pages/product/product",
+    "pages/product-edit/product-edit",
+    "pages/product-select/product-select",
+    "pages/product-import/product-import",
+    "pages/customers/customers",
+    "pages/customer-edit/customer-edit",
+    "pages/customer-detail/customer-detail",
+    "pages/suppliers/suppliers",
+    "pages/supplier-edit/supplier-edit",
+    "pages/supplier-detail/supplier-detail",
+    "pages/directory/directory"
+  ],
+  "window": {
+    "navigationBarTitleText": "金淇纸箱",
+    "navigationBarBackgroundColor": "#1a1a2e",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#f5f5f5"
+  },
+  "tabBar": {
+    "color": "#999",
+    "selectedColor": "#e94560",
+    "backgroundColor": "#fff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/orders/orders",
+        "text": "订单"
+      },
+      {
+        "pagePath": "pages/purchase/purchase",
+        "text": "采购"
+      },
+      {
+        "pagePath": "pages/product/product",
+        "text": "产品档案"
+      },
+      {
+        "pagePath": "pages/directory/directory",
+        "text": "往来单位"
+      }
+    ],
+    "custom": true
+  }
+}

@@ -1,0 +1,27 @@
+<view class="page {{fontClass}}">
+  <view class="card">
+    <text class="section-title">常备预警（{{list.length}}）</text>
+    <text class="text-xs c-gray">常备款送完后自动生成，补货后可手动取消；新建含该常备款的订单时也会提示取消。</text>
+  </view>
+
+  <block wx:for="{{list}}" wx:key="id">
+    <view class="card alert-card">
+      <view class="flex-row">
+        <view class="flex-1">
+          <text class="a-prod">{{item.productName}}</text>
+          <view class="a-sub">{{item.productId}} · 预警数量 {{item.qty}} · {{item._date}}</view>
+          <view class="a-sub">来源订单：{{item.orderId}}</view>
+        </view>
+        <text class="a-del" bindtap="remove" data-id="{{item.id}}">取消</text>
+      </view>
+      <view class="flex-row gap-8 mt-8">
+        <text class="a-link" bindtap="goProduct" data-product="{{item.productId}}">看产品</text>
+        <text class="a-link" bindtap="goOrder" data-order="{{item.orderId}}">看订单</text>
+      </view>
+    </view>
+  </block>
+
+  <view wx:if="{{list.length === 0}}" class="empty-state">
+    <text class="c-gray">暂无预警</text>
+  </view>
+</view>

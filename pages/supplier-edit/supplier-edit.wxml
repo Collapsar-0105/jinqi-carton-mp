@@ -1,0 +1,42 @@
+<view class="page {{fontClass}}">
+  <view class="card">
+    <text class="section-title">{{isEdit ? '编辑供应商' : '新增供应商'}}</text>
+
+    <view class="field">
+      <text class="label">供应商名称 *</text>
+      <input placeholder-style="color:#555;font-weight:600" class="input" placeholder="如：鑫达纸板厂" value="{{name}}" bindinput="onField" data-field="name" />
+    </view>
+
+    <view class="field">
+      <text class="label">联系人</text>
+      <input placeholder-style="color:#555;font-weight:600" class="input" placeholder="如：王经理" value="{{contact}}" bindinput="onField" data-field="contact" />
+    </view>
+
+    <view class="field">
+      <text class="label">联系电话</text>
+      <input placeholder-style="color:#555;font-weight:600" class="input" type="number" placeholder="如：13800000000" value="{{phone}}" bindinput="onField" data-field="phone" />
+    </view>
+
+    <view class="field">
+      <text class="label">供应类型（可多选）</text>
+      <view class="chip-list">
+        <view wx:for="{{typeOptions}}" wx:key="name"
+              class="chip {{item.checked ? 'on' : ''}}"
+              bindtap="toggleType" data-name="{{item.name}}">
+          {{item.name}}
+        </view>
+      </view>
+      <text class="text-xs c-gray">勾了「代印 / 成品箱」的供应商，下单时可当选代工厂</text>
+    </view>
+
+    <view class="field">
+      <text class="label">备注</text>
+      <input placeholder-style="color:#555;font-weight:600" class="input" placeholder="如：账期 30 天" value="{{note}}" bindinput="onField" data-field="note" />
+    </view>
+  </view>
+
+  <view class="footer" style="bottom:{{footerBottom}}px;">
+    <view wx:if="{{isEdit}}" class="btn btn-outline flex-1" bindtap="remove">删除</view>
+    <view class="btn btn-primary flex-1" bindtap="save">保存</view>
+  </view>
+</view>

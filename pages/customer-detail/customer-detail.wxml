@@ -1,0 +1,63 @@
+<view class="page {{fontClass}}">
+  <view class="card">
+    <view class="flex-row">
+      <text class="cust-name flex-1">{{customer.name || name}}</text>
+      <text class="link" bindtap="goEdit">编辑档案</text>
+    </view>
+    <view wx:if="{{customer.contact || customer.phone}}" class="line">
+      <text class="line-label">联系人</text>
+      <text>{{customer.contact || "—"}} {{customer.phone || ""}}</text>
+    </view>
+    <view wx:if="{{customer.note}}" class="line">
+      <text class="line-label">备注</text>
+      <text>{{customer.note}}</text>
+    </view>
+    <view class="line">
+      <text class="line-label">订单</text>
+      <text>{{total}} 单</text>
+    </view>
+  </view>
+
+  <view class="card" wx:if="{{addresses.length}}">
+    <text class="section-title">收货地址（{{addresses.length}}）</text>
+    <view wx:for="{{addresses}}" wx:key="index" class="addr-row">
+      <view class="flex-1">
+        <text class="addr-text">{{item.address}}</text>
+        <text class="addr-sub">{{item.contact || ""}} {{item.phone || ""}}</text>
+      </view>
+      <text wx:if="{{item.phone}}" class="link" bindtap="call" data-phone="{{item.phone}}">拨打</text>
+    </view>
+  </view>
+
+  <view class="card">
+    <text class="section-title">订单（{{total}}）</text>
+    <view class="sort-row">
+      <view wx:for="{{sorts}}" wx:key="*this" class="chip {{sortIndex === index ? 'on' : ''}}"
+            bindtap="setSort" data-index="{{index}}">按{{item}}</view>
+    </view>
+
+    <block wx:for="{{groups}}" wx:key="key" wx:for-item="g">
+      <view class="group-head" bindtap="toggle" data-key="{{g.key}}">
+        <text class="group-arrow">{{g.collapsed ? '▶' : '▼'}}</text>
+        <text class="group-title">{{g.title}}</text>
+        <text class="group-count">{{g.count}} 单</text>
+      </view>
+
+      <block wx:if="{{!g.collapsed}}" wx:for="{{g.items}}" wx:key="id" wx:for-item="o">
+        <view class="order-row" bindtap="goOrder" data-id="{{o.id}}">
+          <view class="flex-1">
+            <view class="order-line">
+              <text class="order-id">{{o.id}}</text>
+              <text class="order-date">{{o.createdAt}}</text>
+            </view>
+            <view class="order-prod">{{o.items[0].productId}} {{o.items[0].productName}}
+              <text wx:if="{{o.items.length > 1}}"> 等 {{o.items.length}} 款</text>
+            </view>
+          </view>
+        </view>
+      </block>
+    </block>
+
+    <view wx:if="{{!groups.length}}" class="empty">还没有订单</view>
+  </view>
+</view>

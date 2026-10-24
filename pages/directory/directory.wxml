@@ -1,0 +1,17 @@
+<view class="page {{fontClass}}">
+  <view class="card entry" bindtap="goCustomers">
+    <view class="flex-1">
+      <text class="entry-title">客户</text>
+      <text class="entry-sub">{{customerCount}} 个客户 · 订单与送货记录</text>
+    </view>
+    <text class="arrow">›</text>
+  </view>
+
+  <view class="card entry" bindtap="goSuppliers">
+    <view class="flex-1">
+      <text class="entry-title">供应商</text>
+      <text class="entry-sub">{{supplierCount}} 个供应商 · 物料与代工</text>
+    </view>
+    <text class="arrow">›</text>
+  </view>
+</view>

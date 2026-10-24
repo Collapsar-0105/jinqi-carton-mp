@@ -1,0 +1,21 @@
+.line { display: flex; gap: 10px; font-size: 15px; color: #333; margin-top: 6px; }
+.line-label { color: #666; min-width: 52px; }
+.cust-name { font-size: 20px; font-weight: 800; color: #111; }
+.addr-row { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px dashed #eee; }
+.addr-text { display: block; font-size: 15px; color: #222; }
+.addr-sub { display: block; font-size: 14px; color: #666; margin-top: 2px; }
+.sort-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 10px; }
+.chip { padding: 4px 10px; border-radius: 12px; border: 1px solid #ddd; font-size: 14px; color: #444; }
+.chip.on { background: #e94560; border-color: #e94560; color: #fff; font-weight: 700; }
+.group-head { display: flex; align-items: center; gap: 6px; padding: 8px 0; border-bottom: 1px solid #f0f0f0; }
+.group-arrow { font-size: 14px; color: #888; }
+.group-title { flex: 1; font-size: 15px; font-weight: 700; color: #111; }
+.group-count { font-size: 14px; color: #666; }
+.order-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid #f7f7f7; }
+.order-line { display: flex; align-items: baseline; gap: 8px; }
+.order-id { font-size: 15px; font-weight: 700; color: #2b5bb3; }
+.order-date { font-size: 14px; color: #777; }
+.order-prod { font-size: 15px; color: #222; margin-top: 2px; }
+.order-amt { font-size: 16px; font-weight: 800; color: #e94560; }
+.empty { text-align: center; color: #888; font-size: 14px; padding: 16px 0; }
+.link { color: #2b5bb3; font-size: 14px; }

@@ -1,0 +1,30 @@
+<view class="page {{fontClass}}">
+  <block wx:if="{{items.length > 0}}">
+    <view class="section-header">
+      <text>待采购（{{items.length}}）</text>
+    </view>
+    <block wx:for="{{items}}" wx:key="_key">
+      <view class="card purchase-card">
+        <view class="flex-row mb-8">
+          <text class="text-bold flex-1">{{item.type}} · {{item.name}}</text>
+        </view>
+        <view class="text-xs c-gray mb-8">
+          <text>{{item.customer}} · {{item.product}}</text>
+        </view>
+        <view class="flex-row gap-8 text-xs">
+          <text>供应商：{{item.supplier || '未填'}}</text>
+          <text>数量：{{item.quantity || '-'}}</text>
+        </view>
+        <view class="mt-8">
+          <view class="btn btn-sm btn-primary" bindtap="markArrived" data-order-id="{{item.orderId}}" data-item="{{item.itemIndex}}" data-index="{{item._index}}">
+            标记到货
+          </view>
+        </view>
+      </view>
+    </block>
+  </block>
+
+  <view wx:else class="empty-state">
+    <text class="c-gray">暂无待采购物料</text>
+  </view>
+</view>

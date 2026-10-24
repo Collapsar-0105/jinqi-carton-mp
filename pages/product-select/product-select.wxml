@@ -1,0 +1,21 @@
+<view class="page {{fontClass}}">
+  <view class="search-bar">
+    <input placeholder-style="color:#555;font-weight:600" class="input search-input" placeholder="输入编号或名称搜索" value="{{keyword}}" bindinput="onSearch" />
+  </view>
+
+  <block wx:for="{{list}}" wx:key="id">
+    <view class="card item" bindtap="choose" data-id="{{item.id}}">
+      <view class="flex-row">
+        <text class="p-id">{{item.id}}</text>
+        <text class="p-name flex-1">{{item.name}}</text>
+        <text class="p-price">{{item.priceText}}</text>
+      </view>
+      <view class="p-spec">{{item.summary}}</view>
+    </view>
+  </block>
+
+  <view wx:if="{{list.length === 0}}" class="empty-state">
+    <text class="c-gray">没有找到产品</text>
+    <view class="btn btn-outline btn-sm mt-12" bindtap="goArchive">去产品档案看看</view>
+  </view>
+</view>

@@ -1,0 +1,90 @@
+<view class="page {{fontClass}}">
+  <view wx:if="{{launchErrors.length}}" class="card">
+    <text class="section-title c-red">启动异常</text>
+    <text wx:for="{{launchErrors}}" wx:key="*this" class="err-text">{{item}}</text>
+    <text class="text-xs c-gray">把这段文字发给技术，能直接定位问题。</text>
+  </view>
+  <view class="card">
+    <text class="section-title">字体大小</text>
+    <text class="text-xs c-gray">看图片和小字吃力时，可以调大；调完所有页面都会变大。</text>
+    <view class="font-row">
+      <view class="font-opt {{fontLevel === 0 ? 'on' : ''}}" bindtap="setFont" data-level="0">标准</view>
+      <view class="font-opt {{fontLevel === 1 ? 'on' : ''}}" bindtap="setFont" data-level="1">大</view>
+      <view class="font-opt {{fontLevel === 2 ? 'on' : ''}}" bindtap="setFont" data-level="2">特大</view>
+    </view>
+  </view>
+
+  <view wx:if="{{launchErrors.length}}" class="card">
+    <text class="section-title c-red">启动异常</text>
+    <text wx:for="{{launchErrors}}" wx:key="*this" class="err-text">{{item}}</text>
+    <text class="text-xs c-gray">把这段文字发给技术，能直接定位问题。</text>
+  </view>
+  <view class="card">
+    <text class="section-title">云同步</text>
+    <view class="sync-row"><text class="sync-label">云端接口</text><text class="sync-value">{{apiReadyText || '检测中…'}}</text></view>
+    <view class="sync-row" bindtap="perfCheck"><text class="sync-label">性能自检</text><text class="sync-value">点我看耗时 ›</text></view>
+    <view wx:if="{{isAdmin}}" class="sync-row" bindtap="archivePick"><text class="sync-label">年结存归档</text><text class="sync-value">选择年份归档 ›</text></view>
+    <view class="sync-row"><text class="sync-label">数据用量</text><text class="sync-value">{{usageText}}</text></view>
+    <text class="cloud-state {{cloud.mode === 'cloud' ? 'ok' : 'off'}}">{{cloud.mode === 'cloud' ? '已连接云端' : '本地模式'}}</text>
+    <text class="text-xs c-gray">{{cloud.mode === 'cloud' ? ('最近同步 ' + cloud.lastSyncText) : (cloud.error || '开通云开发后，多台手机自动同步')}}</text>
+    <text wx:if="{{cloud.mode === 'pending'}}" class="err-text">本机 openid：{{cloud.openid}}（让管理员在「用户管理」里允许）</text>
+    <view wx:if="{{isAdmin}}" class="field mt-12">
+      <text class="label">云环境 ID</text>
+      <input class="input" placeholder="如 cloud1-xxxxxx" value="{{cloudEnv}}" bindinput="onEnvInput" />
+    </view>
+    <view wx:if="{{isAdmin}}" class="btn btn-outline btn-block mt-8" bindtap="saveEnv">保存环境并连接</view>
+    <view wx:if="{{isAdmin}}" class="btn btn-primary btn-block mt-8" bindtap="pushCloud">把本机数据上传到云端</view>
+    <view class="btn btn-outline btn-block mt-8" bindtap="pullCloud">从云端拉取最新数据</view>
+    <view wx:if="{{isAdmin}}" class="btn btn-outline btn-block mt-8" bindtap="goUsers">用户管理（授权新设备）</view>
+    <view wx:if="{{isAdmin}}" class="btn btn-outline btn-block mt-8 danger-btn" bindtap="clearCloud">清空云端数据</view>
+    <view wx:if="{{isAdmin}}" class="btn btn-outline btn-block mt-8 danger-btn" bindtap="resetAll">重置全部（本机 + 云端）</view>
+    <text wx:if="{{isAdmin}}" class="text-xs c-gray mt-8">第一次使用：先点「上传」，其他手机装同一版本后自动拉取。</text>
+  </view>
+
+  <view wx:if="{{isAdmin}}" class="card">
+    <text class="section-title">当前数据</text>
+    <view class="counts">
+      <view class="cnt"><text class="cnt-num">{{counts.orders}}</text><text class="cnt-label">订单</text></view>
+      <view class="cnt"><text class="cnt-num">{{counts.products}}</text><text class="cnt-label">产品</text></view>
+      <view class="cnt"><text class="cnt-num">{{counts.customers}}</text><text class="cnt-label">客户</text></view>
+      <view class="cnt"><text class="cnt-num">{{counts.suppliers}}</text><text class="cnt-label">供应商</text></view>
+    </view>
+    <text class="text-xs c-gray">上次导出：{{lastBackup}}</text>
+  </view>
+
+  <view wx:if="{{isAdmin}}" class="card">
+    <text class="section-title">导出备份</text>
+    <text class="text-xs c-gray">生成一个 json 文件，直接发送到微信聊天（建议发给「文件传输助手」），换手机时再导入。</text>
+    <view class="btn btn-primary btn-block mt-12" bindtap="exportData">导出并发送到聊天</view>
+    <view class="btn btn-outline btn-block mt-8" bindtap="copyData">复制备份内容（文本）</view>
+  </view>
+
+  <view wx:if="{{launchErrors.length}}" class="card">
+    <text class="section-title c-red">启动异常</text>
+    <text wx:for="{{launchErrors}}" wx:key="*this" class="err-text">{{item}}</text>
+    <text class="text-xs c-gray">把这段文字发给技术，能直接定位问题。</text>
+  </view>
+  <view class="card">
+    <text class="section-title">导入备份</text>
+    <text class="text-xs c-gray">从微信聊天里选之前导出的 json 文件，会覆盖当前数据，请谨慎操作。</text>
+    <view class="btn btn-outline btn-block mt-12" bindtap="importData">选择文件导入</view>
+  </view>
+
+  <view wx:if="{{launchErrors.length}}" class="card">
+    <text class="section-title c-red">启动异常</text>
+    <text wx:for="{{launchErrors}}" wx:key="*this" class="err-text">{{item}}</text>
+    <text class="text-xs c-gray">把这段文字发给技术，能直接定位问题。</text>
+  </view>
+  <view class="card">
+    <text class="section-title">本机缓存</text>
+    <text class="text-xs c-gray">换手机、白屏、数据错乱时用：清掉这台手机的本地缓存后重新从云端拉取，云端数据不动。</text>
+    <view class="btn btn-outline btn-block mt-8" bindtap="clearLocalCache">清空本机缓存并重登</view>
+  </view>
+  <view class="card tips">
+    <text class="section-title">说明</text>
+    <text class="tip">· 备份包含：订单（含收货地址分配、送货记录）、产品档案（含默认收货地址）、客户、供应商、代工厂、打样草稿、常备预警、工作年设置</text>
+    <text class="tip">· 备份包含订单、产品、客户、供应商、打样草稿等全部数据</text>
+    <text class="tip">· 数据已存云端，所有设备登录同一环境即可同步；导出仅作离线备份</text>
+    <text class="tip">· 当前版本 v{{version}}</text>
+  </view>
+</view>

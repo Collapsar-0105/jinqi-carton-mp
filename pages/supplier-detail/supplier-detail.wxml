@@ -1,0 +1,29 @@
+<view class="page {{fontClass}}">
+  <view class="card">
+    <view class="flex-row mb-8">
+      <text class="cust-name flex-1">{{name}}</text>
+      <text class="link" bindtap="edit">编辑</text>
+    </view>
+    <text class="text-xs c-gray">供应：{{typeText || '未分类'}}</text>
+    <text wx:if="{{supplier.contact || supplier.phone}}" class="text-xs c-gray" style="display:block;margin-top:4px;">
+      联系人：{{supplier.contact || '—'}} {{supplier.phone || ''}}
+    </text>
+    <view wx:if="{{supplier.note}}" class="text-xs c-gray mt-8">备注：{{supplier.note}}</view>
+
+    </view>
+
+  <view class="card">
+    <text class="section-title">相关采购单（{{orders.length}}）</text>
+    <view wx:for="{{orders}}" wx:key="id" class="order-row" bindtap="goOrder" data-id="{{item.id}}">
+      <view class="flex-1">
+        <text class="order-id">{{item.id}}</text>
+        <text class="order-product">{{item.productName || item.product}}</text>
+        <view class="order-sub">{{item._qty}} 个 · 下单 {{item._date}}</view>
+        <view wx:if="{{item._items}}" class="order-sub">{{item._items}}</view>
+        <view wx:if="{{item._isFactory}}" class="order-sub">代工：{{item._factoryProducts}}</view>
+      </view>
+      <text wx:if="{{item._amount}}" class="order-amount">¥{{item._amount}}</text>
+    </view>
+    <view wx:if="{{orders.length === 0}}" class="text-xs c-gray" style="padding:8px 0;">还没有相关采购单</view>
+  </view>
+</view>

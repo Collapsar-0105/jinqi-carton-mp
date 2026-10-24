@@ -1,0 +1,56 @@
+.page {
+  padding-bottom: 20px;
+}
+
+.summary {
+  display: flex;
+  background: #fff;
+  padding: 16px;
+  margin: 10px 14px;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+.sum-item {
+  flex: 1;
+  text-align: center;
+}
+.sum-num {
+  font-size: 18px;
+  font-weight: bold;
+  display: block;
+}
+.sum-label {
+  font-size: 14px;
+  color: #999;
+  margin-top: 2px;
+}
+
+.entry {
+  display: flex;
+  align-items: center;
+  padding: 16px 14px;
+}
+.entry:active {
+  background: #fafafa;
+}
+.entry-title {
+  font-size: 16px;
+  font-weight: bold;
+  display: block;
+}
+.entry-sub {
+  font-size: 14px;
+  color: #999;
+  margin-top: 4px;
+  display: block;
+}
+.arrow {
+  color: #ccc;
+  font-size: 20px;
+}
+
+.dec { font-size: 0.72em; }
+
+
+/* 自定义 tabBar 留白 */
+.page { padding-bottom: 118px; }

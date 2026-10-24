@@ -1,0 +1,36 @@
+.page {
+  padding-bottom: 20px;
+}
+.section-title {
+  font-weight: bold;
+  font-size: 15px;
+}
+.row {
+  display: flex;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #f5f5f5;
+}
+.row:last-child {
+  border-bottom: none;
+}
+.row-name {
+  font-size: 14px;
+  color: #333;
+}
+.row-sub {
+  font-size: 14px;
+  color: #999;
+  margin-top: 3px;
+}
+.del {
+  color: #e94560;
+  font-size: 14px;
+  padding-left: 12px;
+}
+.empty {
+  padding: 20px 0;
+  text-align: center;
+  font-size: 14px;
+  color: #999;
+}

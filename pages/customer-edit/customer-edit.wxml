@@ -1,0 +1,41 @@
+<view class="page {{fontClass}}">
+  <view class="card">
+    <text class="section-title">{{isEdit ? '编辑客户' : '新增客户'}}</text>
+
+    <view class="field">
+      <text class="label">客户名称 *</text>
+      <input placeholder-style="color:#555;font-weight:600" class="input" placeholder="如：许昌恒尔" value="{{name}}" bindinput="onField" data-field="name" />
+    </view>
+
+    <view class="field">
+      <text class="label">联系人</text>
+      <input placeholder-style="color:#555;font-weight:600" class="input" placeholder="如：王经理" value="{{contact}}" bindinput="onField" data-field="contact" />
+    </view>
+
+    <view class="field">
+      <text class="label">联系电话</text>
+      <input placeholder-style="color:#555;font-weight:600" class="input" type="number" placeholder="如：13800000000" value="{{phone}}" bindinput="onField" data-field="phone" />
+    </view>
+
+    <view class="field">
+      <view class="flex-row">
+        <text class="label flex-1">收货地址（可多个）</text>
+        <text class="link" bindtap="addAddress">+ 添加</text>
+      </view>
+      <view wx:for="{{addresses}}" wx:key="index" class="addr-box">
+        <view class="flex-row gap-8">
+          <input placeholder-style="color:#555;font-weight:600" class="input flex-1" placeholder="收货人" value="{{item.contact}}" bindinput="onAddressField" data-index="{{index}}" data-field="contact" />
+          <input placeholder-style="color:#555;font-weight:600" class="input flex-1" placeholder="电话" value="{{item.phone}}" bindinput="onAddressField" data-index="{{index}}" data-field="phone" />
+          <text class="del" bindtap="removeAddress" data-index="{{index}}">✕</text>
+        </view>
+        <input placeholder-style="color:#555;font-weight:600" class="input mt-8" placeholder="详细地址" value="{{item.address}}" bindinput="onAddressField" data-index="{{index}}" data-field="address" />
+      </view>
+      <text wx:if="{{addresses.length === 0}}" class="text-xs c-gray">不填则送货信息里没有地址</text>
+    </view>
+  </view>
+
+  <view class="footer" style="bottom:{{footerBottom}}px;">
+    <view wx:if="{{isEdit}}" class="btn btn-outline flex-1" bindtap="remove">删除</view>
+    <view class="btn btn-primary flex-1" bindtap="save">保存</view>
+  </view>
+</view>

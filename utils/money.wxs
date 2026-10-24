@@ -1,0 +1,16 @@
+function int(v) {
+  var s = (v === null || v === undefined || v === '') ? '0.00' : String(v)
+  var i = s.indexOf('.')
+  return i < 0 ? s : s.slice(0, i)
+}
+
+function dec(v) {
+  var s = (v === null || v === undefined || v === '') ? '0.00' : String(v)
+  var i = s.indexOf('.')
+  return i < 0 ? '' : s.slice(i)
+}
+
+module.exports = {
+  int: int,
+  dec: dec
+}

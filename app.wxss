@@ -1,0 +1,538 @@
+page {
+  background: #f0f2f5;
+  font-size: 16px;
+  color: #0f0f0f;
+  font-weight: 600;
+  overflow-x: hidden;
+}
+
+/* 对比度与字重：整体更清楚 */
+page .label { color: #333; font-weight: 600; }
+page .c-gray { color: #444; }
+.btn { font-weight: 600; }
+page .input { color: #1f1f1f; font-weight: 500; }
+page .it-spec, page .text-xs { color: #555; }
+page .step-status { color: #444; }
+
+.c-red    { color: #e94560; }
+.c-green  { color: #2ecc71; }
+.c-blue   { color: #3498db; }
+.c-orange { color: #f39c12; }
+.c-gray   { color: #999; }
+.bg-red   { background: #e94560; }
+.bg-green { background: #2ecc71; }
+.bg-blue  { background: #3498db; }
+.bg-white { background: #fff; }
+
+.card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 14px;
+  margin: 10px 14px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  box-sizing: border-box;
+}
+
+/* 统一盒模型，避免输入框 padding 把页面撑宽 */
+.input,
+input,
+textarea,
+.picker-value,
+.btn,
+.card {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+.tag {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+.tag-pending   { background: #eee; color: #999; }
+.tag-progress  { background: #dbeafe; color: #2563eb; }
+.tag-done      { background: #d1fae5; color: #059669; }
+.tag-overdue   { background: #fee2e2; color: #dc2626; }
+.tag-no-need   { background: transparent; color: #ccc; }
+.tag-warn      { background: #fff4e5; color: #b26a00; }
+
+.step-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.step-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.step-dot.pending   { background: #ddd; }
+.step-dot.progress  { background: #3498db; }
+.step-dot.done      { background: #2ecc71; }
+.step-dot.overdue   { background: #e94560; }
+.step-line {
+  width: 12px;
+  height: 2px;
+  background: #ddd;
+  flex-shrink: 0;
+}
+.step-line.done { background: #2ecc71; }
+
+.btn {
+  box-sizing: border-box;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  text-align: center;
+  border: none;
+}
+.btn-primary { background: #e94560; color: #fff; }
+.btn-outline { background: #fff; color: #e94560; border: 1px solid #e94560; }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+.btn-block { width: 100%; }
+
+.flex-row { display: flex; flex-direction: row; align-items: center; }
+.flex-col { display: flex; flex-direction: column; }
+.flex-1 { flex: 1; min-width: 0; }
+.gap-8 { gap: 8px; }
+.gap-4 { gap: 4px; }
+.mt-8 { margin-top: 8px; }
+.mt-12 { margin-top: 12px; }
+.mt-16 { margin-top: 16px; }
+.mb-8 { margin-bottom: 8px; }
+.text-sm { font-size: 12px; }
+.text-xs { font-size: 11px; }
+.text-bold { font-weight: bold; }
+.text-right { text-align: right; }
+
+/* ===== PC / 宽屏：内容最大 520px 居中 ===== */
+.page {
+  max-width: 520px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+
+/* ===== 字号分级：15 / 14 / 13 ===== */
+page { font-size: 15px; color: #222; font-weight: 500; }
+
+/* 需要强调的：金额、数量、剩余天数、产品名、客户 */
+page .remain,
+page .amt,
+page .pqty,
+page .it-amount,
+page .p-name,
+page .it-name,
+page .ov-num,
+page .cust,
+page .head-remain { font-size: 17px !important; font-weight: 700 !important; color: #111 !important; }
+
+/* 标签 / 主要字段 */
+page .label,
+page .it-id,
+page .pid,
+page .p-id,
+page .step-name { font-size: 14px !important; font-weight: 600 !important; color: #333 !important; }
+
+/* 说明性小字：比正文小一档，但不再是浅灰 */
+page .c-gray,
+page .text-xs,
+page .it-spec,
+page .step-status,
+page .step-unit,
+page .spec-label,
+page .due,
+page .odate,
+page .ov-label,
+page .head-sub,
+page .p-spec,
+page .order-sub,
+page .row-sub,
+page .s-sub,
+page .entry-sub,
+page .entry-date,
+page .entry-note,
+page .sub,
+page .meta,
+page .count,
+page .group-title,
+page .pb-sup,
+page .pb-type,
+page .file-size,
+page .hist-meta,
+page .ph-label,
+page .pads-line,
+page .pads-label,
+page .early,
+page .summary,
+page .oid,
+page .unit,
+page .diff-label,
+page .layer-label,
+page .bp-tip,
+page .bp-formula,
+page .rule-k,
+page .rule-v,
+page .a-sub,
+page .deliver-text,
+page .progress-text,
+page .period,
+page .filter,
+page .stat-label,
+page .sum-label,
+page .key-label,
+page .cnt-label,
+page .bar-status,
+page .workyear-tip,
+page .is-placeholder,
+page .total-line,
+page .empty,
+page .tip { font-size: 13px !important; color: #4a4a4a !important; }
+
+page .input { font-size: 15px !important; }
+page .btn { font-size: 15px !important; font-weight: 600; }
+page .placeholder,
+input::placeholder { color: #7a7a7a; }
+
+/* 大 */
+.fs-1 { font-size: 16.5px; }
+.fs-1 .remain,
+.fs-1 .amt,
+.fs-1 .pqty,
+.fs-1 .it-amount,
+.fs-1 .p-name,
+.fs-1 .it-name,
+.fs-1 .ov-num,
+.fs-1 .cust,
+.fs-1 .head-remain { font-size: 18.5px !important; }
+.fs-1 .label,
+.fs-1 .it-id,
+.fs-1 .pid,
+.fs-1 .p-id,
+.fs-1 .step-name { font-size: 15px !important; }
+.fs-1 .c-gray,
+.fs-1 .text-xs,
+.fs-1 .it-spec,
+.fs-1 .step-status,
+.fs-1 .step-unit,
+.fs-1 .spec-label,
+.fs-1 .due,
+.fs-1 .odate,
+.fs-1 .ov-label,
+.fs-1 .head-sub,
+.fs-1 .p-spec,
+.fs-1 .order-sub,
+.fs-1 .row-sub,
+.fs-1 .s-sub,
+.fs-1 .entry-sub,
+.fs-1 .entry-date,
+.fs-1 .entry-note,
+.fs-1 .sub,
+.fs-1 .meta,
+.fs-1 .count,
+.fs-1 .group-title,
+.fs-1 .pb-sup,
+.fs-1 .pb-type,
+.fs-1 .file-size,
+.fs-1 .hist-meta,
+.fs-1 .ph-label,
+.fs-1 .pads-line,
+.fs-1 .pads-label,
+.fs-1 .early,
+.fs-1 .summary,
+.fs-1 .oid,
+.fs-1 .unit,
+.fs-1 .diff-label,
+.fs-1 .layer-label,
+.fs-1 .bp-tip,
+.fs-1 .bp-formula,
+.fs-1 .rule-k,
+.fs-1 .rule-v,
+.fs-1 .a-sub,
+.fs-1 .deliver-text,
+.fs-1 .progress-text,
+.fs-1 .period,
+.fs-1 .filter,
+.fs-1 .stat-label,
+.fs-1 .sum-label,
+.fs-1 .key-label,
+.fs-1 .cnt-label,
+.fs-1 .bar-status,
+.fs-1 .workyear-tip,
+.fs-1 .is-placeholder,
+.fs-1 .total-line,
+.fs-1 .empty,
+.fs-1 .tip { font-size: 14.5px !important; color: #333 !important; }
+.fs-1 .input { font-size: 16px !important; }
+.fs-1 .btn { font-size: 16px !important; }
+
+/* 特大 */
+.fs-2 { font-size: 18px; }
+.fs-2 .remain,
+.fs-2 .amt,
+.fs-2 .pqty,
+.fs-2 .it-amount,
+.fs-2 .p-name,
+.fs-2 .it-name,
+.fs-2 .ov-num,
+.fs-2 .cust,
+.fs-2 .head-remain { font-size: 20px !important; }
+.fs-2 .label,
+.fs-2 .it-id,
+.fs-2 .pid,
+.fs-2 .p-id,
+.fs-2 .step-name { font-size: 16px !important; }
+.fs-2 .c-gray,
+.fs-2 .text-xs,
+.fs-2 .it-spec,
+.fs-2 .step-status,
+.fs-2 .step-unit,
+.fs-2 .spec-label,
+.fs-2 .due,
+.fs-2 .odate,
+.fs-2 .ov-label,
+.fs-2 .head-sub,
+.fs-2 .p-spec,
+.fs-2 .order-sub,
+.fs-2 .row-sub,
+.fs-2 .s-sub,
+.fs-2 .entry-sub,
+.fs-2 .entry-date,
+.fs-2 .entry-note,
+.fs-2 .sub,
+.fs-2 .meta,
+.fs-2 .count,
+.fs-2 .group-title,
+.fs-2 .pb-sup,
+.fs-2 .pb-type,
+.fs-2 .file-size,
+.fs-2 .hist-meta,
+.fs-2 .ph-label,
+.fs-2 .pads-line,
+.fs-2 .pads-label,
+.fs-2 .early,
+.fs-2 .summary,
+.fs-2 .oid,
+.fs-2 .unit,
+.fs-2 .diff-label,
+.fs-2 .layer-label,
+.fs-2 .bp-tip,
+.fs-2 .bp-formula,
+.fs-2 .rule-k,
+.fs-2 .rule-v,
+.fs-2 .a-sub,
+.fs-2 .deliver-text,
+.fs-2 .progress-text,
+.fs-2 .period,
+.fs-2 .filter,
+.fs-2 .stat-label,
+.fs-2 .sum-label,
+.fs-2 .key-label,
+.fs-2 .cnt-label,
+.fs-2 .bar-status,
+.fs-2 .workyear-tip,
+.fs-2 .is-placeholder,
+.fs-2 .total-line,
+.fs-2 .empty,
+.fs-2 .tip { font-size: 16px !important; color: #222 !important; }
+.fs-2 .input { font-size: 17px !important; }
+.fs-2 .btn { font-size: 17px !important; }
+
+/* 选中态：分页/筛选是实底白字；标签是浅底红字，别盖掉 */
+.period.on, .filter.on { color: #fff !important; }
+.chip.on { color: #e94560 !important; background: #fef2f2 !important; border-color: #e94560 !important; }
+
+/* 勾选标签的字号跟着档位走 */
+page .chip { font-size: 13px !important; color: #444 !important; }
+.fs-1 .chip { font-size: 14.5px !important; }
+.fs-2 .chip { font-size: 16px !important; }
+
+/* 特大：全站再加粗一级 */
+.fs-2, .fs-2 view, .fs-2 text { font-weight: 700 !important; }
+.fs-2 .remain,
+.fs-2 .amt,
+.fs-2 .pqty,
+.fs-2 .it-amount,
+.fs-2 .p-name,
+.fs-2 .it-name,
+.fs-2 .ov-num,
+.fs-2 .cust,
+.fs-2 .head-remain { font-weight: 800 !important; }
+.fs-2 .label,
+.fs-2 .it-id,
+.fs-2 .pid,
+.fs-2 .p-id,
+.fs-2 .step-name,
+.fs-2 .section-title,
+.fs-2 .group-name,
+.fs-2 .group-title,
+.fs-2 .btn,
+.fs-2 .chip,
+.fs-2 .filter,
+.fs-2 .period,
+.fs-2 .count { font-weight: 800 !important; }
+
+/* ===== 特大模式：只有大和更大，没有小字 ===== */
+.fs-2 .odate-line,
+.fs-2 .due,
+.fs-2 .po-line,
+.fs-2 .ono-line,
+.fs-2 .prod-sub,
+.fs-2 .head-sub,
+.fs-2 .order-sub,
+.fs-2 .row-sub,
+.fs-2 .s-sub,
+.fs-2 .spec-label,
+.fs-2 .it-spec,
+.fs-2 .search-input,
+.fs-2 .label,
+.fs-2 .text-xs,
+.fs-2 .c-gray,
+.fs-2 .tip,
+.fs-2 .empty,
+.fs-2 .bar-status,
+.fs-2 .font-opt,
+.fs-2 .group-count,
+.fs-2 .count,
+.fs-2 .meta,
+.fs-2 .a-sub,
+.fs-2 .deliver-text,
+.fs-2 .progress-text,
+.fs-2 .job-due,
+.fs-2 .job-remain,
+.fs-2 .job-po,
+.fs-2 .job-status,
+.fs-2 .hist-meta,
+.fs-2 .file-size,
+.fs-2 .ph-label,
+.fs-2 .pads-label,
+.fs-2 .pads-line,
+.fs-2 .rule-v,
+.fs-2 .rule-k,
+.fs-2 .bp-k,
+.fs-2 .bp-unit,
+.fs-2 .bp-tip,
+.fs-2 .bp-formula,
+.fs-2 .unit,
+.fs-2 .diff-label,
+.fs-2 .layer-label,
+.fs-2 .step-status,
+.fs-2 .step-unit,
+.fs-2 .ov-label,
+.fs-2 .stat-label,
+.fs-2 .sum-label,
+.fs-2 .key-label,
+.fs-2 .cnt-label,
+.fs-2 .period,
+.fs-2 .filter,
+.fs-2 .chip { font-size: 17px !important; font-weight: 700 !important; color: #111 !important; }
+
+.fs-2 .pqty,
+.fs-2 .amt,
+.fs-2 .remain,
+.fs-2 .it-amount,
+.fs-2 .p-name,
+.fs-2 .it-name,
+.fs-2 .ov-num,
+.fs-2 .cust,
+.fs-2 .head-remain,
+.fs-2 .oid,
+.fs-2 .step-name { font-size: 22px !important; font-weight: 800 !important; color: #000 !important; }
+
+.fs-2 .label { font-size: 18px !important; font-weight: 800 !important; }
+.fs-2 .btn { font-size: 19px !important; font-weight: 800 !important; }
+.fs-2 .input {
+  font-size: 19px !important;
+  font-weight: 700 !important;
+  color: #000 !important;
+}
+.fs-2 input::placeholder { color: #444 !important; }
+
+/* 标准/大 也把这几处说明字提上来 */
+page .odate-line, page .due, page .po-line, page .ono-line, page .prod-sub { font-size: 14px !important; color: #444 !important; }
+.fs-1 .odate-line, .fs-1 .due, .fs-1 .po-line, .fs-1 .ono-line, .fs-1 .prod-sub { font-size: 15.5px !important; color: #222 !important; }
+
+/* 特大：边角小字也不放过 */
+.fs-2 .ph-chip,
+.fs-2 .pb-title,
+.fs-2 .it-del,
+.fs-2 .tag,
+.fs-2 .file-tag,
+.fs-2 .ono,
+.fs-2 .subtag,
+.fs-2 .split-progress,
+.fs-2 .early,
+.fs-2 .paused-tip,
+.fs-2 .finished-tip,
+.fs-2 .group-arrow,
+.fs-2 .expand-btn,
+.fs-2 .file-chip,
+.fs-2 .ov-meta,
+.fs-2 .search-input,
+.fs-2 .link,
+.fs-2 .clear-btn,
+.fs-2 .clear-inline,
+.fs-2 .del,
+.fs-2 .size-x,
+.fs-2 .picker-arrow,
+.fs-2 .font-opt { font-size: 17px !important; font-weight: 700 !important; color: #111 !important; }
+
+page .ph-chip, page .pb-title, page .it-del, page .tag, page .file-tag, page .ono,
+page .subtag, page .split-progress, page .early, page .paused-tip, page .finished-tip,
+page .group-arrow, page .expand-btn, page .file-chip, page .ov-meta, page .link,
+page .clear-btn, page .size-x, page .picker-arrow { font-size: 14px !important; color: #444 !important; }
+
+.fs-1 .ph-chip, .fs-1 .pb-title, .fs-1 .it-del, .fs-1 .tag, .fs-1 .file-tag, .fs-1 .ono,
+.fs-1 .subtag, .fs-1 .split-progress, .fs-1 .early, .fs-1 .paused-tip, .fs-1 .finished-tip,
+.fs-1 .group-arrow, .fs-1 .expand-btn, .fs-1 .file-chip, .fs-1 .ov-meta, .fs-1 .link,
+.fs-1 .clear-btn, .fs-1 .size-x, .fs-1 .picker-arrow { font-size: 15.5px !important; color: #222 !important; }
+
+/* 产品名在卡片里也要显眼 */
+page .pid, page .pname, page .p-name, page .it-name { font-size: 16px !important; font-weight: 700 !important; color: #111 !important; }
+.fs-1 .pid, .fs-1 .pname, .fs-1 .p-name, .fs-1 .it-name { font-size: 17.5px !important; }
+.fs-2 .pid, .fs-2 .pname, .fs-2 .p-name, .fs-2 .it-name { font-size: 20px !important; font-weight: 800 !important; color: #000 !important; }
+
+/* 特大：统计行也放大加粗 */
+.fs-2 .summary { font-size: 18px !important; font-weight: 700 !important; color: #111 !important; }
+
+/* 选中态放最后：深底白字，任何放大规则都不许覆盖 */
+page .period.on, page .filter.on,
+.fs-1 .period.on, .fs-1 .filter.on,
+.fs-2 .period.on, .fs-2 .filter.on { color: #fff !important; }
+.fs-1 .period.on, .fs-1 .filter.on { font-size: 16px !important; font-weight: 800 !important; }
+.fs-2 .period.on, .fs-2 .filter.on { font-size: 17px !important; font-weight: 800 !important; }
+
+/* 看板概览保持横排，特大时缩小一点以放得下 */
+.fs-2 .ov-row { flex-direction: row; align-items: flex-start; gap: 4px; }
+.fs-2 .ov-item { flex: 1; }
+.fs-2 .ov-num { font-size: 17px !important; }
+.fs-2 .ov-label { font-size: 13px !important; color: #333 !important; }
+.fs-2 .oid { font-size: 20px !important; }
+.fs-2 .cust { font-size: 20px !important; }
+
+/* 行距统一放松 */
+page { line-height: 1.6; }
+.page { line-height: 1.62; }
+.card { line-height: 1.7; }
+page .field { margin-bottom: 16px; }
+page .label { margin-bottom: 6px; line-height: 1.5; }
+.page .it-spec, .page .p-spec, .page .spec-label, .page .row-sub, .page .sub, .page .tip {
+  line-height: 1.7;
+}
+.input { line-height: 1.5; }
+
+/* ===== iOS 风格基础 ===== */
+page { background: #f2f2f7; color: #1c1c1e; font-family: -apple-system, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif; }
+.card { background: #ffffff; border-radius: 14px; border: none; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+.input { background: #f2f2f7; border-radius: 10px; border: none; }
+.btn { border-radius: 12px; }
+.btn-primary { background: #e94560; color: #fff; border: none; }
+.filter.on, .period.on { background: #e94560; border-color: #e94560; color: #fff; }
+
+/* 模块间距统一 */
+.page { padding-left: 12px; padding-right: 12px; box-sizing: border-box; }
+.page > .card, .page > block > .card { margin-left: 0; margin-right: 0; margin-bottom: 10px; }
+.page > .card:last-child, .page > block:last-child > .card { margin-bottom: 0; }

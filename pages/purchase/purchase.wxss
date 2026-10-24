@@ -1,0 +1,22 @@
+.page {
+  padding-bottom: 20px;
+}
+
+.section-header {
+  padding: 14px 18px 6px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.purchase-card {
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+
+.empty-state {
+  display: flex;
+  justify-content: center;
+  padding: 80px 20px;
+}
+/* 自定义 tabBar 留白 */
+.page { padding-bottom: 118px; }

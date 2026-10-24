@@ -1,0 +1,82 @@
+.head-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.refresh {
+  font-size: 15px;
+  color: #2b5bb3;
+  font-weight: 600;
+}
+.err {
+  display: block;
+  margin-top: 8px;
+  font-size: 14px;
+  color: #e94560;
+}
+.user-card {
+  padding: 14px;
+}
+.user-name {
+  font-size: 18px;
+  font-weight: 800;
+  color: #111;
+  flex: 1;
+}
+.badge {
+  font-size: 14px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  margin-left: 8px;
+  background: #f1f3f6;
+  color: #666;
+}
+.badge.ok {
+  background: #eaf7ee;
+  color: #2e7d32;
+}
+.badge.wait {
+  background: #fff4e5;
+  color: #b26a00;
+}
+.badge.admin {
+  background: #eaf0fb;
+  color: #2b5bb3;
+}
+.oid-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+.oid-text {
+  font-size: 14px;
+  color: #2b5bb3;
+  font-family: monospace;
+}
+.copy {
+  font-size: 14px;
+  color: #888;
+}
+.meta {
+  font-size: 14px;
+  color: #666;
+  margin-top: 4px;
+}
+.actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+.actions .btn {
+  flex: 0 0 auto;
+  padding: 6px 14px;
+}
+.danger {
+  color: #e94560;
+  border-color: #f3b6c1;
+}
+.empty {
+  text-align: center;
+  padding: 24px;
+}

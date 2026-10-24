@@ -1,0 +1,50 @@
+.page {
+  padding-bottom: 30px;
+}
+
+.section-title {
+  font-weight: bold;
+  font-size: 15px;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.btn-block {
+  margin-top: 10px;
+}
+
+.textarea {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 160px;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  background: #fafafa;
+  padding: 10px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.result {
+  margin-top: 10px;
+  padding: 10px;
+  background: #eef4ff;
+  color: #2b5bb3;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.rule-row {
+  display: flex;
+  padding: 4px 0;
+  font-size: 14px;
+}
+.rule-k {
+  width: 42px;
+  color: #999;
+  flex-shrink: 0;
+}
+.rule-v {
+  color: #444;
+  flex: 1;
+}

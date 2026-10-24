@@ -1,0 +1,108 @@
+.page {
+  padding-bottom: 30px;
+}
+.card .section-title {
+  font-weight: bold;
+  font-size: 15px;
+  display: block;
+  margin-bottom: 10px;
+}
+.cust-name {
+  font-size: 18px;
+  font-weight: bold;
+}
+.link {
+  color: #e94560;
+  font-size: 14px;
+}
+
+.input {
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  height: 34px;
+  line-height: 34px;
+  padding: 0 8px;
+  font-size: 14px;
+  background: #fafafa;
+  box-sizing: border-box;
+}
+.picker-value {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 92px;
+}
+.is-placeholder {
+  color: #bbb;
+}
+
+.summary {
+  display: flex;
+  margin-top: 10px;
+}
+.sum-item {
+  flex: 1;
+  text-align: center;
+}
+.sum-num {
+  font-size: 16px;
+  font-weight: bold;
+  display: block;
+}
+.sum-label {
+  font-size: 14px;
+  color: #999;
+}
+
+.entry-row,
+.order-row {
+  display: flex;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #f5f5f5;
+}
+.entry-row:last-child,
+.order-row:last-child {
+  border-bottom: none;
+}
+.entry-amount {
+  font-size: 14px;
+  font-weight: bold;
+  color: #f39c12;
+  margin-right: 8px;
+}
+.entry-date {
+  font-size: 14px;
+  color: #999;
+}
+.entry-note {
+  font-size: 14px;
+  color: #666;
+  margin-top: 2px;
+}
+.del {
+  color: #e94560;
+  font-size: 14px;
+  padding-left: 10px;
+}
+.order-id {
+  font-size: 14px;
+  color: #e94560;
+  margin-right: 6px;
+}
+.order-product {
+  font-size: 14px;
+  color: #333;
+}
+.order-sub {
+  font-size: 14px;
+  color: #999;
+  margin-top: 2px;
+}
+.order-amount {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.dec { font-size: 0.72em; }
+

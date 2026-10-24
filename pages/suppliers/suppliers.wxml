@@ -1,0 +1,18 @@
+<view class="page {{fontClass}}">
+  <view class="card">
+    <view class="flex-row">
+      <text class="section-title flex-1">供应商名录（{{list.length}}）</text>
+      <view class="btn btn-primary btn-sm" bindtap="goNew">+ 新增</view>
+    </view>
+
+    <view wx:for="{{list}}" wx:key="name" class="row">
+      <view class="flex-1" bindtap="goDetail" data-name="{{item.name}}">
+        <text class="row-name">{{item.name}}</text>
+        <view class="row-sub">{{item.typeText}}</view>
+      </view>
+      <text class="del" bindtap="remove" data-name="{{item.name}}">删除</text>
+    </view>
+
+    <view wx:if="{{list.length === 0}}" class="empty">还没有供应商，点「新增」添加</view>
+  </view>
+</view>

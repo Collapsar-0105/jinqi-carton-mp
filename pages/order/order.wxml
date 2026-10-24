@@ -1,0 +1,138 @@
+<view class="page {{fontClass}}">
+  <view class="card">
+    <text class="section-title">订单信息</text>
+
+    <view class="field">
+      <text class="label">客户</text>
+      <picker mode="selector" range="{{customerNames}}" value="{{customerIndex}}" bindchange="onCustomer">
+        <view class="input picker-value">
+          <text>{{customer}}</text>
+          <text class="picker-arrow">›</text>
+        </view>
+      </picker>
+      <text wx:if="{{customerIndex > 0}}" class="clear-btn" bindtap="clearCustomer">清空</text>
+      <text class="text-xs c-gray">不选就是「其他」，选客户后只能挑该客户的产品</text>
+    </view>
+
+    <view class="field">
+      <text class="label">客户单号（可不填）</text>
+      <input placeholder-style="color:#555;font-weight:600" class="input" placeholder="客户订单号" value="{{orderNo}}" bindinput="onOrderNo" />
+    </view>
+  </view>
+
+  <block wx:for="{{items}}" wx:key="key" wx:for-item="it" wx:for-index="idx">
+    <view class="card item-card">
+      <view class="flex-row">
+        <view class="flex-1">
+          <text class="it-id">{{it.productId}}</text>
+          <text class="it-name">{{it.productName}}</text>
+        </view>
+        <text class="it-del" bindtap="removeItem" data-index="{{idx}}">删除</text>
+      </view>
+
+      <view class="it-spec">
+        <text>{{it.craft}} · {{it.boxType}} · {{it.flute}}</text>
+        <text wx:if="{{it.paperColor}}"> · {{it.paperColor}}</text>
+        <text wx:if="{{it.boxType === '梯形箱'}}"> · 上{{it.sizeTL}}×{{it.sizeTW}} 中高{{it.sizeH2}} 下{{it.sizeBL}}×{{it.sizeBW}}mm</text>
+        <text wx:elif="{{it.sizeL}}"> · {{it.sizeL}}×{{it.sizeW}}×{{it.sizeH}}mm</text>
+        <text wx:if="{{it.boardL}}"> · 纸板 {{it.boardL}}×{{it.boardW}}{{it.twoPiece ? '（两片）' : ''}}</text>
+      </view>
+
+      <view class="flex-row gap-8 mt-8">
+        <view class="field flex-1">
+          <text class="label">数量 *</text>
+          <input placeholder-style="color:#555;font-weight:600" class="input" type="number" placeholder="个" value="{{it.quantity}}" bindinput="onItemField" data-index="{{idx}}" data-field="quantity" />
+        </view>
+        <view class="field flex-1">
+          <text class="label">单价（元/个）*</text>
+          <input placeholder-style="color:#555;font-weight:600" class="input" type="digit" placeholder="如 3.5" value="{{it.price}}" bindinput="onItemField" data-index="{{idx}}" data-field="price" />
+        </view>
+      </view>
+      <text class="text-xs c-gray">{{it.priceHint}}</text>
+      <view wx:if="{{it.priceOptions.length > 0}}" class="price-history">
+        <text class="ph-label">历史价</text>
+        <view wx:for="{{it.priceOptions}}" wx:key="price" wx:for-item="po"
+              class="ph-chip" bindtap="onPricePick" data-index="{{idx}}" data-price="{{po.price}}">¥{{po.price}}</view>
+      </view>
+
+      <view class="field mt-8">
+        <text class="label">PO（批次号，可不填）</text>
+        <input placeholder-style="color:#555;font-weight:600" class="input" placeholder="客户 PO / 批次号" value="{{it.po}}" bindinput="onPO" data-index="{{idx}}" />
+      </view>
+
+      <view wx:if="{{it.addrOptions.length > 0}}" class="field mt-8">
+        <view class="flex-row">
+          <text class="label flex-1">收货地址</text>
+          <text wx:if="{{it.addrOptions.length > 1}}" class="link" bindtap="toggleAddrPanel" data-index="{{idx}}">
+            {{it.addrPanelOpen ? '收起' : '按地址分配数量 ›'}}
+          </text>
+        </view>
+        <picker wx:if="{{it.addrOptions.length === 1}}" mode="selector" range="{{it.addrOptions}}" range-key="label" value="{{it.addrIndex}}" bindchange="onAddrPick" data-index="{{idx}}">
+          <view class="input picker-value"><text>{{it.addrOptions[0].address}}</text></view>
+        </picker>
+        <view wx:else class="addr-summary" bindtap="toggleAddrPanel" data-index="{{idx}}">
+          <text>{{it.addrSummary}}</text>
+          <text class="addr-sum-badge {{it.addrSum === (it.quantity * 1) ? 'ok' : 'warn'}}">{{it.addrSum}} / {{it.quantity}}</text>
+        </view>
+
+        <view wx:if="{{it.addrPanelOpen}}" class="addr-panel">
+          <view wx:for="{{it.addrList}}" wx:key="address" wx:for-item="a" wx:for-index="ai" class="addr-line">
+            <text class="addr-name">{{a.address}}</text>
+            <input placeholder-style="color:#555;font-weight:600" class="input addr-qty" type="number" placeholder="数量" value="{{a.qty}}" bindinput="onAddrQty" data-index="{{idx}}" data-ai="{{ai}}" />
+          </view>
+          <text class="addr-tip {{it.addrSum === (it.quantity * 1) ? 'ok' : 'warn'}}">
+            合计 {{it.addrSum}} / 订单数量 {{it.quantity || 0}}{{it.addrSum === (it.quantity * 1) ? '' : '（要相等）'}}
+          </text>
+        </view>
+      </view>
+
+      <view class="field mt-8">
+        <text class="label">生产安排</text>
+        <picker mode="selector" range="{{factoryModes}}" value="{{it.factoryModeIndex}}" bindchange="onItemFactoryMode" data-index="{{idx}}">
+          <view class="input picker-value">
+            <text>{{factoryModes[it.factoryModeIndex]}}</text>
+            <text class="picker-arrow">›</text>
+          </view>
+        </picker>
+      </view>
+
+      <block wx:if="{{it.factoryModeIndex === 1}}">
+        <view class="flex-row gap-8">
+          <picker wx:if="{{it.factories.length > 0}}" class="flex-1" mode="selector" range="{{it.factories}}" bindchange="onItemFactory" data-index="{{idx}}">
+            <view class="input picker-value">
+              <text class="{{it.factoryName ? '' : 'c-gray'}}">{{it.factoryName || '选代工厂'}}</text>
+            </view>
+          </picker>
+          <text wx:if="{{it.factoryName}}" class="clear-inline" catchtap="clearFactory" data-index="{{idx}}">×</text>
+          <view wx:else class="link" bindtap="goSuppliers">去添加代工厂</view>
+          <input placeholder-style="color:#555;font-weight:600" class="input" style="width:90px;" type="digit" placeholder="代工价" value="{{it.factoryPrice}}" bindinput="onItemField" data-index="{{idx}}" data-field="factoryPrice" />
+        </view>
+
+        <view class="copy-order" bindtap="copyOrderInfo" data-index="{{idx}}">复制订单信息</view>
+      </block>
+
+      <view wx:if="{{it.pads.length > 0}}" class="pads-line">
+        <text class="pads-label">垫片</text>
+        <text wx:for="{{it.pads}}" wx:key="index" wx:for-item="pd" class="pads-item">{{pd.type}} {{pd.L}}×{{pd.W}} ×{{pd.qty}}</text>
+      </view>
+
+      <view wx:if="{{it.purchases.length > 0}}" class="purchase-box">
+        <text class="pb-title">采购物料</text>
+        <view wx:for="{{it.purchases}}" wx:key="name" wx:for-item="p" wx:for-index="pi" class="pb-row">
+          <view class="flex-1">
+            <text class="pb-type">{{p.type}}</text>
+            <text class="pb-name">{{p.name}}</text>
+            <text class="pb-sup">{{p.supplier || '未定供应商'}}</text>
+          </view>
+          <input placeholder-style="color:#555;font-weight:600" class="input" style="width:64px;" placeholder="数量" value="{{p.quantity}}" bindinput="onPurchaseField" data-item="{{idx}}" data-index="{{pi}}" data-field="quantity" />
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <view class="add-item" bindtap="chooseProduct">＋ 添加产品</view>
+
+  <view class="submit-bar" style="bottom:{{footerBottom}}px;">
+    <view class="btn btn-primary btn-block" bindtap="submit">创建订单</view>
+  </view>
+</view>

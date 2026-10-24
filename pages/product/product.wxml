@@ -1,0 +1,62 @@
+<view class="page {{fontClass}}">
+  <view wx:if="{{undoLabel}}" class="undo-bar" bindtap="undoLast">↩ 撤销：{{undoLabel}}</view>
+
+  <view class="search-bar">
+    <input placeholder-style="color:#555;font-weight:600" class="input search-input" placeholder="搜索编号或名称" value="{{keyword}}" bindinput="onSearch" />
+  </view>
+
+  <view class="actions">
+    <view class="btn btn-primary btn-sm" bindtap="goNew">+ 新增</view>
+    <view class="btn btn-outline btn-sm" bindtap="goImport">导入 / 模板</view>
+  </view>
+
+  <view class="filters">
+    <picker mode="selector" range="{{groupModes}}" value="{{groupIndex}}" bindchange="onGroup">
+      <view class="filter-chip">分类：{{groupModes[groupIndex]}} ▾</view>
+    </picker>
+    <picker mode="selector" range="{{sortModes}}" value="{{sortIndex}}" bindchange="onSort">
+      <view class="filter-chip">排序：{{sortModes[sortIndex]}} ▾</view>
+    </picker>
+  </view>
+
+  <view class="count">
+    共 {{total}} 款<text wx:if="{{keyword}}">，筛选出 {{count}} 款</text>
+  </view>
+
+  <view class="expand-bar">
+    <text class="expand-btn" bindtap="expandAll">全部展开</text>
+    <text class="expand-btn" bindtap="collapseAll">全部收起</text>
+  </view>
+
+  <block wx:for="{{sections}}" wx:key="key" wx:for-item="sec">
+    <view class="group-title" bindtap="toggleGroup" data-key="{{sec.key}}">
+      <text class="group-arrow">{{sec.collapsed ? '▶' : '▼'}}</text>
+      <text class="group-name">{{sec.title}}</text>
+      <text class="group-count">{{sec.items.length}} 款</text>
+    </view>
+
+    <block wx:if="{{!sec.collapsed}}" wx:for="{{sec.items}}" wx:key="id" wx:for-item="p">
+      <view class="card product-card" bindtap="goEdit" data-id="{{p.id}}">
+        <view class="flex-row">
+          <text class="p-id">{{p.id}}</text>
+          <text class="p-name flex-1">{{p.name}}</text>
+          <text class="p-price">{{p.priceText}}</text>
+        </view>
+        <view class="p-spec">{{p.summary}}</view>
+        <view class="p-spec">销量 {{p.salesQty}} 个<text wx:if="{{p.lastOrder}}"> · 最近下单 {{p.lastOrder}}</text></view>
+        <view class="cust-line">
+          <text wx:if="{{p.customerText}}" class="p-spec">客户：{{p.customerText}}</text>
+          <text wx:if="{{p.outsourceLabel}}" class="outsource-tag">{{p.outsourceLabel}}</text>
+        </view>
+        <view wx:if="{{p.idleWarn}}" class="flex-row gap-4 mt-8">
+          <text class="tag tag-warn">久未下单</text>
+        </view>
+      </view>
+    </block>
+  </block>
+
+  <view wx:if="{{count === 0}}" class="empty-state">
+    <text class="c-gray">{{total === 0 ? '还没有产品' : '没有匹配的产品'}}</text>
+    <text wx:if="{{total === 0}}" class="c-gray text-sm mt-8">点「导入 / 模板」可以一次导入几百款</text>
+  </view>
+</view>

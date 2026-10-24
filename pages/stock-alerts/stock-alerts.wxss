@@ -1,0 +1,35 @@
+.page {
+  padding-bottom: 20px;
+}
+.section-title {
+  font-weight: bold;
+  font-size: 15px;
+  display: block;
+  margin-bottom: 6px;
+}
+.alert-card {
+  padding: 12px 14px;
+  border-left: 3px solid #e67e22;
+}
+.a-prod {
+  font-size: 15px;
+  font-weight: bold;
+}
+.a-sub {
+  font-size: 14px;
+  color: #999;
+  margin-top: 3px;
+}
+.a-del {
+  font-size: 14px;
+  color: #e94560;
+}
+.a-link {
+  font-size: 14px;
+  color: #2b5bb3;
+}
+.empty-state {
+  display: flex;
+  justify-content: center;
+  padding: 60px 20px;
+}

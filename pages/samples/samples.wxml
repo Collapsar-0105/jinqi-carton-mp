@@ -1,0 +1,31 @@
+<view class="page {{fontClass}}">
+  <view class="card">
+    <view class="flex-row">
+      <text class="section-title flex-1">打样单（{{list.length}}）</text>
+      <view class="btn btn-primary btn-sm" bindtap="goNew">+ 新建打样</view>
+    </view>
+    <text class="text-xs c-gray">打样过程可随时保存草稿；尺寸确定后一键转成产品档案</text>
+  </view>
+
+  <block wx:for="{{list}}" wx:key="id">
+    <view class="card sample" bindtap="goEdit" data-id="{{item.id}}">
+      <view class="flex-row">
+        <view class="flex-1">
+          <text class="s-name">{{item.name}}</text>
+          <view class="s-sub">{{item.customer || '未填客户'}} · 数量 {{item.quantity || '-'}} · {{item._size}}</view>
+          <view class="s-sub">{{item.craft}} · {{item.flute}} · 更新 {{item.updatedAt}}</view>
+        </view>
+        <view class="tag {{item._statusColor}}">{{item._statusText}}</view>
+      </view>
+      <view class="flex-row mt-8">
+        <text class="s-del" catchtap="remove" data-id="{{item.id}}">删除</text>
+        <text wx:if="{{item.productId}}" class="s-prod">产品：{{item.productId}}</text>
+      </view>
+    </view>
+  </block>
+
+  <view wx:if="{{list.length === 0}}" class="empty-state">
+    <text class="c-gray">还没有打样单</text>
+    <text class="c-gray text-sm mt-8">点「+ 新建打样」开始</text>
+  </view>
+</view>
