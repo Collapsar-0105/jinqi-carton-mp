@@ -567,7 +567,12 @@ App({
 
   getData() {
     const d = this._kvRead('factory_data', null)
-    return d || { orders: [], seq: 1, v: 2 }
+    if (!d) return { orders: [], seq: 1, v: 2 }
+    // 兜底：云端同步过程中 _kv 可能短暂处于未写完状态（缺 orders），
+    // 这里保证 orders 一定是数组，避免 getAllOrders 等调用 .filter 时崩溃
+    // （曾导致进入小程序即白屏/报错，见 1.9.45 修复记录）
+    if (!Array.isArray(d.orders)) d.orders = []
+    return d
   },
 
   saveData(data) {
@@ -870,7 +875,7 @@ App({
   },
 
   getAllOrders() {
-    return this.getData().orders.filter(o => o.status !== 'deleted')
+    return (this.getData().orders || []).filter(o => o && o.status !== 'deleted')
   },
 
   orderQty(order) {
@@ -1331,8 +1336,11 @@ App({
         const qty = Math.min(Number(r.qty), left)
         if (qty <= 0) return
         it.deliveredQty = (Number(it.deliveredQty) || 0) + qty
+        // 地址级已送不在这里冗余存储：itemAddrList → deliveredOfAddr 每次都从
+        // shipments 现算（唯一权威），冗余字段会和 shipments 漂移
         amount += qty * (Number(it.price) || 0)
-        list.push({ index: r.index, qty, addrIndex: (r.addrIndex == null ? 0 : Number(r.addrIndex)) })
+        const ai = (r.addrIndex == null ? 0 : Number(r.addrIndex))
+        list.push({ index: r.index, qty, addrIndex: ai })
       })
       if (!list.length) return
       o.shipments = o.shipments || []

@@ -104,6 +104,10 @@ Page({
       if (p) {
         this.setData({ isEdit: true })
         this.loadFrom(p)
+        // 记住加载时的原始编号：保存时的重复检查要用它。
+        // 以前直接用 this.data.id，用户把编号输入框改成别人的编号时
+        // 「自己排除自己」导致检查失效，会静默覆盖已有产品
+        this._originId = p.id
       }
     } else {
       this.setData({
@@ -524,7 +528,9 @@ Page({
       outsource: d.outsourceEnabled ? { mode: d.outsourceMode || (d.craft === '彩箱' ? '成品箱' : ''), supplier: (d.outsource && d.outsource.supplier) || '' } : { mode: '', supplier: '' },
       price: Number(d.price) || 0,
       note: (d.note || '').trim(),
-      updatedAt: app.now()
+      // 必须毫秒数：多设备合并按 updatedAt 定胜负，app.now() 是日期字符串，
+      // Number('YYYY-MM-DD') 是 NaN，比较时恒为 0，等于没有
+      updatedAt: Date.now()
     }
   },
 
@@ -553,10 +559,14 @@ Page({
     if (p.steps.length === 0) { wx.showToast({ title: '请选择工序', icon: 'none' }); return }
 
     const all = app.getProducts()
-    if (all.find(x => x.id === p.id && x.id !== this.data.id)) {
+    // 排除「自己」要用加载时的原始编号，不能用当前输入框的值：
+    // 用户把编号输入框改成别人的编号时，用 data.id 会「自己排除自己」，
+    // 检查失效后静默覆盖已有产品
+    const originId = this._originId != null ? this._originId : this.data.id
+    if (all.find(x => x.id === p.id && x.id !== originId)) {
       wx.showToast({ title: '编号已存在', icon: 'none' }); return
     }
-    const dupName = all.find(x => x.name === p.name && x.id !== p.id)
+    const dupName = all.find(x => x.name === p.name && x.id !== originId)
     if (dupName) { wx.showToast({ title: '名称已存在（' + dupName.id + '）', icon: 'none' }); return }
 
     app.upsertProducts([this.buildProduct()])
@@ -577,7 +587,7 @@ Page({
       customer: (d.customer || '').trim(),
       quantity: parseInt(d.quantity) || 0,
       status: 'draft',
-      updatedAt: app.now(),
+      updatedAt: Date.now(),
       createdAt: d.draftId ? (app.getDraft(d.draftId) || {}).createdAt || app.now() : app.now()
     })
     app.upsertDraft(draft)
@@ -604,7 +614,7 @@ Page({
       app.upsertDraft(Object.assign({}, draft, {
         status: 'converted',
         productId: product.id,
-        updatedAt: app.now()
+        updatedAt: Date.now()
       }))
     }
 

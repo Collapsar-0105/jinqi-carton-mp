@@ -111,7 +111,8 @@ Page({
         // 只在「还有别的款没入库」时才给单款入库按钮；只剩最后一款交给底部按钮，避免两个按钮做同一件事
         canStockItem: !isSub && !it.stocked && order.status !== 'done' && app.canStockItem(it)
           && (order.items || []).filter(x => !x.stocked).length > 1,
-        itemRatioPct: Math.round(app.itemRatio(it) * 100),
+        // 保留 1 位小数：round 后 89.8% 会显示成 90%，和 90% 才能入库的规则对不上，让人困惑
+        itemRatioPct: Math.round(app.itemRatio(it) * 1000) / 10,
         stockLeft: (order.items || []).filter(x => !x.stocked).length,
         originalQty: isSub ? qty : (Number(it.originalQty) || (qty + (Number(it.splitQty) || 0))),
         splitQty: isSub ? 0 : (Number(it.splitQty) || 0),
@@ -197,9 +198,10 @@ Page({
       return
     }
 
-    // 允许超量制作：上限是订单数量 × 1.1，不是订单数量
+    // 允许超量制作：上限是订单数量 × 1.1。
+    // 注意 1.9.38 起完成数量是「覆盖」不是「累加」，所以校验上限是 limit 本身；
+    // 以前用 limit - doneQty，想把 449 改成 500 会被拦住（只剩 101 的额度）
     const limit = app.stockLimitOf(it)
-    const left = Math.max(0, limit - (Number(st.doneQty) || 0))
     const label = st.name === '纸板到货' ? '到货数量'
       : st.name === '面纸印刷' ? '印刷数量'
       : st.name === '代工' ? '实际回来数量'
@@ -209,12 +211,12 @@ Page({
       title: st.name + ' · ' + label,
       editable: true,
       fail: () => wx.showToast({ title: '输入框打不开，请更新微信', icon: 'none' }),
-      placeholderText: '最多 ' + left + '（订单 ' + (Number(it.quantity) || 0) + '，可超 10%）',
+      placeholderText: '最多 ' + limit + '（订单 ' + (Number(it.quantity) || 0) + '，可超 10%）',
       success: res => {
         if (!res.confirm) return
         const qty = parseInt(res.content)
         if (!qty || qty <= 0) { wx.showToast({ title: '请输入有效数量', icon: 'none' }); return }
-        if (qty > left) { wx.showToast({ title: '最多 ' + left, icon: 'none' }); return }
+        if (qty > limit) { wx.showToast({ title: '最多 ' + limit, icon: 'none' }); return }
         this.completeStep(item, step, qty)
       }
     })

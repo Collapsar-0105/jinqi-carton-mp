@@ -121,6 +121,9 @@ Page({
       return String(b.createdAt || '').localeCompare(String(a.createdAt || ''))
     })
 
+    // 缓存「筛选+搜索+排序」后的源列表：showMore 据此增量追加，
+    // 避免每次「显示更多」都把已渲染的卡片整片重建（1026 单曾达 ~1000ms）
+    this._srcList = list
     const lim = Number(this.data.renderLimit) || 120
     const shown = list.slice(0, lim)
     this.setData({
@@ -137,15 +140,16 @@ Page({
     })
   },
 
-  onSearch(e) { this.setData({ keyword: e.detail.value }, () => this.load()) },
+  // 筛选/搜索/周期变化都重置 renderLimit=120，避免「先加载很多再切筛选」时重建大片卡片
+  onSearch(e) { this.setData({ keyword: e.detail.value, renderLimit: 120 }, () => this.load()) },
   setFilter(e) {
     const key = e.currentTarget.dataset.key
     if (key === 'alerts') { this.goAlerts(); return }
-    this.setData({ filterKey: key }, () => this.load())
+    this.setData({ filterKey: key, renderLimit: 120 }, () => this.load())
   },
-  setPeriod(e) { this.setData({ periodType: Number(e.currentTarget.dataset.index) }, () => this.load()) },
-  onMonthChange(e) { this.setData({ monthValue: e.detail.value }, () => this.load()) },
-  onYearChange(e) { this.setData({ yearIndex: Number(e.detail.value) }, () => this.load()) },
+  setPeriod(e) { this.setData({ periodType: Number(e.currentTarget.dataset.index), renderLimit: 120 }, () => this.load()) },
+  onMonthChange(e) { this.setData({ monthValue: e.detail.value, renderLimit: 120 }, () => this.load()) },
+  onYearChange(e) { this.setData({ yearIndex: Number(e.detail.value), renderLimit: 120 }, () => this.load()) },
 
   onPullDownRefresh() {
     app.cloudPull(true).then(() => { this.load(); wx.stopPullDownRefresh() })
@@ -169,9 +173,25 @@ Page({
     this.load()
   },
 
-  // 一次多渲染 120 单，避免几百单时首屏卡顿
+  // 一次多渲染 120 单：只对新增的这 120 单生成卡片，并用「路径式 setData」只追加
+  // 这部分到视图，不把已渲染的整片列表重新传一遍 —— 数据量大时越点越卡的根因就在这
   showMore() {
-    this.setData({ renderLimit: (Number(this.data.renderLimit) || 120) + 120 }, () => this.loadLocal())
+    const src = this._srcList || []
+    const oldLen = (this.data.list || []).length
+    const lim = (Number(this.data.renderLimit) || 120) + 120
+    // 源列表若是旧的（数据/筛选已变），回退到全量重建保证正确
+    if (!src.length || oldLen > src.length) {
+      this.setData({ renderLimit: lim }, () => this.loadLocal())
+      return
+    }
+    const more = src.slice(oldLen, lim).map(o => app.orderCardData(o))
+    const patch = {
+      renderLimit: lim,
+      shownCount: Math.min(lim, src.length),
+      hasMore: src.length > lim
+    }
+    more.forEach((c, i) => { patch['list[' + (oldLen + i) + ']'] = c })
+    this.setData(patch)
   },
 
   goDetail(e) { wx.navigateTo({ url: '/pages/detail/detail?id=' + e.currentTarget.dataset.id }) }

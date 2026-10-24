@@ -419,6 +419,7 @@ Page({
         twoPiece: it.twoPiece,
         pads: it.pads || [],
         quantity: parseInt(it.quantity),
+        splitQty: 0,
         price: Number(it.price),
         steps: it.steps,
         purchases: it.purchases.filter(p => (p.name || '').trim()).map(p => ({
