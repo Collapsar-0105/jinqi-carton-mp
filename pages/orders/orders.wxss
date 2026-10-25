@@ -843,7 +843,7 @@
   box-shadow: 0 0 0 3px var(--age, #d5d9e0), 0 2px 8px rgba(0, 0, 0, 0.07) !important;
 }
 /* 外框往外扩 3px，卡片间距跟着放大，否则相邻两张的外框会贴在一起 */
-.page > block > .card.order { margin-bottom: 16px; }
+.page > block > .card.order { margin-bottom: 14px; }
 
 /* ===== 卡片三档联动（1.9.66） =====
    由 app.cardAgeVars() 在卡片内联注入三个变量（都从状态本色派生）：
@@ -853,12 +853,18 @@
    卡片整体底色与主体都统一为淡灰 #f7f8fa：底部浅带的根因是「卡片底色从留白处露出」，
    只要卡片底和主体同色，留白处露出来的也是同一个淡灰，不会再出现色带。 */
 .card.order {
+  /* 【缝隙的根治办法】外框改成 border，并把左侧加粗成「外框+书签条」一条边：
+     border 和背景是同一个元素、同一次绘制、同一条抗锯齿路径，
+     不存在「外框一层、书签条一层」两条路径在交界处各自半透明 → 也就不会再露白缝。
+     左边 15px = 3px 外框 + 12px 书签条，视觉上和原来一致。 */
   background: #f7f8fa !important;
-  border: 0;
+  border: 3px solid var(--age, #d5d9e0);
+  border-left-width: 15px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07) !important;
 }
-/* 书签条宽度必须和 .band 的左内边距(12px)一致，否则中间会露出 2px 卡片底色 → 浅色卡上就是一条白缝 */
-.card.order::before { display: block; width: 12px; }
-.card.order .band { padding-bottom: 0; }
+/* 书签条已由 border-left 承担，伪元素不再使用 */
+.card.order::before { display: none; }
+.card.order .band { padding-bottom: 0; padding-left: 0; }
 .card.order .band-body { margin-bottom: 0; background: #f7f8fa; }
 .card.order .band-head {
   margin-bottom: 0;

@@ -43,3 +43,18 @@
   align-items: center;
   padding: 60px 20px;
 }
+
+/* ===== 产品卡：外框 + 上部分层，配色统一取「加急订单卡」那套（1.9.72） ===== */
+.card.item {
+  padding: 12px 14px;
+  border: 3px solid #e9445f;
+  background: #f7f8fa;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+  overflow: hidden;
+}
+.card.item > .flex-row:first-child {
+  background: hsl(350, 31%, 89%);
+  border-bottom: 3px solid hsl(350, 45%, 82%);
+  margin: -12px -14px 8px;
+  padding: 12px 14px;
+}
