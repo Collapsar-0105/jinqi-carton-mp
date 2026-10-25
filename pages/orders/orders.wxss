@@ -838,7 +838,9 @@
    （卡片每张都按状态/天数注入了 --age，所以外框天然跟随色卡）。
    原各状态的彩色投影统一换成中性投影，避免和外框打架。 */
 .card.order {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07), 0 0 0 3px var(--age, #d5d9e0) !important;
+  /* 外框放前面：box-shadow 列表中越靠前越在上层，0 0 0 3px 放第一位，
+     否则会被后面的投影 rgba(0,0,0,.07) 叠暗一圈，看起来就像外框和书签条之间有条缝 */
+  box-shadow: 0 0 0 3px var(--age, #d5d9e0), 0 2px 8px rgba(0, 0, 0, 0.07) !important;
 }
 /* 外框往外扩 3px，卡片间距跟着放大，否则相邻两张的外框会贴在一起 */
 .page > block > .card.order { margin-bottom: 16px; }
@@ -852,10 +854,10 @@
    只要卡片底和主体同色，留白处露出来的也是同一个淡灰，不会再出现色带。 */
 .card.order {
   background: #f7f8fa !important;
-  /* 去掉 2px 边框：原来「2px 边框 + 10px 书签条」是两层分别绘制的，
-     圆角处各自抗锯齿会露出一条 1px 浅缝。去掉边框后由 3px 外框直接贴住书签条，缝隙消失。 */
   border: 0;
 }
+/* 书签条宽度必须和 .band 的左内边距(12px)一致，否则中间会露出 2px 卡片底色 → 浅色卡上就是一条白缝 */
+.card.order::before { display: block; width: 12px; }
 .card.order .band { padding-bottom: 0; }
 .card.order .band-body { margin-bottom: 0; background: #f7f8fa; }
 .card.order .band-head {
