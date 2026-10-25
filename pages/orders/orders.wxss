@@ -777,9 +777,9 @@
 
 /* 第二行选中：实底白字 */
 .home-card .chip-grid-main .chip.on { box-shadow: 0 4px 12px rgba(0,0,0,0.16); }
-.home-card .chip-grid-main .chip-active.on { background: #ffe082 !important; border-color: #ffe082 !important; }
+.home-card .chip-grid-main .chip-active.on { background: #ffe3a3 !important; border-color: #ffe3a3 !important; }
 .home-card .chip-grid-main .chip-urgent.on { background: #e94560 !important; border-color: #e94560 !important; }
-.home-card .chip-grid-main .chip-stocked.on { background: #80deea !important; border-color: #80deea !important; }
+.home-card .chip-grid-main .chip-stocked.on { background: #9fefea !important; border-color: #9fefea !important; }
 .home-card .chip-grid-main .chip.on .chip-count,
 .home-card .chip-grid-main .chip.on .chip-label { color: #fff !important; }
 /* 黄/青底色偏亮，用深色字才读得清（其余底色深，用白字） */
