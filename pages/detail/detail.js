@@ -131,7 +131,8 @@ Page({
 
     const totalQty = app.orderQty(order)
     const sentQty = app.shippedQty(order)
-    const elapsed = app.elapsedDays(order)
+    // 已入库的单显示「已入库 N 天」，天数自入库日算，和订单卡片保持一致（1.9.53）
+    const elapsed = order.status === 'stocked' ? app.stockedDays(order) : app.elapsedDays(order)
     const ratio = app.completedRatio(order)
     const canStock = app.canStockIn(order)
 

@@ -948,6 +948,18 @@ App({
     return Math.max(1, diff + 1)
   },
 
+  // 已入库之后积压了几天：自「入库日」起算（1.9.53）
+  // 老单没有 stockedAt 时回落到下单日，避免显示成 0 天
+  stockedDays(order) {
+    if (!order) return 1
+    const start = order.stockedAt || order.createdAt
+    if (!start) return 1
+    const s = new Date(start + 'T00:00:00')
+    const t = new Date(this.today() + 'T00:00:00')
+    const diff = Math.floor((t - s) / 86400000)
+    return Math.max(1, diff + 1)
+  },
+
 
   // ===== 入库数量规则 =====
   // 工序实际完成数量（各工序做到的最少量）
@@ -1637,13 +1649,16 @@ App({
     const qty = items.reduce((s, it) => s + (Number(it.quantity) || 0), 0)
     const shipped = this.shippedQty(o)
     const days = this.elapsedDays(o)
+    // 已入库的颜色/天数自入库日算，其余按持续天数
+    const isStocked = o.status === 'stocked'
+    const ageDays = isStocked ? this.stockedDays(o) : days
 
     let cls = ''
     // 文案要短，太长了会把单号挤到第二行
     let statusText = '已持续 ' + days + ' 天'
     if (o.status === 'paused') { cls = 'paused'; statusText = '暂缓 ' + days + ' 天' }
     else if (o.status === 'done') { cls = 'done'; statusText = '已完成 ' + days + ' 天' }
-    else if (o.status === 'stocked') { cls = 'stocked'; statusText = '已入库 ' + days + ' 天' }
+    else if (isStocked) { cls = 'stocked'; statusText = '已入库 ' + ageDays + ' 天' }
 
     return {
       id: o.id,
@@ -1717,15 +1732,16 @@ App({
       urgent: !!o.urgent,
       poText: items.map(it => it.po).filter(Boolean).join('、'),
       // 加急优先（红）> 已完成（绿）> 按天数渐变
-      ageStyle: '--age:' + this.cardAgeColor(o, days) + ';',
+      ageStyle: '--age:' + this.cardAgeColor(o, ageDays) + ';',
       cls,
       statusText
     }
   },
 
   // ===== 卡片色卡（1.9.48）=====
-  // 按订单状态各走一条色带，颜色越「重」代表积压越久。天数沿用卡片上已经显示的
-  // 「已持续 N 天 / 已入库 N 天」（elapsedDays，自下单日起算），保证颜色和数字对得上。
+  // 按订单状态各走一条色带，颜色越「重」代表积压越久。天数与卡片上显示的
+  // 「已持续 N 天 / 已入库 N 天」一致：进行中/已完成自下单日起算，
+  // 已入库自「入库日」起算（stockedDays，1.9.53），保证颜色和数字对得上。
   // 起点都避开了过浅的颜色：浅青 / 浅黄在白底卡片上可读性差。
   // - 加急：固定红（优先级最高，不随天数变）
   // - 已完成：固定绿（事件语义里绿=完成，固定不动）
@@ -1757,21 +1773,21 @@ App({
   },
 
   // 已入库：0~15 天 青 → 深紫，>15 天常驻深紫
-  // 1.9.52 整体调浅一档（用户反馈太深），但仍保持「越久越深」的递进
+  // 1.9.52/1.9.53 起点逐步调浅（用户反馈太深），仍保持「越久越深」的递进
   stockedAgeColor(days) {
     const d = Math.max(0, Number(days) || 0)
     const t = Math.min(1, d / 15)
-    return this._hsl(this._ramp([184, 52, 46], [274, 42, 42], t))
+    return this._hsl(this._ramp([184, 48, 58], [274, 42, 42], t))
   },
 
   // 进行中：0~5 天 浅黄 → 较深橙红；5~15 天 橙红 → 较深红；>15 天常驻深红
-  // 1.9.52 整体调浅一档（起点黄更柔和），保持黄→橙红→红→深红的递进
+  // 1.9.52/1.9.53 起点逐步调浅（用户反馈太深），仍保持黄→橙红→红→深红的递进
   // 注意 5~15 段色相从 14 走到 -4（=356）：必须走「经过 0 度纯红」这条短路，
   // 直接插到 356 会绕回青/蓝，颜色就断了。
   activeAgeColor(days) {
     const d = Math.max(0, Number(days) || 0)
     if (d > 15) return this._hsl([348, 70, 45])
-    if (d <= 5) return this._hsl(this._ramp([42, 82, 58], [14, 72, 56], d / 5))
+    if (d <= 5) return this._hsl(this._ramp([42, 85, 67], [14, 72, 56], d / 5))
     return this._hsl(this._ramp([14, 72, 56], [-4, 64, 52], (d - 5) / 10))
   },
   // ================= 字体大小 =================

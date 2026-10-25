@@ -13,7 +13,7 @@
     <view class="head-sub">
       <text>{{order.id}} · 下单 {{order.createdAt}}</text>
     </view>
-    <view class="head-remain c-orange">已持续 {{elapsed}} 天</view>
+    <view class="head-remain c-orange">{{order.status === 'stocked' ? '已入库' : '已持续'}} {{elapsed}} 天</view>
     <view wx:if="{{order.earlyFinish}}" class="paused-tip early">提前完成：{{order.earlyReason}}{{order.shortQty ? "（未送 " + order.shortQty + " 个）" : ""}}</view>
     <view wx:if="{{order.status !== 'done'}}" class="urgent-row">
       <text class="urgent-state {{order.urgent ? 'on' : ''}}">{{order.urgent ? '已加急' : '未加急'}}</text>
