@@ -570,6 +570,11 @@ Page({
     if (dupName) { wx.showToast({ title: '名称已存在（' + dupName.id + '）', icon: 'none' }); return }
 
     app.upsertProducts([this.buildProduct()])
+    // 允许改编号（用户 2026-10-25 决定）：改编号后必须删掉旧编号的产品，
+    // 否则 upsert 按新 id 新增、旧 id 产品原地残留，变成列表里删不掉的「幽灵产品」
+    if (this.data.isEdit && originId && p.id !== originId) {
+      app.removeProduct(originId)
+    }
     wx.showToast({ title: '已保存', icon: 'success' })
     setTimeout(() => wx.navigateBack(), 500)
   },
