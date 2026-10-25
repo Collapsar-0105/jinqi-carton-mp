@@ -815,17 +815,17 @@
 /* 已入库的款 */
 .prod-meta .ptag.done { color: #1f9d55; background: #e6f6ec; }
 
-/* ===== 选中态外框：各自主题色加深一档（1.9.56） =====
+/* ===== 选中态外框：各自主题色的浅色外框（1.9.58） =====
    原来 `.chip.on` 带一层红色光晕 rgba(233,69,96,0.12)，第一行「全部/暂缓/常备预警/已完成」
-   选中时没被覆盖，会出现红圈。这里统一改成：底色=主题色，外框=同色系加深一档的 3px 实心圈。 */
+   选中时没被覆盖，会出现红圈。这里统一改成：底色=主题色，外框=同色系浅一档的 6px 实心圈。 */
 
 /* 第一行（概览）：全部 / 暂缓 / 常备预警 / 已完成 */
-.home-card .chip.chip-top.chip-all.on { box-shadow: 0 0 0 3px #374151 !important; }
-.home-card .chip.chip-top.chip-paused.on { box-shadow: 0 0 0 3px #4d5665 !important; }
-.home-card .chip.chip-top.chip-alerts.on { box-shadow: 0 0 0 3px #b84708 !important; }
-.home-card .chip.chip-top.chip-done.on { box-shadow: 0 0 0 3px #0f7a37 !important; }
+.home-card .chip.chip-top.chip-all.on { box-shadow: 0 0 0 6px #7c8798 !important; }
+.home-card .chip.chip-top.chip-paused.on { box-shadow: 0 0 0 6px #98a1af !important; }
+.home-card .chip.chip-top.chip-alerts.on { box-shadow: 0 0 0 6px #f4915c !important; }
+.home-card .chip.chip-top.chip-done.on { box-shadow: 0 0 0 6px #45c47c !important; }
 
-/* 第二行（主力）：进行中 / 加急 / 已入库 —— 保留原有投影，再加一圈深色外框 */
-.home-card .chip-grid-main .chip-active.on { box-shadow: 0 4px 12px rgba(0,0,0,0.14), 0 0 0 3px #e0b53a !important; }
-.home-card .chip-grid-main .chip-urgent.on { box-shadow: 0 4px 12px rgba(0,0,0,0.14), 0 0 0 3px #c72a45 !important; }
-.home-card .chip-grid-main .chip-stocked.on { box-shadow: 0 4px 12px rgba(0,0,0,0.14), 0 0 0 3px #46c2d4 !important; }
+/* 第二行（主力）：进行中 / 加急 / 已入库 —— 保留原有投影，再叠一圈浅色外框 */
+.home-card .chip-grid-main .chip-active.on { box-shadow: 0 4px 12px rgba(0,0,0,0.14), 0 0 0 6px #f3d48e !important; }
+.home-card .chip-grid-main .chip-urgent.on { box-shadow: 0 4px 12px rgba(0,0,0,0.14), 0 0 0 6px #f27e93 !important; }
+.home-card .chip-grid-main .chip-stocked.on { box-shadow: 0 4px 12px rgba(0,0,0,0.14), 0 0 0 6px #a8e8f1 !important; }
