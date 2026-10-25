@@ -1749,10 +1749,10 @@ App({
   // - 进行中：0~5 天 浅黄 → 较深橙红，5~15 天 橙红 → 较深红，>15 天常驻深红
   // - 暂缓：中性灰蓝（明确「搁置中」，不参与 aging）
   cardAgeColor(o, days) {
-    if (!o) return '#8a94a6'
+    if (!o) return '#6b7688'
     if (o.urgent) return '#e94560'
     if (o.status === 'done') return '#2ecc71'
-    if (o.status === 'paused') return '#8a94a6'
+    if (o.status === 'paused') return '#6b7688'   // 暂缓：加深一档的中性灰蓝
     if (o.status === 'stocked') return this.stockedAgeColor(days)
     return this.activeAgeColor(days)
   },
@@ -1773,21 +1773,21 @@ App({
   },
 
   // 已入库：0~15 天 青 → 深紫，>15 天常驻深紫
-  // 1.9.52/1.9.53 起点逐步调浅（用户反馈太深），仍保持「越久越深」的递进
+  // 起点用「普通青色」#4dd0e1（hsl 187,71%,59%），与模块主题色一致；1.9.54
   stockedAgeColor(days) {
     const d = Math.max(0, Number(days) || 0)
     const t = Math.min(1, d / 15)
-    return this._hsl(this._ramp([184, 48, 58], [274, 42, 42], t))
+    return this._hsl(this._ramp([187, 71, 59], [274, 42, 42], t))
   },
 
   // 进行中：0~5 天 浅黄 → 较深橙红；5~15 天 橙红 → 较深红；>15 天常驻深红
-  // 1.9.52/1.9.53 起点逐步调浅（用户反馈太深），仍保持黄→橙红→红→深红的递进
+  // 起点用「普通黄色」#ffd54f（hsl 46,100%,65%），与模块主题色一致；1.9.54
   // 注意 5~15 段色相从 14 走到 -4（=356）：必须走「经过 0 度纯红」这条短路，
   // 直接插到 356 会绕回青/蓝，颜色就断了。
   activeAgeColor(days) {
     const d = Math.max(0, Number(days) || 0)
     if (d > 15) return this._hsl([348, 70, 45])
-    if (d <= 5) return this._hsl(this._ramp([42, 85, 67], [14, 72, 56], d / 5))
+    if (d <= 5) return this._hsl(this._ramp([46, 100, 65], [14, 72, 56], d / 5))
     return this._hsl(this._ramp([14, 72, 56], [-4, 64, 52], (d - 5) / 10))
   },
   // ================= 字体大小 =================

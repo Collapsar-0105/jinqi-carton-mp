@@ -535,7 +535,7 @@
 .chip-all .chip-count { color: #555; }
 .chip-active .chip-count { color: #b8790a; }
 .chip-urgent .chip-count { color: #e94560; }
-.chip-paused .chip-count { color: #8a94a6; }
+.chip-paused .chip-count { color: #6b7688; }
 .chip-overdue .chip-count { color: #c92a2a; }
 .chip-stocked .chip-count { color: #0e7c74; }
 .chip-done .chip-count { color: #2ecc71; }
@@ -749,34 +749,34 @@
 .chip-grid-main .chip .chip-count { font-size: 21px; font-weight: 900; line-height: 1.1; }
 .chip-grid-main .chip .chip-label { font-size: 13px; font-weight: 800; color: #222; }
 
-/* 进行中：浅黄（与进行中订单色卡起点一致，1.9.48；1.9.53 再调浅） */
-.chip-grid-main .chip-active .chip-count { color: #c08f14; }
-.chip-grid-main .chip-active { border-color: #f8ecd2 !important; }
+/* 进行中：普通黄色（与色卡起点一致，1.9.54） */
+.chip-grid-main .chip-active .chip-count { color: #d9a800; }
+.chip-grid-main .chip-active { border-color: #ffe9a8 !important; }
 
 /* 加急：红（紧急） */
 .chip-grid-main .chip-urgent .chip-count { color: #e94560; }
 .chip-grid-main .chip-urgent { border-color: #fbd0d8 !important; }
 
-/* 已入库：青（与已入库订单色卡起点一致，1.9.48；1.9.53 再调浅） */
-.chip-grid-main .chip-stocked .chip-count { color: #3aa89f; }
-.chip-grid-main .chip-stocked { border-color: #d6efed !important; }
+/* 已入库：普通青色（与色卡起点一致，1.9.54） */
+.chip-grid-main .chip-stocked .chip-count { color: #1ba3b8; }
+.chip-grid-main .chip-stocked { border-color: #c4edf4 !important; }
 
 /* 第二行选中：实底白字 */
 .home-card .chip-grid-main .chip.on { box-shadow: 0 4px 12px rgba(0,0,0,0.16); }
-.home-card .chip-grid-main .chip-active.on { background: #f3c968 !important; border-color: #f3c968 !important; }
+.home-card .chip-grid-main .chip-active.on { background: #ffd54f !important; border-color: #ffd54f !important; }
 .home-card .chip-grid-main .chip-urgent.on { background: #e94560 !important; border-color: #e94560 !important; }
-.home-card .chip-grid-main .chip-stocked.on { background: #68cac3 !important; border-color: #68cac3 !important; }
+.home-card .chip-grid-main .chip-stocked.on { background: #4dd0e1 !important; border-color: #4dd0e1 !important; }
 .home-card .chip-grid-main .chip.on .chip-count,
 .home-card .chip-grid-main .chip.on .chip-label { color: #fff !important; }
-/* 黄/青底色调浅后用深色字才读得清（其余底色深，用白字） */
+/* 黄/青底色偏亮，用深色字才读得清（其余底色深，用白字） */
 .home-card .chip-grid-main .chip-active.on .chip-count,
 .home-card .chip-grid-main .chip-active.on .chip-label { color: #5a4200 !important; }
 .home-card .chip-grid-main .chip-stocked.on .chip-count,
-.home-card .chip-grid-main .chip-stocked.on .chip-label { color: #0d4744 !important; }
+.home-card .chip-grid-main .chip-stocked.on .chip-label { color: #06414d !important; }
 
 /* 第一行概览配色（淡，数字带一点状态色） */
 .home-card .chip-grid .chip-all .chip-count { color: #4b5563; }
-.home-card .chip-grid .chip-paused .chip-count { color: #8a94a6; }
+.home-card .chip-grid .chip-paused .chip-count { color: #6b7688; }
 .home-card .chip-grid .chip-alerts .chip-count { color: #e8590c; }
 .home-card .chip-grid .chip-done .chip-count { color: #16a34a; }
 /* 撤销后的醒目提示（1.9.23） */
