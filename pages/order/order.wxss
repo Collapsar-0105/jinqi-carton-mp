@@ -362,7 +362,15 @@
 
 /* ===== 下单页：收货地址分配（1.9.20） ===== */
 /* 整行标题可点（不加只点得到下面那个框，点「收货地址」几个字没反应，1.9.50） */
-.addr-head { padding: 2px 0; }
+.addr-head { padding: 6px 0; }
+/* 展开后的说明：把「收起分配」到底在干什么讲清楚（1.9.51） */
+.addr-panel-hint {
+  display: block;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #8a94a6;
+  margin-bottom: 8px;
+}
 .addr-summary {
   display: flex; align-items: center; justify-content: space-between;
   gap: 8px; padding: 10px 12px; border: 1px solid #dfe4ee; border-radius: 10px;
