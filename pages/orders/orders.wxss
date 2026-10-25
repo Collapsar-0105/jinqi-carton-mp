@@ -853,21 +853,30 @@
    卡片整体底色与主体都统一为淡灰 #f7f8fa：底部浅带的根因是「卡片底色从留白处露出」，
    只要卡片底和主体同色，留白处露出来的也是同一个淡灰，不会再出现色带。 */
 .card.order {
-  /* 【缝隙的根治办法】外框改成 border，并把左侧加粗成「外框+书签条」一条边：
-     border 和背景是同一个元素、同一次绘制、同一条抗锯齿路径，
-     不存在「外框一层、书签条一层」两条路径在交界处各自半透明 → 也就不会再露白缝。
-     左边 15px = 3px 外框 + 12px 书签条，视觉上和原来一致。 */
-  background: #f7f8fa !important;
-  border: 3px solid var(--age, #d5d9e0);
-  border-left-width: 15px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07) !important;
+  /* 【缝隙的另一条解法：书签条 = 卡片背景本身】
+     整张卡铺状态色，再由 band-head / band-body 盖住右侧，只在左边露出 12px → 就是书签条。
+     这样书签条和外框同属一层背景，不再有「两个图层各自抗锯齿」的交界，缝隙消失；
+     同时外框保持 3px 细框，左边不会被撑粗。 */
+  background: var(--age, #d5d9e0) !important;
+  border: 0;
+  box-shadow: 0 0 0 3px var(--age, #d5d9e0), 0 2px 8px rgba(0, 0, 0, 0.07) !important;
 }
-/* 书签条已由 border-left 承担，伪元素不再使用 */
+/* 书签条已由卡片背景承担，伪元素不再使用 */
 .card.order::before { display: none; }
-.card.order .band { padding-bottom: 0; padding-left: 0; }
-.card.order .band-body { margin-bottom: 0; background: #f7f8fa; }
+/* 注意：band / band-head / band-body 是同一个元素的复合类名，没有外层包裹。
+   padding 属于元素自身、会被自身背景盖住，所以书签条必须用 border-left 画：
+   border 与背景同属一次绘制（背景默认延伸到 border 之下），左侧整片颜色连续无缝。 */
+.card.order .band-body {
+  margin: 0;
+  padding: 10px 10px 10px 2px;
+  border-left: 12px solid var(--age, #d5d9e0);
+  background: #f7f8fa;
+}
 .card.order .band-head {
-  margin-bottom: 0;
+  margin: 0;
+  padding: 8px 10px 8px 2px;
+  border-left: 12px solid var(--age, #d5d9e0);
+  border-radius: 0;
   background: var(--age-soft, #f5f6f8);
   border-bottom: 3px solid var(--age-mid, #d5d9e0);
 }
