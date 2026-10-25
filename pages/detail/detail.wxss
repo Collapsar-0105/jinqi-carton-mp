@@ -244,3 +244,10 @@
   background: #e8f4fd; border: 1px solid #aed6f1;
   border-radius: 4px; padding: 0 6px; margin-left: 6px;
 }
+
+/* 未分配数量提示（客户还没定送哪，先备货，1.9.52） */
+.unassigned-line {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
+  margin-top: 8px; padding-top: 8px; border-top: 1px dashed #ecdfc8;
+}
+.unassigned-hint { font-size: 12px; color: #a07840; }

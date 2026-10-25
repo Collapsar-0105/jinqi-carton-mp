@@ -749,28 +749,30 @@
 .chip-grid-main .chip .chip-count { font-size: 21px; font-weight: 900; line-height: 1.1; }
 .chip-grid-main .chip .chip-label { font-size: 13px; font-weight: 800; color: #222; }
 
-/* 进行中：浅黄（与进行中订单色卡起点一致，1.9.48） */
-.chip-grid-main .chip-active .chip-count { color: #b8790a; }
-.chip-grid-main .chip-active { border-color: #eed9a0 !important; }
+/* 进行中：浅黄（与进行中订单色卡起点一致，1.9.48；1.9.52 调浅） */
+.chip-grid-main .chip-active .chip-count { color: #b8810a; }
+.chip-grid-main .chip-active { border-color: #f3e3b8 !important; }
 
 /* 加急：红（紧急） */
 .chip-grid-main .chip-urgent .chip-count { color: #e94560; }
 .chip-grid-main .chip-urgent { border-color: #fbd0d8 !important; }
 
-/* 已入库：青（与已入库订单色卡起点一致，1.9.48） */
-.chip-grid-main .chip-stocked .chip-count { color: #0e7c74; }
-.chip-grid-main .chip-stocked { border-color: #b3d9d5 !important; }
+/* 已入库：青（与已入库订单色卡起点一致，1.9.48；1.9.52 调浅） */
+.chip-grid-main .chip-stocked .chip-count { color: #1a8c84; }
+.chip-grid-main .chip-stocked { border-color: #c3e5e2 !important; }
 
 /* 第二行选中：实底白字 */
 .home-card .chip-grid-main .chip.on { box-shadow: 0 4px 12px rgba(0,0,0,0.16); }
-.home-card .chip-grid-main .chip-active.on { background: #e8a60c !important; border-color: #e8a60c !important; }
+.home-card .chip-grid-main .chip-active.on { background: #ecb73c !important; border-color: #ecb73c !important; }
 .home-card .chip-grid-main .chip-urgent.on { background: #e94560 !important; border-color: #e94560 !important; }
-.home-card .chip-grid-main .chip-stocked.on { background: #17827c !important; border-color: #17827c !important; }
+.home-card .chip-grid-main .chip-stocked.on { background: #38b2aa !important; border-color: #38b2aa !important; }
 .home-card .chip-grid-main .chip.on .chip-count,
 .home-card .chip-grid-main .chip.on .chip-label { color: #fff !important; }
-/* 浅黄底上用深色字才读得清（其余两个底色深，用白字） */
+/* 黄/青底色调浅后用深色字才读得清（其余底色深，用白字） */
 .home-card .chip-grid-main .chip-active.on .chip-count,
-.home-card .chip-grid-main .chip-active.on .chip-label { color: #3a2a00 !important; }
+.home-card .chip-grid-main .chip-active.on .chip-label { color: #4a3500 !important; }
+.home-card .chip-grid-main .chip-stocked.on .chip-count,
+.home-card .chip-grid-main .chip-stocked.on .chip-label { color: #0b3b38 !important; }
 
 /* 第一行概览配色（淡，数字带一点状态色） */
 .home-card .chip-grid .chip-all .chip-count { color: #4b5563; }

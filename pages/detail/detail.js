@@ -108,6 +108,13 @@ Page({
         remainQty: app.shippableQty(order, it),
         producedQty: app.producedQtyOf(it),
         overQty: Math.max(0, app.producedQtyOf(it) - qty),
+        // 有分配记录但没分完 → 剩下的算未分配（客户还没定送到哪个地址，先备货）
+        unassigned: (function () {
+          const al = it.addrList || []
+          if (!al.length) return 0
+          const s = al.reduce((acc, a) => acc + (Number(a.qty) || 0), 0)
+          return Math.max(0, (Number(it.quantity) || 0) - s)
+        })(),
         // 只在「还有别的款没入库」时才给单款入库按钮；只剩最后一款交给底部按钮，避免两个按钮做同一件事
         canStockItem: !isSub && !it.stocked && order.status !== 'done' && app.canStockItem(it)
           && (order.items || []).filter(x => !x.stocked).length > 1,

@@ -118,6 +118,12 @@
           </view>
           <text class="text-xs c-gray">送货数量不限死每个地址，按实际发多少记多少</text>
         </block>
+
+        <!-- 有数量没分配地址：客户还没定送哪，先备货（1.9.52） -->
+        <view wx:if="{{it.unassigned > 0}}" class="unassigned-line">
+          <text class="tag tag-warn">{{it.unassigned}} 个未分配</text>
+          <text class="unassigned-hint">客户还没指定收货地址，先备货</text>
+        </view>
       </view>
     </view>
   </block>

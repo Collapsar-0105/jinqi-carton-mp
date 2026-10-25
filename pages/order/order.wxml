@@ -62,29 +62,20 @@
       </view>
 
       <view wx:if="{{it.addrOptions.length > 0}}" class="field mt-8">
-        <view class="flex-row addr-head" bindtap="toggleAddrPanel" data-index="{{idx}}">
-          <text class="label flex-1">收货地址</text>
-          <text wx:if="{{it.addrOptions.length > 1}}" class="link">
-            {{it.addrPanelOpen ? '收起分配 ▲' : '按地址分配数量 ▾'}}
-          </text>
-        </view>
-        <picker wx:if="{{it.addrOptions.length === 1}}" mode="selector" range="{{it.addrOptions}}" range-key="label" value="{{it.addrIndex}}" bindchange="onAddrPick" data-index="{{idx}}">
-          <view class="input picker-value"><text>{{it.addrOptions[0].address}}</text></view>
-        </picker>
-        <view wx:else class="addr-summary" bindtap="toggleAddrPanel" data-index="{{idx}}">
-          <text>{{it.addrSummary}}</text>
-          <text class="addr-sum-badge {{(it.quantity && it.addrSum === (it.quantity * 1)) ? 'ok' : 'warn'}}">{{it.addrSum}} / {{it.quantity}}</text>
+        <text class="label">收货地址</text>
+
+        <!-- 客户只有一个地址：直接显示 -->
+        <view wx:if="{{it.addrOptions.length === 1}}" class="input picker-value">
+          <text>{{it.addrOptions[0].address}}</text>
         </view>
 
-        <view wx:if="{{it.addrPanelOpen}}" class="addr-panel">
-          <text class="addr-panel-hint">同一款货分送到多个地址时，在这里填每个地址各送多少，合计要等于订单数量</text>
+        <!-- 多个地址：全部列出来手动填分配数量；不填满也行，剩余算未分配（客户还没定送哪） -->
+        <view wx:else class="addr-panel">
           <view wx:for="{{it.addrList}}" wx:key="address" wx:for-item="a" wx:for-index="ai" class="addr-line">
             <text class="addr-name">{{a.address}}</text>
-            <input placeholder-style="color:#555;font-weight:600" class="input addr-qty" type="number" placeholder="数量" value="{{a.qty}}" bindinput="onAddrQty" data-index="{{idx}}" data-ai="{{ai}}" />
+            <input placeholder-style="color:#555;font-weight:600" class="input addr-qty" type="number" placeholder="0" value="{{a.qty}}" bindinput="onAddrQty" data-index="{{idx}}" data-ai="{{ai}}" />
           </view>
-          <text class="addr-tip {{(it.quantity && it.addrSum === (it.quantity * 1)) ? 'ok' : 'warn'}}">
-            合计 {{it.addrSum}} / 订单数量 {{it.quantity || 0}}{{it.addrSum === (it.quantity * 1) ? '' : '（要相等）'}}
-          </text>
+          <text class="addr-tip {{it.unassignedQty > 0 ? '' : 'ok'}}">{{it.addrTipText}}</text>
         </view>
       </view>
 

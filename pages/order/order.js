@@ -194,51 +194,25 @@ Page({
       address: o.address, contact: o.contact, phone: o.phone,
       qty: i === idx ? q : ''
     }))
-    return { addrOptions: opts, addrIndex: idx, addrList: list, addrPanelOpen: false, addrSum: 0, addrSummary: opts.length ? opts[idx].address : '' }
+    return { addrOptions: opts, addrIndex: idx, addrList: list, addrSum: 0, unassignedQty: 0, addrTipText: '' }
   },
 
-  // 汇总每款的地址分配
+  // 汇总每款的地址分配（允许只分一部分，剩下的算未分配）
   syncAddrDerived() {
     const items = this.data.items.map(it => {
       const list = it.addrList || []
       const sum = list.reduce((s, a) => s + (Number(a.qty) || 0), 0)
-      let summary = ''
-      if (list.length === 1) summary = list[0].address + '（全部）'
-      else {
-        const parts = list.filter(a => Number(a.qty) > 0).map(a => a.address + ' ' + a.qty)
-        summary = parts.length ? parts.join(' / ') : '未分配'
+      const q = parseInt(it.quantity) || 0
+      const unassigned = Math.max(0, q - sum)
+      let tip = ''
+      if (list.length > 1) {
+        tip = unassigned > 0
+          ? ('已分配 ' + sum + ' / 订单 ' + q + '，剩余 ' + unassigned + ' 未分配（可留空先备货）')
+          : ('已全部分配 ' + sum + ' / 订单 ' + q)
       }
-      return Object.assign({}, it, { addrSum: sum, addrSummary: summary })
+      return Object.assign({}, it, { addrSum: sum, unassignedQty: unassigned, addrTipText: tip })
     })
     this.setData({ items })
-  },
-
-  toggleAddrPanel(e) {
-    const idx = Number(e.currentTarget.dataset.index)
-    const items = [...this.data.items]
-    if (!(items[idx].addrOptions || []).length) {
-      wx.showToast({ title: '该客户还没填收货地址', icon: 'none' })
-      return
-    }
-    items[idx].addrPanelOpen = !items[idx].addrPanelOpen
-    // 打开时如果还没分配，把数量全给默认地址
-    if (items[idx].addrPanelOpen) {
-      const list = items[idx].addrList || []
-      const sum = list.reduce((s, a) => s + (Number(a.qty) || 0), 0)
-      if (!sum && items[idx].quantity) {
-        const i = Number(items[idx].addrIndex) || 0
-        if (list[i]) list[i].qty = String(items[idx].quantity)
-      }
-    }
-    this.setData({ items }, () => {
-      this.syncAddrDerived()
-      // 面板展开后滚到可见位置：收货地址块常在屏幕底部，不滚的话点了像没反应
-      if (items[idx].addrPanelOpen) {
-        setTimeout(() => {
-          try { wx.pageScrollTo({ selector: '.addr-panel', offsetTop: -60, duration: 200 }) } catch (e) {}
-        }, 80)
-      }
-    })
   },
 
   onAddrQty(e) {
@@ -263,21 +237,6 @@ Page({
     }
   },
 
-  onAddrPick(e) {
-    const idx = Number(e.currentTarget.dataset.index)
-    const i = Number(e.detail.value)
-    const items = [...this.data.items]
-    const it = items[idx]
-    const old = Number(it.addrIndex) || 0
-    it.addrIndex = i
-    // 单一分配时把数量挪到新地址；多地址则把原地址的数量搬过去
-    if (it.addrList && it.addrList[i]) {
-      const prev = it.addrList[old] ? it.addrList[old].qty : ''
-      it.addrList[old] && (it.addrList[old].qty = '')
-      it.addrList[i].qty = prev || (it.quantity ? String(it.quantity) : '')
-    }
-    this.setData({ items }, () => this.syncAddrDerived())
-  },
   onPO(e) {
     const idx = Number(e.currentTarget.dataset.index)
     const items = [...this.data.items]
@@ -394,13 +353,13 @@ Page({
       if (it.factoryModeIndex === 1 && !it.factoryName) {
         wx.showToast({ title: '第 ' + (i + 1) + ' 款未选代工厂', icon: 'none' }); return
       }
-      // 有地址就必须把数量分配完
+      // 地址分配：允许少分（剩下的算未分配，客户还没定送哪，先备货），但不能超过订单数量
       const opts = it.addrOptions || []
       if (opts.length) {
         const q = parseInt(it.quantity) || 0
         const sum = (it.addrList || []).reduce((s, a) => s + (Number(a.qty) || 0), 0)
-        if (sum !== q) {
-          wx.showToast({ title: '第 ' + (i + 1) + ' 款地址分配 ' + sum + '，数量 ' + q + '，要相等', icon: 'none' })
+        if (sum > q) {
+          wx.showToast({ title: '第 ' + (i + 1) + ' 款分配 ' + sum + ' 超过数量 ' + q, icon: 'none' })
           return
         }
       }
