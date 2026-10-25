@@ -1786,15 +1786,14 @@ App({
     return this._hsl(this._ageHsl(o, days))
   },
 
-  // 三档联动（1.9.66）：
+  // 三档联动（1.9.66 建立，1.9.67 调轻）：
   //   --age      外框 + 左侧色带 = 状态本色
-  //   --age-soft 卡片上半部底色   = 本色「变浅变亮」→ 明度 +12、饱和度 ×0.6
-  //   --age-mid  中间隔断色带     = 上半部底色「再压深」→ 明度 −12、饱和度 ×0.85
-  // 这样换任何主题色，三档都会自动跟着走，不需要为每个状态单独配色。
+  //   --age-soft 卡片上半部底色   = 本色大幅变浅变亮：明度 +24、饱和度 ×0.32（很淡的一层底色，不抢内容）
+  //   --age-mid  中间隔断色带     = 上半部底色再压深：明度 −9、饱和度 ×0.62（比上半部明显深一档，但不到本色那么重）
   cardAgeVars(o, days) {
     const b = this._ageHsl(o, days)
-    const soft = [b[0], Math.round(b[1] * 0.6), Math.min(93, b[2] + 12)]
-    const mid = [b[0], Math.round(b[1] * 0.85), Math.max(0, soft[2] - 12)]
+    const soft = [b[0], Math.round(b[1] * 0.32), Math.min(96, b[2] + 24)]
+    const mid = [b[0], Math.round(b[1] * 0.62), Math.max(0, soft[2] - 9)]
     return '--age:' + this._hsl(b) + ';--age-soft:' + this._hsl(soft) + ';--age-mid:' + this._hsl(mid) + ';'
   },
   // ================= 字体大小 =================

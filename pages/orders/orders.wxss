@@ -843,13 +843,13 @@
 /* ===== 卡片三档联动（1.9.66） =====
    由 app.cardAgeVars() 在卡片内联注入三个变量（都从状态本色派生）：
      --age       外框 + 左侧色带 = 状态本色
-     --age-soft  卡片上半部底色   = 本色 变浅变亮（明度 +12、饱和度 ×0.6）
-     --age-mid   中间隔断色带     = 上半部底色再压深（明度 −12、饱和度 ×0.85）
-   卡片整体底色强制为白：之前底部那条浅带就是卡片底色从留白处露出来造成的，
-   改白之后无论怎么留白都不会再出现色带；上半部的颜色改由 .band-head 自己承担。 */
-.card.order { background: #ffffff !important; }
+     --age-soft  卡片上半部底色   = 本色大幅变浅（明度 +24、饱和度 ×0.32）
+     --age-mid   中间隔断色带     = 上半部底色再压深（明度 −9、饱和度 ×0.62）
+   卡片整体底色与主体都统一为淡灰 #f7f8fa：底部浅带的根因是「卡片底色从留白处露出」，
+   只要卡片底和主体同色，留白处露出来的也是同一个淡灰，不会再出现色带。 */
+.card.order { background: #f7f8fa !important; }
 .card.order .band { padding-bottom: 0; }
-.card.order .band-body { margin-bottom: 0; background: #ffffff; }
+.card.order .band-body { margin-bottom: 0; background: #f7f8fa; }
 .card.order .band-head {
   margin-bottom: 0;
   background: var(--age-soft, #f5f6f8);
