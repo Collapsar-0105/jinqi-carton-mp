@@ -1,5 +1,5 @@
 // 版本号：每次发版改这里
-const APP_VERSION = '1.9.75'
+const APP_VERSION = '1.9.76'
 
 // 公共常量与小工具
 
@@ -53,6 +53,9 @@ const DEFAULT_STEPS = {
 
 // 机器最大进纸宽度（mm），纸板长超过需两片成型
 const MAX_FEED_WIDTH = 2450
+
+// 常备预警阈值（个）：常备款现有库存 ≤ 这个数就预警，提示补货到该水平
+const STOCK_ALERT_THRESHOLD = 300
 
 // 按工艺取进纸上限：彩箱走小机器 1600，草箱 2450
 function feedLimit(craft) {
@@ -144,6 +147,7 @@ module.exports = {
   SUPPLIER_TYPES,
   STEPS,
   MAX_FEED_WIDTH,
+  STOCK_ALERT_THRESHOLD,
   feedLimit,
   defaultTang,
   calcBoard,

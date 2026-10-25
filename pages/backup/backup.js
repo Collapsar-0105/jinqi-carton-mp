@@ -23,7 +23,8 @@ Page({
     isAdmin: false,
     launchErrors: [],
     cloud: { mode: 'local', error: '', lastSyncText: '-' },
-    cloudEnv: ''
+    cloudEnv: '',
+    workYears: []
   },
 
   // 非管理员：危险操作一律拦住
@@ -119,6 +120,50 @@ Page({
       cur.setData({ __perfProbe: t }, () => { renderMs = (Date.now() - t) + 'ms'; done() })
     } else done()
   },
+  // ===== 工作年设置（1.9.66 从独立页面搬进设置页） =====
+  loadWorkYears() {
+    const now = new Date().getFullYear()
+    const cfg = app.getWorkYears()
+    const list = []
+    for (let y = now + 1; y >= now - 3; y--) {
+      const c = cfg[String(y)] || {}
+      list.push({ year: y, start: c.start || '', end: c.end || '' })
+    }
+    this.setData({ workYears: list })
+  },
+
+  onWorkStart(e) {
+    const idx = Number(e.currentTarget.dataset.index)
+    const list = this.data.workYears.slice()
+    list[idx].start = e.detail.value
+    this.setData({ workYears: list })
+    this.saveWorkYears()
+  },
+
+  onWorkEnd(e) {
+    const idx = Number(e.currentTarget.dataset.index)
+    const list = this.data.workYears.slice()
+    list[idx].end = e.detail.value
+    this.setData({ workYears: list })
+    this.saveWorkYears()
+  },
+
+  clearWorkEnd(e) {
+    const idx = Number(e.currentTarget.dataset.index)
+    const list = this.data.workYears.slice()
+    list[idx].end = ''
+    this.setData({ workYears: list })
+    this.saveWorkYears()
+  },
+
+  saveWorkYears() {
+    const cfg = {}
+    this.data.workYears.forEach(x => {
+      if (x.start || x.end) cfg[String(x.year)] = { start: x.start, end: x.end }
+    })
+    app.saveWorkYears(cfg)
+  },
+
   checkApi() {
     const c = app.globalData.cloud || {}
     if (!c.ready) { this.setData({ apiReadyText: '未连接云端' }); return }
@@ -129,6 +174,7 @@ Page({
   },
 
   onShow() {
+    this.loadWorkYears()
     // 启动异常直接摆出来，别让用户靠猜
     try {
       const errs = (app.globalData.launchErrors || [])

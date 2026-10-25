@@ -464,12 +464,8 @@ Page({
         app.addShipment(this.data.orderId, [{ index: idx, qty, addrIndex: ai }], '送货 ' + qty + ' 个')
 
         const updated = app.getOrder(this.data.orderId)
-        ;(updated.items || []).forEach(x => {
-          const p = app.getProduct(x.productId)
-          if (p && p.stockItem && (Number(x.deliveredQty) || 0) >= (Number(x.quantity) || 0)) {
-            app.addStockAlert(x.productId, updated.id, x.quantity)
-          }
-        })
+        // 常备预警：库存掉到阈值（300）以下就提示补货
+        app.checkStockAlerts((updated.items || []).map(x => x.productId), updated.id)
 
         wx.showToast({ title: '已送货', icon: 'success' })
         this.loadOrder()

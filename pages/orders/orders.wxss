@@ -649,7 +649,7 @@
 .row1 { display: flex; align-items: center; gap: 10px; margin-bottom: 0; }
 .head-left {
   flex: 1; min-width: 0;
-  display: flex; flex-wrap: wrap; align-items: center;
+  display: flex; flex-wrap: wrap; align-items: baseline;
   column-gap: 10px; row-gap: 2px;
 }
 .row1 .head-left .cust,
@@ -853,12 +853,14 @@
    卡片整体底色与主体都统一为淡灰 #f7f8fa：底部浅带的根因是「卡片底色从留白处露出」，
    只要卡片底和主体同色，留白处露出来的也是同一个淡灰，不会再出现色带。 */
 .card.order {
-  /* 【缝隙的另一条解法：书签条 = 卡片背景本身】
-     整张卡铺状态色，再由 band-head / band-body 盖住右侧，只在左边露出 12px → 就是书签条。
-     这样书签条和外框同属一层背景，不再有「两个图层各自抗锯齿」的交界，缝隙消失；
-     同时外框保持 3px 细框，左边不会被撑粗。 */
+  /* 【书签条 = 卡片自己的底色，一个元素一次绘制 → 内外都没有缝】
+     整张卡铺状态色，靠卡片的 padding-left 露出 20px 形成书签条：
+       · 书签条和外框环是同一张卡的外缘，只有一条抗锯齿路径 → 左边不再有缝；
+       · 书签条跨越头部/主体，主体不再另画一条 border-left → 中间那道横缝也没了。
+     头部/主体自身没有左边框，背景也不会盖住卡片的内边距，所以这里能干净地「露出」底色。 */
   background: var(--age, #d5d9e0) !important;
   border: 0;
+  padding: 0 0 0 18px;   /* 色带内边缘向左 2px：20 -> 18 */
   box-shadow: 0 0 0 3px var(--age, #d5d9e0), 0 2px 8px rgba(0, 0, 0, 0.07) !important;
 }
 /* 书签条已由卡片背景承担，伪元素不再使用 */
@@ -868,20 +870,66 @@
    border 与背景同属一次绘制（背景默认延伸到 border 之下），左侧整片颜色连续无缝。 */
 .card.order .band-body {
   margin: 0;
-  padding: 10px 10px 10px 8px;
-  border-left: 16px solid var(--age, #d5d9e0);
+  padding: 10px;
   background: #f7f8fa;
 }
 .card.order .band-head {
+  position: relative;
   margin: 0;
-  padding: 8px 10px 8px 8px;
-  border-left: 16px solid var(--age, #d5d9e0);
+  padding: 8px 10px;
   border-radius: 0;
   background: var(--age-soft, #f5f6f8);
-  border-bottom: 3px solid var(--age-mid, #d5d9e0);
+}
+/* 分隔线不能再写成 border-bottom：border-bottom 会和 border-left 在拐角处斜接，
+   粉色会盖到书签条上（就是截图里那道穿过红条的横线）。
+   改成绝对定位的伪元素，left:0 相对的是 padding box（已在 20px 书签条右侧），
+   所以分隔线正好从书签条右缘开始，书签条始终在最上层。 */
+.card.order .band-head::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 3px;
+  background: var(--age-mid, #d5d9e0);
+}
+/* 「加急」已移到右侧时间块内，与「已持续 N 天 / 下单日」垂直居中，不再参与左行的换行 */
+.card.order .head-right {
+  flex-direction: row;
+  align-items: center;
+  column-gap: 6px;
+}
+.card.order .head-right .hr-texts {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
 }
 
-/* 书签条加宽到 16px 后左侧多占 12px，「加急」等标签会被挤到第二行。
-   收紧头部标签间距与右侧内边距把空间腾回来，保持单行。 */
-.card.order .head-left { column-gap: 6px; }
-.card.order .band-head { padding-right: 6px; }
+
+/* 头部左行：客户名必须完整显示。
+   宽度不够就让它换行、卡片变高，绝不能用省略号截断——少看一个字比多划两行糟糕得多。
+   只对「订单编号」固定不折断（编号被折断就失去意义）。 */
+.card.order .head-left { flex-wrap: wrap; align-items: baseline; }
+.card.order .row1 .head-left .cust {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  word-break: break-word;
+  min-width: 0;
+  /* .cust 是全局通用类，历史样式带了 margin-top: 4px，
+     基线对齐时会把客户名整体下移 4px，和订单编号错开。头部这里必须归零。 */
+  margin-top: 0;
+}
+.card.order .row1 .head-left .oid { white-space: nowrap; flex-shrink: 0; }
+
+
+/* 超大字模式：把左内边距收回到和普通模式一致。
+   历史遗留的 `.fs-2 .card.order .band { padding: 8px 12px 8px 30px }`（4 个类，特异性最高）
+   那 30px 左内边距，是当年给「伪元素色条」让位用的；
+   现在色条改由卡片自身的 padding-left 承担，这里就成了重复让位，
+   导致超大字模式下文字起点比普通模式右移了 16px。 */
+.fs-2 .card.order .band { padding: 8px 10px; }
+
+/* 超大字模式：标题（客户名）字号 24px，6 个字需要 144px，
+   而左侧 head-left 只分到 150px、扣掉 margin-right 后只剩 140px —— 差 4px 就断行。
+   .row1 的 gap: 10px 是左右两块之间的固定间隙，这里收掉，把空间让给标题。
+   标题更长时仍然会正常换行，不会截断。 */
+.fs-2 .row1 { gap: 0; }

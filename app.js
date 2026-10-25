@@ -1596,11 +1596,18 @@ App({
     return this.getStockAlerts().some(a => a.productId === productId)
   },
 
+  // 生成 / 刷新常备预警（同一产品只保留一条，数量按最新情况更新）
   addStockAlert(productId, orderId, qty) {
     const p = this.getProduct(productId)
     if (!p || !p.stockItem) return
     const alerts = this.getStockAlerts()
-    if (alerts.some(a => a.productId === productId)) return
+    const exist = alerts.find(a => a.productId === productId)
+    if (exist) {
+      exist.qty = Number(qty) || 0
+      if (orderId) exist.orderId = orderId
+      this.saveStockAlerts(alerts)
+      return
+    }
     alerts.unshift({
       id: 'A' + Date.now(),
       productId,
@@ -1610,6 +1617,20 @@ App({
       date: this.today()
     })
     this.saveStockAlerts(alerts)
+  },
+
+  // 常备预警规则：常备款的现有库存 ≤ 该产品自己设定的「预警数量」就预警。
+  // 预警数量在产品编辑页勾选「常备款」时手动录入（存在产品上 stockAlertQty），
+  // 没设置过时用默认阈值 C.STOCK_ALERT_THRESHOLD（300）。
+  checkStockAlerts(productIds, orderId) {
+    ;(productIds || []).forEach(pid => {
+      const p = this.getProduct(pid)
+      if (!p || !p.stockItem) return
+      const th = Number(p.stockAlertQty) || C.STOCK_ALERT_THRESHOLD
+      const stock = this.productStockQty(pid)
+      if (stock > th) return
+      this.addStockAlert(pid, orderId, th)
+    })
   },
 
   removeStockAlert(id) {

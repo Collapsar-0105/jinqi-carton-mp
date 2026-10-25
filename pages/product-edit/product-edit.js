@@ -53,6 +53,8 @@ Page({
     selectedCustomers: [],
 
     steps: [],
+    stockItem: false,
+    stockAlertQty: 0,
     outsourceEnabled: false,
     outModes: ['代印', '成品箱'],
     outModeIndex: 0,
@@ -165,6 +167,7 @@ Page({
         qty: x.qty || 0
       })),
       stockItem: !!obj.stockItem,
+      stockAlertQty: Number(obj.stockAlertQty) || 0,
       outsource: obj.outsource || { mode: '', supplier: '' },
       outsourceEnabled: !!(obj.outsource && obj.outsource.mode),
       outsourceMode: (obj.outsource && obj.outsource.mode) || '',
@@ -295,7 +298,36 @@ Page({
     this.setData({ steps }, () => this.refreshAll())
   },
 
-  onStockItem(e) { this.setData({ stockItem: e.detail.value }) },
+  // 勾选「常备款」：预警数量默认 300（可点右侧数字框手动改）
+  onStockItem(e) {
+    if (!e.detail.value) {
+      this.setData({ stockItem: false, stockAlertQty: 0 })
+      return
+    }
+    this.setData({
+      stockItem: true,
+      stockAlertQty: this.data.stockAlertQty || C.STOCK_ALERT_THRESHOLD
+    })
+  },
+
+  // 点「预警数量」手动录入（该产品库存 ≤ 这个数就触发预警）
+  editStockAlertQty() {
+    wx.showModal({
+      title: '常备预警数量',
+      editable: true,
+      content: String(this.data.stockAlertQty || C.STOCK_ALERT_THRESHOLD),
+      placeholderText: '库存小于等于这个数时预警，例如 ' + C.STOCK_ALERT_THRESHOLD,
+      success: res => {
+        if (!res.confirm) return
+        const n = parseInt(res.content, 10)
+        if (!n || n <= 0) {
+          wx.showToast({ title: '请输入大于 0 的数量', icon: 'none' })
+          return
+        }
+        this.setData({ stockAlertQty: n })
+      }
+    })
+  },
 
   addPad() {
     this.setData({ pads: this.data.pads.concat([{ typeIndex: 0, L: '', W: '', qty: 0 }]) })
@@ -525,6 +557,7 @@ Page({
         qty: parseInt(x.qty) || 0
       })),
       stockItem: !!d.stockItem,
+      stockAlertQty: d.stockItem ? (Number(d.stockAlertQty) || 0) : 0,
       outsource: d.outsourceEnabled ? { mode: d.outsourceMode || (d.craft === '彩箱' ? '成品箱' : ''), supplier: (d.outsource && d.outsource.supplier) || '' } : { mode: '', supplier: '' },
       price: Number(d.price) || 0,
       note: (d.note || '').trim(),

@@ -347,3 +347,10 @@
 .fs-2 .bp-k { width: 96px; }
 
 .card-divider { height: 1px; background: #eef1f6; margin: 14px 0 10px; }
+
+
+/* 「常备款」「代工」两行的标签与开关之间留出间距。
+   原来标签上写死了 margin-bottom:0，标签和开关贴在一起（间距 0）看着很挤。 */
+.outsource-card .field.half.row-between > .label {
+  margin-bottom: 8px;
+}

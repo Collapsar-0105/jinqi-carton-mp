@@ -11,22 +11,85 @@
   padding: 12px 14px;
   border-left: 3px solid #e67e22;
 }
-.a-prod {
+
+/* 标题行：产品型号 + 产品名称，右侧取消预警按钮 */
+.a-head {
+  align-items: center;
+  gap: 8px;
+}
+.a-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  column-gap: 6px;
+  row-gap: 4px;
+  min-width: 0;
+}
+.a-id {
+  font-size: 13px;
+  font-weight: 700;
+  color: #555;
+  background: #f0f1f3;
+  border-radius: 4px;
+  padding: 1px 6px;
+  white-space: nowrap;
+}
+.a-name {
   font-size: 15px;
   font-weight: bold;
-}
-.a-sub {
-  font-size: 14px;
-  color: #999;
-  margin-top: 3px;
+  color: #111;
+  word-break: keep-all;
 }
 .a-del {
-  font-size: 14px;
-  color: #e94560;
+  flex-shrink: 0;
+  font-size: 13px;
+  color: #fff;
+  background: #e94560;
+  border-radius: 14px;
+  padding: 5px 12px;
 }
-.a-link {
+
+/* 内容行：预警数量与现有库存同一行，项内文字不断行 */
+.a-line {
+  margin-top: 10px;
+}
+.a-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  white-space: nowrap;
+}
+/* 现有库存与预警数量之间的间隔 */
+.a-k2 {
+  margin-left: 16px;
+}
+.a-k {
   font-size: 14px;
-  color: #2b5bb3;
+  color: #999;
+}
+.a-v {
+  font-size: 14px;
+  color: #333;
+  font-weight: 600;
+}
+/* 现有库存：小标题和数字一起强调 */
+.a-stock {
+  font-size: 19px;
+  font-weight: 800;
+  color: #e67e22;
+  line-height: 1.1;
+}
+
+/* 底部：左边来源订单与日期，右边「复制产品信息」按钮（卡片右下角） */
+.a-foot-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12px;
+}
+.a-foot {
+  font-size: 12px;
+  color: #aaa;
 }
 .empty-state {
   display: flex;

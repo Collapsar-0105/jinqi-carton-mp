@@ -56,3 +56,38 @@
 .sync-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; }
 .sync-label { font-size: 15px; color: #333; }
 .sync-value { font-size: 14px; color: #666; }
+
+/* ===== 工作年设置（从原 workyear 页搬来） ===== */
+.year-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 0;
+  border-bottom: 1px solid #f5f5f5;
+}
+.year {
+  width: 64px;
+  font-size: 14px;
+  color: #333;
+  font-weight: bold;
+}
+.date-box {
+  font-size: 14px;
+  padding: 5px 8px;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  background: #fafafa;
+  color: #333;
+}
+.date-box.empty {
+  color: #bbb;
+}
+.to {
+  font-size: 14px;
+  color: #999;
+}
+.clear {
+  color: #e94560;
+  font-size: 15px;
+  padding: 0 4px;
+}

@@ -161,7 +161,6 @@ Page({
   goAlerts() { wx.navigateTo({ url: '/pages/stock-alerts/stock-alerts' }) },
   goBackup() { wx.navigateTo({ url: '/pages/backup/backup' }) },
 
-  goWorkYear() { wx.navigateTo({ url: '/pages/workyear/workyear' }) },
   undoLast() {
     const item = app.undoLast()
     if (!item) { this.setData({ undoLabel: app.undoLabel() }); return }

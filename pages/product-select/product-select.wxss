@@ -44,18 +44,23 @@
   padding: 60px 20px;
 }
 
-/* ===== 产品卡：外框 + 上部分层，配色统一取「加急订单卡」那套（1.9.72） ===== */
+
+/* ===== 产品卡：外框 + 上部分层（1.9.76） =====
+   配色直接取「加急订单卡」实际在用的颜色（实测像素值）：
+     外框 #E8445F / 上半部 #FFE3E8 / 隔断 #E6BCC3 / 主体 #F7F8FA
+   注：加急卡的上半部被 orders.wxss 里 `.order.is-urgent .band-head { background:#ffe3e8 !important }`
+   覆盖成固定值，所以产品卡这里也用 #FFE3E8，两边才能真正一致。 */
 .card.item {
   padding: 12px 14px;
-  border-radius: 26px;                       /* 与订单卡一致（.card 默认只有 10px） */
-  border: 3px solid #e9445f;
+  border-radius: 26px;                                /* 与订单卡一致 */
+  border: 0;
   background: #f7f8fa;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+  box-shadow: 0 0 0 3px #e8445f, 0 2px 8px rgba(0, 0, 0, 0.07) !important;
   overflow: hidden;
 }
 .card.item > .flex-row:first-child {
-  background: hsl(350, 31%, 89%);
-  border-bottom: 3px solid hsl(350, 45%, 82%);
+  background: #ffe3e8;
+  border-bottom: 3px solid #e6bcc3;   /* = 加急卡 --age-mid 的原色 */
   margin: -12px -14px 8px;
   padding: 12px 14px;
 }

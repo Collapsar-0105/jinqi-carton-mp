@@ -17,7 +17,6 @@
     </view>
     <view wx:if="{{periodType === 1}}" class="workyear-tip">
       <text>{{yearRangeText}}</text>
-      <text class="wy-edit" bindtap="goWorkYear">设置</text>
     </view>
 
 
@@ -57,12 +56,14 @@
           <text class="cust">{{item.customer}}</text>
           <text class="oid">{{item.id}}</text>
           <text wx:if="{{item.isSub}}" class="subtag">子单</text>
-          <text wx:if="{{item.urgent && item.status !== 'done'}}" class="urgent-tag">加急</text>
           <text wx:if="{{item.stockTag}}" class="stock-tag">库存</text>
         </view>
         <view class="head-right">
-          <text class="remain">{{item.statusText}}</text>
-          <text class="odate-line">{{item.createdAt}}</text>
+          <text wx:if="{{item.urgent && item.status !== 'done'}}" class="urgent-tag">加急</text>
+          <view class="hr-texts">
+            <text class="remain">{{item.statusText}}</text>
+            <text class="odate-line">{{item.createdAt}}</text>
+          </view>
         </view>
       </view>
       </view>

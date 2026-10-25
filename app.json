@@ -3,7 +3,6 @@
   "pages": [
     "pages/orders/orders",
     "pages/samples/samples",
-    "pages/workyear/workyear",
     "pages/stock-alerts/stock-alerts",
     "pages/backup/backup",
     "pages/users/users",

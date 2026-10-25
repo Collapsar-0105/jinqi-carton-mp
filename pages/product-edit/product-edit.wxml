@@ -62,13 +62,21 @@
     <text class="section-title">库存与代工</text>
 
     <view class="field half row-between">
-      <text class="label flex-1" style="margin-bottom:0;">常备款（库存预警）</text>
+      <text class="label flex-1">常备款</text>
       <switch checked="{{stockItem}}" color="#e94560" bindchange="onStockItem" />
     </view>
 
     <view class="field half row-between">
-      <text class="label flex-1" style="margin-bottom:0;">代工</text>
+      <text class="label flex-1">代工</text>
       <switch checked="{{outsourceEnabled}}" color="#e94560" bindchange="onOutsourceEnabled" />
+    </view>
+
+    <view wx:if="{{stockItem}}" class="field half">
+      <text class="label">预警数量</text>
+      <view class="input picker-value" bindtap="editStockAlertQty">
+        <text>{{stockAlertQty}}</text>
+        <text class="picker-arrow">›</text>
+      </view>
     </view>
 
     <view wx:if="{{outsourceEnabled && craft === '草箱'}}" class="field half">
@@ -81,7 +89,7 @@
       </picker>
     </view>
 
-    <view wx:if="{{outsourceEnabled}}" class="field half">
+    <view wx:if="{{outsourceEnabled}}" class="field">
       <text class="label">代工方（{{outsourceMode}}）</text>
       <picker mode="selector" range="{{supplierNames}}" value="{{supplierIndex}}" bindchange="onOutsourceSupplier">
         <view class="input picker-value">
