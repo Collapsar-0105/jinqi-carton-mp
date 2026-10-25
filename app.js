@@ -1732,7 +1732,7 @@ App({
       urgent: !!o.urgent,
       poText: items.map(it => it.po).filter(Boolean).join('、'),
       // 加急优先（红）> 已完成（绿）> 按天数渐变
-      ageStyle: '--age:' + this.cardAgeColor(o, ageDays) + ';',
+      ageStyle: this.cardAgeVars(o, ageDays),
       cls,
       statusText
     }
@@ -1746,16 +1746,9 @@ App({
   // - 加急：固定红（优先级最高，不随天数变）
   // - 已完成：固定绿（事件语义里绿=完成，固定不动）
   // - 已入库：0~15 天 青 → 深紫，>15 天常驻深紫（送不完积压越久越紫）
-  // - 进行中：0~5 天 浅黄 → 较深橙红，5~15 天 橙红 → 较深红，>15 天常驻深红
+  // - 进行中：1~5 天 浅黄 → 橙红，5~15 天 橙红 → 深红，>15 天常驻深红
   // - 暂缓：中性灰蓝（明确「搁置中」，不参与 aging）
-  cardAgeColor(o, days) {
-    if (!o) return '#6b7688'
-    if (o.urgent) return '#e94560'
-    if (o.status === 'done') return '#2ecc71'
-    if (o.status === 'paused') return '#6b7688'   // 暂缓：加深一档的中性灰蓝
-    if (o.status === 'stocked') return this.stockedAgeColor(days)
-    return this.activeAgeColor(days)
-  },
+  // 取色实现见下方 _ageHsl / cardAgeColor / cardAgeVars
 
   _hsl(c) {
     // 色相归一化到 [0,360)：5~15 天那段会用到 -4（=356），
@@ -1772,24 +1765,37 @@ App({
     ]
   },
 
-  // 已入库：第 1 天（入库当天）= 起点色，第 15 天 = 深紫，>15 天常驻深紫
-  // 注意：业务上不存在「第 0 天」，下单/入库当天就是第 1 天，
-  // 所以插值区间是 1~15 天（14 个间隔），不能用 d/15——否则第 1 天就已经偏离起点色。
-  stockedAgeColor(days) {
+  // 卡片状态色的 HSL 三元组（1.9.66 重构：供三档派生用）
+  _ageHsl(o, days) {
+    if (!o) return [217, 11, 48]
+    if (o.urgent) return [350, 79, 59]              // #e94560 固定红
+    if (o.status === 'done') return [145, 61, 49]   // #2ecc71 固定绿
+    if (o.status === 'paused') return [217, 11, 48] // #6b7688 中性灰蓝
     const d = Math.max(1, Number(days) || 1)
-    const t = Math.min(1, (d - 1) / 14)
-    return this._hsl(this._ramp([187, 72, 78], [274, 42, 42], t))
+    if (o.status === 'stocked') {
+      const t = Math.min(1, (d - 1) / 14)
+      return this._ramp([187, 72, 78], [274, 42, 42], t)
+    }
+    if (d > 15) return [348, 70, 45]
+    if (d <= 5) return this._ramp([45, 100, 82], [14, 72, 56], (d - 1) / 4)
+    return this._ramp([14, 72, 56], [-12, 70, 45], (d - 5) / 10)
   },
 
-  // 进行中：第 1 天 = 起点色 → 第 5 天 橙红 → 第 15 天 深红，>15 天常驻
-  // 【关键】5~15 段的终点必须正好等于 >15 的常驻色 hsl(348,70,45)，
-  // 否则第 15 天到第 16 天会跳色。色相从 14 走到 -12（=348）走「经过 0 度纯红」的短路，
-  // 直接插到 348 会绕回青/蓝导致色带断裂。
-  activeAgeColor(days) {
-    const d = Math.max(1, Number(days) || 1)
-    if (d > 15) return this._hsl([348, 70, 45])
-    if (d <= 5) return this._hsl(this._ramp([45, 100, 82], [14, 72, 56], (d - 1) / 4))
-    return this._hsl(this._ramp([14, 72, 56], [-12, 70, 45], (d - 5) / 10))
+  // 卡片取色（外框 / 左侧色带用）
+  cardAgeColor(o, days) {
+    return this._hsl(this._ageHsl(o, days))
+  },
+
+  // 三档联动（1.9.66）：
+  //   --age      外框 + 左侧色带 = 状态本色
+  //   --age-soft 卡片上半部底色   = 本色「变浅变亮」→ 明度 +12、饱和度 ×0.6
+  //   --age-mid  中间隔断色带     = 上半部底色「再压深」→ 明度 −12、饱和度 ×0.85
+  // 这样换任何主题色，三档都会自动跟着走，不需要为每个状态单独配色。
+  cardAgeVars(o, days) {
+    const b = this._ageHsl(o, days)
+    const soft = [b[0], Math.round(b[1] * 0.6), Math.min(93, b[2] + 12)]
+    const mid = [b[0], Math.round(b[1] * 0.85), Math.max(0, soft[2] - 12)]
+    return '--age:' + this._hsl(b) + ';--age-soft:' + this._hsl(soft) + ';--age-mid:' + this._hsl(mid) + ';'
   },
   // ================= 字体大小 =================
   // 0 标准 / 1 大 / 2 特大。没手动选过时：管理员标准，其他人都默认特大（车间看得清）
