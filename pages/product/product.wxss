@@ -103,6 +103,7 @@
 /* ===== 产品卡：外框 + 上部分层，配色统一取「加急订单卡」那套（1.9.72） ===== */
 .card.product-card {
   padding: 12px 14px;
+  border-radius: 26px;                       /* 与订单卡一致（.card 默认只有 10px） */
   border: 3px solid #e9445f;                 /* 外框 = 加急卡 --age */
   background: #f7f8fa;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);

@@ -3,6 +3,12 @@
 > 纸箱厂生产管理小程序。版本号定义在 `utils/constants.js` 的 `APP_VERSION`，每次上传前必须递增。
 > 历史交接背景见 `HANDOVER.md`。
 
+## 1.9.74（2026-10-25）
+
+- **产品卡圆角改成 26px**，与订单卡（加急卡）一致。原来用的是 `.card` 的基础圆角 **10px**，所以两者一眼就能看出不一样。
+- 涉及两处：`pages/product/product.wxss`（`.card.product-card`，产品档案）、`pages/product-select/product-select.wxss`（`.card.item`，选择产品）。
+- 底色两边本来就都是 `#f7f8fa`，这次只是圆角不一致；改完两边视觉统一（3px 红框 + 淡粉头部 + 3px 分隔线 + 浅灰主体 + 26px 圆角）。
+
 ## 1.9.73（2026-10-25）
 
 ### 撤回 1.9.72 的「合并图层」，改用 border-left 画书签条
