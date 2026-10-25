@@ -42,6 +42,7 @@
         <view class="field flex-1">
           <text class="label">数量 *</text>
           <input placeholder-style="color:#555;font-weight:600" class="input" type="number" placeholder="个" value="{{it.quantity}}" bindinput="onItemField" data-index="{{idx}}" data-field="quantity" />
+          <text wx:if="{{it.stockQty > 0}}" class="stock-hint">该产品有 {{it.stockQty}} 个库存</text>
         </view>
         <view class="field flex-1">
           <text class="label">单价（元/个）*</text>

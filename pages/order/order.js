@@ -151,7 +151,10 @@ Page({
       factoryPrice: '',
       factories: app.getServiceSuppliers().map(s => s.name),
       purchases: materials,
-      steps: steps.map(name => ({ name, status: 'pending', doneQty: 0 }))
+      steps: steps.map(name => ({ name, status: 'pending', doneQty: 0 })),
+      // 该产品当前还剩多少可送（已入库未送完 + 超量多出来的），选品时算一次，
+      // 填单过程中库存不会变，不用反复重算
+      stockQty: app.productStockQty(p.id)
     }
 
     // 收货地址：默认带出产品档案预设的（必须属于本单客户）

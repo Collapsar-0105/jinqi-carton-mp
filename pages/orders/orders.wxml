@@ -76,11 +76,10 @@
             <text class="pname">{{it.productName}}</text>
           </view>
           <view class="prod-meta">
-            <text wx:if="{{it.stockedTag}}" class="ptag done">已入库 {{it.stockedQty}}</text>
             <text wx:if="{{it.finished}}" class="ptag">已完成</text>
             <text wx:if="{{it.lowStock}}" class="ptag warn">库存不足</text>
             <text wx:if="{{it.overQty > 0}}" class="ptag over">超 {{it.overQty}}</text>
-            <text class="pqty {{it.overQty > 0 ? 'over' : ''}}">{{it.doneQtyProd}} / {{it.quantity}}</text>
+            <text class="pqty {{it.overQty > 0 ? 'over' : ''}}">{{it.qtyText}}</text>
           </view>
         </view>
       </view>

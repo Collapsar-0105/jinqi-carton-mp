@@ -993,6 +993,21 @@ App({
     return Number(item.quantity) || 0
   },
 
+  // 某产品当前还剩多少可送：所有已入库订单里「实际入库 - 已送」的总和。
+  // 含两部分：正常还没送完的 + 超量生产多出来的。拆到子单的款在子单上算，母单那部分
+  // shippableQty 会返回 0，不会重复计。
+  productStockQty(productId) {
+    if (!productId) return 0
+    let n = 0
+    this.getAllOrders().forEach(o => {
+      (o.items || []).forEach(it => {
+        if (!it || it.productId !== productId || !it.stocked) return
+        n += this.shippableQty(o, it)
+      })
+    })
+    return n
+  },
+
   // 允许超量 10%：订单 1000 最多能入 1100
   // 注意：不能写 Math.ceil(qty * 1.1)，浮点会翻车（100*1.1=110.00000000000001，ceil 变 111）
   // 先乘 11（整数乘法）再除 10 取整，整百整千的数量也不会多算 1 个
@@ -1649,19 +1664,32 @@ App({
         const totalQty = Number(it.originalQty) || q
         const doneQty = Math.min(totalQty, (Number(it.splitQty) || 0) + d)
         if (o.isSub) {
+          // 子单是从母单拆出来的入库款，同样按「已送 / 实际入库」显示
+          const subStock = this.producedQtyOf(it) || q
+          const subSent = this.deliveredOf(o, it)
           return {
             productId: it.productId || '',
             productName: it.productName || '',
             quantity: q,
             totalQty: q,
             doneQty: q,
+            doneQtyProd: q,
             splitQty: 0,
             finished: !!it.finished,
             showProgress: false,
-            lowStock: false
+            lowStock: false,
+            stockedTag: true,
+            stockedQty: subStock,
+            sentQty: subSent,
+            overQty: Math.max(0, subStock - q),
+            qtyText: subSent + ' / ' + subStock
           }
         }
         const doneProd = this.completedQtyOf(it)   // 已做完多少个（纸板/面纸定的基数 × 工序进度）
+        const stockQty = this.producedQtyOf(it)
+        // 已入库的款显示「已送 / 实际入库」——超量生产的也能直接看出还剩多少没送；
+        // 没入库的款显示「已生产 / 订单量」
+        const sent = it.stocked ? this.deliveredOf(o, it) : d
         return {
           productId: it.productId || '',
           productName: it.productName || '',
@@ -1669,14 +1697,16 @@ App({
           totalQty,
           doneQty,
           doneQtyProd: doneProd,
-          producedQty: this.producedQtyOf(it),
+          producedQty: stockQty,
           stockedTag: !!it.stocked,
-          stockedQty: Number(it.producedQty) || 0,
+          stockedQty: stockQty,
           overQty: Math.max(0, doneProd - q),
           splitQty: Number(it.splitQty) || 0,
           finished: !!it.finished,
           showProgress: false,
-          lowStock: !!(p && p.stockItem) && q > 0 && d / q >= 0.8 && d < q
+          lowStock: !!(p && p.stockItem) && q > 0 && d / q >= 0.8 && d < q,
+          sentQty: sent,
+          qtyText: it.stocked ? (sent + ' / ' + stockQty) : (doneProd + ' / ' + q)
         }
       }),
       qty,

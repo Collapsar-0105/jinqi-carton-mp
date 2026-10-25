@@ -35,7 +35,7 @@
 
       <view class="it-spec">
         <view>{{it.craft}} · {{it.boxType}} · {{it.flute}}<text wx:if="{{it.paperColor}}"> · {{it.paperColor}}</text></view>
-        <view>尺寸：{{it._sizeText}} · {{(!order.isSub && it.originalQty > it.quantity) ? "剩余数量" : "数量"}} {{it.quantity}}</view>
+        <view>尺寸：{{it._sizeText}} · {{(!order.isSub && it.originalQty > it.quantity) ? "剩余数量" : "数量"}}<text wx:if="{{it.overQty > 0}}" class="qty-box">{{it.quantity}}</text><text wx:else>{{it.quantity}}</text></view>
         <view wx:if="{{it.boardL}}">纸板：{{it.boardL}}×{{it.boardW}}mm（{{it.twoPiece ? '两片' : '一片'}}成型）· 箱舌 {{it.tang}}mm</view>
 
         <view wx:if="{{it.pads.length > 0}}">
@@ -88,7 +88,8 @@
 
       <view wx:if="{{it.stocked}}" class="deliver-box">
         <view class="deliver-head">
-          <text class="deliver-text">已入库 · 已送 {{it.delivered}} / {{it.quantity}}</text>
+          <text class="deliver-text">已入库 · 已送 {{it.delivered}} / {{it.producedQty}}</text>
+          <text wx:if="{{it.overQty > 0}}" class="ptag over">超 {{it.overQty}}</text>
           <text wx:if="{{it.remainQty <= 0 && !(it.splitQty > 0 && !order.isSub)}}" class="tag tag-done">已送完</text>
         </view>
 

@@ -377,3 +377,12 @@
 .addr-tip { display: block; margin-top: 6px; font-size: 13px; color: #888; }
 .addr-tip.ok { color: #16a34a; font-weight: 700; }
 .addr-tip.warn { color: #e94560; font-weight: 700; }
+
+/* 该产品有库存的提示（数量框下方，1.9.47） */
+.stock-hint {
+  display: block;
+  margin-top: 4px;
+  font-size: 13px;
+  color: #2980b9;
+  font-weight: 600;
+}

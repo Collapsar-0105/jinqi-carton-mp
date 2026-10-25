@@ -226,3 +226,21 @@
   background: #fff4e5; border-left: 4px solid #f39c12;
   color: #8a5a00; font-size: 15px; font-weight: 800;
 }
+
+/* 超量生产的单：把订单数量框起来提示（与订单卡片「超 N」同款蓝框，1.9.47） */
+.qty-box {
+  display: inline-block;
+  margin: 0 2px;
+  padding: 0 8px;
+  border: 1px solid #aed6f1;
+  background: #e8f4fd;
+  color: #2980b9;
+  border-radius: 4px;
+  font-weight: 700;
+}
+/* 已入库区块里的「超 N」标记，沿用卡片蓝框样式 */
+.ptag.over {
+  font-size: 13px; color: #2980b9;
+  background: #e8f4fd; border: 1px solid #aed6f1;
+  border-radius: 4px; padding: 0 6px; margin-left: 6px;
+}
