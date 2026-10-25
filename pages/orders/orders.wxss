@@ -304,7 +304,10 @@
   left: 0; top: 0; bottom: 0;
   width: 10px;
   background: #d5d9e0;
-  border-radius: 24px 0 0 24px;
+  /* 不要给书签条自己设圆角：它只有 10px 宽，24px 的圆角会被浏览器按比例压成 10px，
+     而卡片内圆角是 26px(-2px 边框)=24px，两者弧度对不上 → 左上/左下会露出一条浅色缝。
+     交给卡片的 overflow:hidden 统一裁切即可，边缘完全贴合。 */
+  border-radius: 0;
   z-index: 3;
   pointer-events: none;
 }
@@ -847,7 +850,12 @@
      --age-mid   中间隔断色带     = 比上半部固定深 7 个明度
    卡片整体底色与主体都统一为淡灰 #f7f8fa：底部浅带的根因是「卡片底色从留白处露出」，
    只要卡片底和主体同色，留白处露出来的也是同一个淡灰，不会再出现色带。 */
-.card.order { background: #f7f8fa !important; }
+.card.order {
+  background: #f7f8fa !important;
+  /* 去掉 2px 边框：原来「2px 边框 + 10px 书签条」是两层分别绘制的，
+     圆角处各自抗锯齿会露出一条 1px 浅缝。去掉边框后由 3px 外框直接贴住书签条，缝隙消失。 */
+  border: 0;
+}
 .card.order .band { padding-bottom: 0; }
 .card.order .band-body { margin-bottom: 0; background: #f7f8fa; }
 .card.order .band-head {
