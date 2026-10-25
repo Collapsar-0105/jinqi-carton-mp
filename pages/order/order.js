@@ -26,6 +26,8 @@ Page({
   },
 
   onLoad() {
+    // 这是填单页，表单内容还没保存；云同步落地时不要重建本页（见 app.reloadCurrentPage）
+    this.noAutoReload = true
     const sys = wx.getDeviceInfo ? wx.getDeviceInfo() : wx.getSystemInfoSync()
     this.setData({ isIOS: sys.platform === 'ios' })
     this.kbHandler = res => this.setData({
@@ -228,7 +230,15 @@ Page({
         if (list[i]) list[i].qty = String(items[idx].quantity)
       }
     }
-    this.setData({ items }, () => this.syncAddrDerived())
+    this.setData({ items }, () => {
+      this.syncAddrDerived()
+      // 面板展开后滚到可见位置：收货地址块常在屏幕底部，不滚的话点了像没反应
+      if (items[idx].addrPanelOpen) {
+        setTimeout(() => {
+          try { wx.pageScrollTo({ selector: '.addr-panel', offsetTop: -60, duration: 200 }) } catch (e) {}
+        }, 80)
+      }
+    })
   },
 
   onAddrQty(e) {

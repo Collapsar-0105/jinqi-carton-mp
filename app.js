@@ -277,6 +277,9 @@ App({
       const pages = getCurrentPages()
       const cur = pages[pages.length - 1]
       if (!cur) return
+      // 页面声明了 noAutoReload（如「新建订单」有未保存的表单），云同步不要重建它，
+      // 否则正在填的内容会被 reLaunch 清空（1.9.50）
+      if (cur.noAutoReload) return
       if (typeof cur.loadOrder === 'function') return cur.loadOrder()
       if (typeof cur.load === 'function') return cur.load()
       if (typeof cur.loadLocal === 'function') return cur.loadLocal()
@@ -285,7 +288,7 @@ App({
       try {
         const pages = getCurrentPages()
         const cur = pages[pages.length - 1]
-        if (cur && cur.route) wx.reLaunch({ url: '/' + cur.route })
+        if (cur && !cur.noAutoReload && cur.route) wx.reLaunch({ url: '/' + cur.route })
       } catch (e2) {}
     }
   },

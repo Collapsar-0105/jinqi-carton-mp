@@ -62,9 +62,9 @@
       </view>
 
       <view wx:if="{{it.addrOptions.length > 0}}" class="field mt-8">
-        <view class="flex-row">
+        <view class="flex-row addr-head" bindtap="toggleAddrPanel" data-index="{{idx}}">
           <text class="label flex-1">收货地址</text>
-          <text wx:if="{{it.addrOptions.length > 1}}" class="link" bindtap="toggleAddrPanel" data-index="{{idx}}">
+          <text wx:if="{{it.addrOptions.length > 1}}" class="link">
             {{it.addrPanelOpen ? '收起' : '按地址分配数量 ›'}}
           </text>
         </view>
@@ -73,7 +73,7 @@
         </picker>
         <view wx:else class="addr-summary" bindtap="toggleAddrPanel" data-index="{{idx}}">
           <text>{{it.addrSummary}}</text>
-          <text class="addr-sum-badge {{it.addrSum === (it.quantity * 1) ? 'ok' : 'warn'}}">{{it.addrSum}} / {{it.quantity}}</text>
+          <text class="addr-sum-badge {{(it.quantity && it.addrSum === (it.quantity * 1)) ? 'ok' : 'warn'}}">{{it.addrSum}} / {{it.quantity}}</text>
         </view>
 
         <view wx:if="{{it.addrPanelOpen}}" class="addr-panel">
@@ -81,7 +81,7 @@
             <text class="addr-name">{{a.address}}</text>
             <input placeholder-style="color:#555;font-weight:600" class="input addr-qty" type="number" placeholder="数量" value="{{a.qty}}" bindinput="onAddrQty" data-index="{{idx}}" data-ai="{{ai}}" />
           </view>
-          <text class="addr-tip {{it.addrSum === (it.quantity * 1) ? 'ok' : 'warn'}}">
+          <text class="addr-tip {{(it.quantity && it.addrSum === (it.quantity * 1)) ? 'ok' : 'warn'}}">
             合计 {{it.addrSum}} / 订单数量 {{it.quantity || 0}}{{it.addrSum === (it.quantity * 1) ? '' : '（要相等）'}}
           </text>
         </view>

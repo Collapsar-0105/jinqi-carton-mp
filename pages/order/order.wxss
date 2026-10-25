@@ -1,5 +1,7 @@
 .page {
-  padding-bottom: 30px;
+  /* 底部固定「创建订单」栏约 64px 高，留 30px 会把最后一屏内容压在按钮栏下面点不到，
+     留足 100px 保证滚到底时全部内容可点（1.9.50） */
+  padding-bottom: 100px;
 }
 
 .section-title {
@@ -359,6 +361,8 @@
 
 
 /* ===== 下单页：收货地址分配（1.9.20） ===== */
+/* 整行标题可点（不加只点得到下面那个框，点「收货地址」几个字没反应，1.9.50） */
+.addr-head { padding: 2px 0; }
 .addr-summary {
   display: flex; align-items: center; justify-content: space-between;
   gap: 8px; padding: 10px 12px; border: 1px solid #dfe4ee; border-radius: 10px;
