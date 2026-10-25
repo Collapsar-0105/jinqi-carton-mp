@@ -817,15 +817,15 @@
 
 /* ===== 选中态外框：各自主题色加深一档（1.9.56） =====
    原来 `.chip.on` 带一层红色光晕 rgba(233,69,96,0.12)，第一行「全部/暂缓/常备预警/已完成」
-   选中时没被覆盖，会出现红圈。这里统一改成：底色=主题色，外框=同色系加深一档的 2px 实心圈。 */
+   选中时没被覆盖，会出现红圈。这里统一改成：底色=主题色，外框=同色系加深一档的 3px 实心圈。 */
 
 /* 第一行（概览）：全部 / 暂缓 / 常备预警 / 已完成 */
-.home-card .chip.chip-top.chip-all.on { box-shadow: 0 0 0 2px #374151 !important; }
-.home-card .chip.chip-top.chip-paused.on { box-shadow: 0 0 0 2px #4d5665 !important; }
-.home-card .chip.chip-top.chip-alerts.on { box-shadow: 0 0 0 2px #b84708 !important; }
-.home-card .chip.chip-top.chip-done.on { box-shadow: 0 0 0 2px #0f7a37 !important; }
+.home-card .chip.chip-top.chip-all.on { box-shadow: 0 0 0 3px #374151 !important; }
+.home-card .chip.chip-top.chip-paused.on { box-shadow: 0 0 0 3px #4d5665 !important; }
+.home-card .chip.chip-top.chip-alerts.on { box-shadow: 0 0 0 3px #b84708 !important; }
+.home-card .chip.chip-top.chip-done.on { box-shadow: 0 0 0 3px #0f7a37 !important; }
 
 /* 第二行（主力）：进行中 / 加急 / 已入库 —— 保留原有投影，再加一圈深色外框 */
-.home-card .chip-grid-main .chip-active.on { box-shadow: 0 4px 12px rgba(0,0,0,0.14), 0 0 0 2px #e0b53a !important; }
-.home-card .chip-grid-main .chip-urgent.on { box-shadow: 0 4px 12px rgba(0,0,0,0.14), 0 0 0 2px #c72a45 !important; }
-.home-card .chip-grid-main .chip-stocked.on { box-shadow: 0 4px 12px rgba(0,0,0,0.14), 0 0 0 2px #46c2d4 !important; }
+.home-card .chip-grid-main .chip-active.on { box-shadow: 0 4px 12px rgba(0,0,0,0.14), 0 0 0 3px #e0b53a !important; }
+.home-card .chip-grid-main .chip-urgent.on { box-shadow: 0 4px 12px rgba(0,0,0,0.14), 0 0 0 3px #c72a45 !important; }
+.home-card .chip-grid-main .chip-stocked.on { box-shadow: 0 4px 12px rgba(0,0,0,0.14), 0 0 0 3px #46c2d4 !important; }
