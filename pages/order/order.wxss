@@ -386,3 +386,15 @@
   color: #2980b9;
   font-weight: 600;
 }
+
+/* 数量/单价两列：严格等宽（1.9.49）
+   根因有两个，叠加导致「数量」列被撑成 132px、「单价」列 237px、两行对不齐：
+   1) 字段原先带 flex-1 类（flex:1 → flex-basis:0%），flex-basis 优先级高于 width，
+      而微信的 flexbox 又把 0% 当内容宽度处理（连显式 width:180px 都被忽略）；
+   2) 改用 CSS Grid 后，1fr 等价于 minmax(auto,1fr)，轨道最小尺寸由内容决定——
+      数量单元格里的库存提示文字把它撑宽了（微信 grid 不支持 minmax()，压不住）。
+   解法：Grid + 1fr 1fr + gap，并把库存提示移到网格外面（整行下方，视觉上仍在数量框下方），
+   单元格里只剩标签和输入框，两列就绝对等宽了。 */
+.qty-price-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.qty-price-row .field { min-width: 0; }
+.qty-price-row .field .input { width: 100%; }

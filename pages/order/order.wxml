@@ -38,27 +38,27 @@
         <text wx:if="{{it.boardL}}"> · 纸板 {{it.boardL}}×{{it.boardW}}{{it.twoPiece ? '（两片）' : ''}}</text>
       </view>
 
-      <view class="flex-row gap-8 mt-8">
-        <view class="field flex-1">
+      <view class="field mt-8">
+        <text class="label">PO（批次号，可不填）</text>
+        <input placeholder-style="color:#555;font-weight:600" class="input" placeholder="客户 PO / 批次号" value="{{it.po}}" bindinput="onPO" data-index="{{idx}}" />
+      </view>
+
+      <view class="mt-8 qty-price-row">
+        <view class="field qp-cell">
           <text class="label">数量 *</text>
-          <input placeholder-style="color:#555;font-weight:600" class="input" type="number" placeholder="个" value="{{it.quantity}}" bindinput="onItemField" data-index="{{idx}}" data-field="quantity" />
-          <text wx:if="{{it.stockQty > 0}}" class="stock-hint">该产品有 {{it.stockQty}} 个库存</text>
+          <input placeholder-style="color:#555;font-weight:600" class="input" type="digit" placeholder="个" value="{{it.quantity}}" bindinput="onItemField" data-index="{{idx}}" data-field="quantity" />
         </view>
-        <view class="field flex-1">
+        <view class="field qp-cell">
           <text class="label">单价（元/个）*</text>
           <input placeholder-style="color:#555;font-weight:600" class="input" type="digit" placeholder="如 3.5" value="{{it.price}}" bindinput="onItemField" data-index="{{idx}}" data-field="price" />
         </view>
       </view>
+      <text wx:if="{{it.stockQty > 0}}" class="stock-hint">该产品有 {{it.stockQty}} 个库存</text>
       <text class="text-xs c-gray">{{it.priceHint}}</text>
       <view wx:if="{{it.priceOptions.length > 0}}" class="price-history">
         <text class="ph-label">历史价</text>
         <view wx:for="{{it.priceOptions}}" wx:key="price" wx:for-item="po"
               class="ph-chip" bindtap="onPricePick" data-index="{{idx}}" data-price="{{po.price}}">¥{{po.price}}</view>
-      </view>
-
-      <view class="field mt-8">
-        <text class="label">PO（批次号，可不填）</text>
-        <input placeholder-style="color:#555;font-weight:600" class="input" placeholder="客户 PO / 批次号" value="{{it.po}}" bindinput="onPO" data-index="{{idx}}" />
       </view>
 
       <view wx:if="{{it.addrOptions.length > 0}}" class="field mt-8">
