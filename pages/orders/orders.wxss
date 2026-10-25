@@ -839,3 +839,14 @@
 }
 /* 外框往外扩 3px，卡片间距跟着放大，否则相邻两张的外框会贴在一起 */
 .page > block > .card.order { margin-bottom: 16px; }
+
+/* ===== 卡片内部修饰（1.9.65） =====
+   1) 去掉底部多余浅带：底部那条浅带其实是 .band 的 padding-bottom(6px)
+      + .band-body 的 margin-bottom(4px) 露出卡片底色。两处归零后，
+      白色主体直接落到卡片底边（卡片已 overflow:hidden，会按圆角裁切）。
+   2) 中间隔断改为主题色：原来靠 .band-head 的 4px 间隙露出卡片底色，
+      而进行中卡底色是白 → 那个隔断看不见，只有部分状态才看得到。
+      改成 band-head 的 border-bottom 用 var(--age)，所有卡都跟随主题色。 */
+.card.order .band { padding-bottom: 0; }
+.card.order .band-body { margin-bottom: 0; }
+.card.order .band-head { margin-bottom: 0; border-bottom: 3px solid var(--age, #d5d9e0); }
