@@ -73,7 +73,7 @@
 - 新增 `setUrgentTree(id, urgent, label)`：加急标记（含子单）可撤销。
 - 订单状态与库存：`stockItemIn`（单款入库拆子单）、`stockIn`（整单入库）、`applyStockStatus`、`mergeSubOrders`（方案甲：整款拆出、自动合并）、`autoMerge`、`hasStockExtra`（库存标）、`shippableQty`、`deliveredOf`、`deliveredOfAddr`。
 - 地址：`itemAddrList`、`customerAddresses`、`defaultAddrFor`。
-- 领域计算：`stockLimitOf`（订单 × 1.1 上限）、`stepBaseQty`（本批基数）、`stepNeedsQty`、`completedQtyOf`、`producedQtyOf`、`itemRatio`、`completedRatio`、`orderCardData`、`ageColor`（天数→颜色 hsl 205→355）。
+- 领域计算：`stockLimitOf`（订单 × 1.1 上限）、`stepBaseQty`（本批基数）、`stepNeedsQty`、`completedQtyOf`、`producedQtyOf`、`itemRatio`、`completedRatio`、`orderCardData`、`cardAgeColor`（按状态分色卡，1.9.48）。
 - 启动：`onLaunch` 包了 `step()` 工厂，四步（自动备份 / 迁移 / 云初始化 / 网络监听）**各自 try/catch**，任何一步出错不影响云端初始化（此前串行执行，一步抛错就整台设备白屏）。
 - 迁移：`migrate` / `migrateOrders`（订单 v2 结构）/ `migrateProducts` / `migrateOrderSteps`（删交期等字段、工序规范化）/ `migrateStepQty` / `migrateOldSubs`（清理旧「分批完成」留下的子单，用 `subs_merged_v1` 标记只跑一次）。
 - 删除的无用函数：`orderAmount`、`allPacked`、`factoryNames`（依据操作记录，v93_195 之前的改动）。
@@ -103,7 +103,7 @@
 
 - 指标卡拆两行：第一行（全部/暂缓/常备预警/已完成）、第二行 3 列（进行中/加急/已入库）；点「常备预警」不是筛选而是 `wx.navigateTo` 到预警页。
 - `renderLimit: 120` + `showMore`，避免一次渲染全部卡片。
-- 卡片：两段式布局，`--age` CSS 变量驱动左边色带和边框；天数越久越红；加急红 > 已完成绿 > 天数渐变。
+- 卡片：两段式布局，`--age` CSS 变量驱动左边色带和边框。色卡按状态分流（1.9.48）：加急固定红 > 已完成固定绿 > 暂缓灰蓝；已入库 0~15 天青→深紫、>15 天常驻深紫；进行中 0~5 天浅黄→较深橙红、5~15 天橙红→较深红、>15 天常驻深红。天数与卡片上「已持续/已入库 N 天」一致（均自下单日起算）。
 - 卡片数量改为「**完成量 / 订单量**」（如 `450 / 500`），超量标红并加 `超 N` 标签；已入库的款加绿色 `已入库 500` 标。
 - 撤销后顶部闪现提示条（`undoFlash`）。
 - `refreshFromCloud` 改为调用 `app.syncOrdersFromCloud()`（增量），10 秒节流。

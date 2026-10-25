@@ -1714,17 +1714,61 @@ App({
       urgent: !!o.urgent,
       poText: items.map(it => it.po).filter(Boolean).join('、'),
       // 加急优先（红）> 已完成（绿）> 按天数渐变
-      ageStyle: '--age:' + (o.urgent ? '#e94560' : (o.status === 'done' ? '#2ecc71' : this.ageColor(days))) + ';',
+      ageStyle: '--age:' + this.cardAgeColor(o, days) + ';',
       cls,
       statusText
     }
   },
 
-  // 订单卡颜色：越久越红（1 天蓝 → 12 天以上红，中间过渡紫/玫红）
-  ageColor(days) {
-    const t = Math.min(1, Math.max(0, (Number(days) - 1) / 11))
-    const hue = Math.round(205 + (355 - 205) * t)
-    return 'hsl(' + hue + ', 70%, 50%)'
+  // ===== 卡片色卡（1.9.48）=====
+  // 按订单状态各走一条色带，颜色越「重」代表积压越久。天数沿用卡片上已经显示的
+  // 「已持续 N 天 / 已入库 N 天」（elapsedDays，自下单日起算），保证颜色和数字对得上。
+  // 起点都避开了过浅的颜色：浅青 / 浅黄在白底卡片上可读性差。
+  // - 加急：固定红（优先级最高，不随天数变）
+  // - 已完成：固定绿（事件语义里绿=完成，固定不动）
+  // - 已入库：0~15 天 青 → 深紫，>15 天常驻深紫（送不完积压越久越紫）
+  // - 进行中：0~5 天 浅黄 → 较深橙红，5~15 天 橙红 → 较深红，>15 天常驻深红
+  // - 暂缓：中性灰蓝（明确「搁置中」，不参与 aging）
+  cardAgeColor(o, days) {
+    if (!o) return '#8a94a6'
+    if (o.urgent) return '#e94560'
+    if (o.status === 'done') return '#2ecc71'
+    if (o.status === 'paused') return '#8a94a6'
+    if (o.status === 'stocked') return this.stockedAgeColor(days)
+    return this.activeAgeColor(days)
+  },
+
+  _hsl(c) {
+    // 色相归一化到 [0,360)：5~15 天那段会用到 -4（=356），
+    // 虽然 CSS 规范里 hsl 接受负色相，但归一化更稳
+    const h = ((c[0] % 360) + 360) % 360
+    return 'hsl(' + h.toFixed(1) + ', ' + c[1].toFixed(1) + '%, ' + c[2].toFixed(1) + '%)'
+  },
+
+  _ramp(from, to, t) {
+    return [
+      from[0] + (to[0] - from[0]) * t,
+      from[1] + (to[1] - from[1]) * t,
+      from[2] + (to[2] - from[2]) * t
+    ]
+  },
+
+  // 已入库：0~15 天 青(#218D85) → 深紫(#522673)，>15 天常驻深紫
+  stockedAgeColor(days) {
+    const d = Math.max(0, Number(days) || 0)
+    const t = Math.min(1, d / 15)
+    return this._hsl(this._ramp([184, 62, 34], [274, 50, 30], t))
+  },
+
+  // 进行中：0~5 天 浅黄(#E8A60C) → 较深橙红(#D34317)；
+  //        5~15 天 橙红 → 较深红(#B81E28)；>15 天常驻深红(#91122B)
+  // 注意 5~15 段色相从 14 走到 -4（=356）：必须走「经过 0 度纯红」这条短路，
+  // 直接插到 356 会绕回青/蓝，颜色就断了。
+  activeAgeColor(days) {
+    const d = Math.max(0, Number(days) || 0)
+    if (d > 15) return this._hsl([348, 78, 32])
+    if (d <= 5) return this._hsl(this._ramp([42, 90, 48], [14, 80, 46], d / 5))
+    return this._hsl(this._ramp([14, 80, 46], [-4, 72, 42], (d - 5) / 10))
   },
   // ================= 字体大小 =================
   // 0 标准 / 1 大 / 2 特大。没手动选过时：管理员标准，其他人都默认特大（车间看得清）
