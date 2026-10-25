@@ -831,11 +831,11 @@
 .home-card .chip-grid-main .chip-stocked.on { box-shadow: 0 4px 12px rgba(0,0,0,0.14), 0 0 0 4px #45c2d4 !important; }
 
 /* ===== 订单卡片外框（1.9.63） =====
-   与选中 chip 同款：4px 实心外框。颜色取卡片自身的状态色 --age
+   与选中 chip 同款：3px 实心外框。颜色取卡片自身的状态色 --age
    （卡片每张都按状态/天数注入了 --age，所以外框天然跟随色卡）。
    原各状态的彩色投影统一换成中性投影，避免和外框打架。 */
 .card.order {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07), 0 0 0 4px var(--age, #d5d9e0) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07), 0 0 0 3px var(--age, #d5d9e0) !important;
 }
-/* 外框往外扩了 4px，卡片间距跟着放大，否则相邻两张的外框会贴在一起 */
+/* 外框往外扩 3px，卡片间距跟着放大，否则相邻两张的外框会贴在一起 */
 .page > block > .card.order { margin-bottom: 16px; }
