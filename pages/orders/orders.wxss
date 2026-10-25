@@ -868,15 +868,20 @@
    border 与背景同属一次绘制（背景默认延伸到 border 之下），左侧整片颜色连续无缝。 */
 .card.order .band-body {
   margin: 0;
-  padding: 10px 10px 10px 2px;
-  border-left: 12px solid var(--age, #d5d9e0);
+  padding: 10px 10px 10px 8px;
+  border-left: 16px solid var(--age, #d5d9e0);
   background: #f7f8fa;
 }
 .card.order .band-head {
   margin: 0;
-  padding: 8px 10px 8px 2px;
-  border-left: 12px solid var(--age, #d5d9e0);
+  padding: 8px 10px 8px 8px;
+  border-left: 16px solid var(--age, #d5d9e0);
   border-radius: 0;
   background: var(--age-soft, #f5f6f8);
   border-bottom: 3px solid var(--age-mid, #d5d9e0);
 }
+
+/* 书签条加宽到 16px 后左侧多占 12px，「加急」等标签会被挤到第二行。
+   收紧头部标签间距与右侧内边距把空间腾回来，保持单行。 */
+.card.order .head-left { column-gap: 6px; }
+.card.order .band-head { padding-right: 6px; }
