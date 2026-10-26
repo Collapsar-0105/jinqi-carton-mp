@@ -85,6 +85,20 @@ exports.main = async (event) => {
     return { ok: true, openid: OPENID, allowed: !!user.allowed, admin, user }
   }
 
+  // 设置自己的称呼：放在 allowed 检查【之前】，
+  // 这样刚扫码、还没被管理员放行的设备也能先把名字报上去，管理员才能认出该放行谁。
+  if (action === 'setMyName') {
+    const nm = String(payload.name || '').trim().slice(0, 20)
+    const nick = String(payload.nickname || '').trim().slice(0, 20)
+    const dev = String(payload.device || '').trim().slice(0, 40)
+    const patch = { name: nm }
+    // 昵称/机型只在有值时写，避免被空值覆盖掉
+    if (nick) patch.nickname = nick
+    if (dev) patch.device = dev
+    try { await db.collection(USERS).doc(OPENID).update({ data: patch }) } catch (e) {}
+    return { ok: true, name: nm, nickname: nick, device: dev }
+  }
+
   if (action === 'listUsers') {
     if (!admin) return { ok: false, error: 'NOT_ADMIN' }
     const r = await db.collection(USERS).orderBy('createdAt', 'asc').limit(100).get()

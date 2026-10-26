@@ -190,6 +190,8 @@ App({
       if (!res || !res.ok) {
         if (res && res.error === 'NOT_ALLOWED') {
           this.setCloud({ mode: 'pending', allowed: false, openid: res.openid || '', error: '等待管理员授权' })
+          // 还没被放行也要先把名字报上去，管理员才知道该放行谁
+          this.promptUserName()
         } else {
           this.setCloud({ error: (res && res.error) || '未授权', mode: 'local' })
         }
@@ -201,6 +203,7 @@ App({
       // 云端为准：订单集合全量覆盖本地
       this.syncOrdersFromCloud().then(() => { try { this.reloadCurrentPage() } catch (e) {} })
       try { wx.setStorageSync('role', res.role || (res.admin ? 'admin' : 'worker')) } catch (e) {}
+      this.promptUserName()
       this.backfillOrders()
       const localAt = Number(wx.getStorageSync('sync_updated_at')) || 0
       const remoteAt = Number(res.updatedAt) || 0
@@ -1844,6 +1847,84 @@ App({
   getFontClass() {
     const lv = this.getFontLevel()
     return lv === 2 ? 'fs-2' : (lv === 1 ? 'fs-1' : '')
+  },
+
+  // ================= 我的称呼 =================
+  // 管理员在「用户管理」里靠这个认出设备，避免只看到一串 openid
+  getUserName() {
+    try { return wx.getStorageSync('user_name') || '' } catch (e) { return '' }
+  },
+  getUserNickname() {
+    try { return wx.getStorageSync('user_nickname') || '' } catch (e) { return '' }
+  },
+
+  // 设备型号（品牌+机型），用户管理里用来区分「谁在哪台设备上」
+  getDeviceLabel() {
+    try {
+      const info = wx.getDeviceInfo ? wx.getDeviceInfo() : wx.getSystemInfoSync()
+      const brand = String(info.brand || '').trim()
+      const model = String(info.model || '').trim()
+      if (!model) return brand
+      if (!brand || brand.toLowerCase() === model.toLowerCase()) return model
+      return brand + ' ' + model
+    } catch (e) { return '' }
+  },
+
+  // 把称呼 / 微信昵称 / 机型 一起上报到云端
+  reportUserProfile(name, nickname) {
+    const n = String(name != null ? name : this.getUserName()).trim().slice(0, 20)
+    const nick = String(nickname != null ? nickname : this.getUserNickname()).trim().slice(0, 20)
+    const dev = this.getDeviceLabel()
+    if (n) { try { wx.setStorageSync('user_name', n) } catch (e) {} }
+    if (nick) { try { wx.setStorageSync('user_nickname', nick) } catch (e) {} }
+    this.cloudCall('setMyName', { name: n, nickname: nick, device: dev }).catch(() => {})
+    return n
+  },
+
+  setUserName(name) {
+    const n = String(name || '').trim().slice(0, 20)
+    if (!n) return false
+    this.reportUserProfile(n, null)
+    return true
+  },
+
+  setUserNickname(nickname) {
+    const nick = String(nickname || '').trim().slice(0, 20)
+    if (!nick) return false
+    this.reportUserProfile(null, nick)
+    return true
+  },
+
+  // 取微信昵称（需要用户点一下授权）
+  fetchWechatNickname() {
+    return new Promise(resolve => {
+      if (!wx.getUserProfile) { resolve(''); return }
+      wx.getUserProfile({
+        desc: '用于在用户管理里标识这台设备是谁',
+        lang: 'zh_CN',
+        success: res => resolve((res.userInfo && res.userInfo.nickName) || ''),
+        fail: () => resolve('')
+      })
+    })
+  },
+  // 第一次连上云端时问一次（在设置页里可以随时改）
+  promptUserName() {
+    if (this._nameAsked) return
+    if (this.getUserName()) return
+    this._nameAsked = true
+    try { wx.setStorageSync('user_name_asked', 1) } catch (e) {}
+    // 就算还没填名字，也先把机型报上去，管理员至少看得出是什么设备
+    this.reportUserProfile(this.getUserName(), this.getUserNickname())
+    setTimeout(() => {
+      wx.showModal({
+        title: '请输入您的称呼',
+        editable: true,
+        placeholderText: '例如：张三 / 车间小李',
+        success: res => {
+          if (res.confirm) this.setUserName(res.content)
+        }
+      })
+    }, 1500)
   },
 
   // ================= 工作年 =================

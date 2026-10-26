@@ -24,7 +24,10 @@ Page({
     launchErrors: [],
     cloud: { mode: 'local', error: '', lastSyncText: '-' },
     cloudEnv: '',
-    workYears: []
+    workYears: [],
+    myName: '',
+    myNickname: '',
+    myDevice: ''
   },
 
   // 非管理员：危险操作一律拦住
@@ -120,6 +123,36 @@ Page({
       cur.setData({ __perfProbe: t }, () => { renderMs = (Date.now() - t) + 'ms'; done() })
     } else done()
   },
+  // ===== 我的称呼 =====
+  onMyNameInput(e) {
+    this.setData({ myName: e.detail.value })
+  },
+
+  saveMyName() {
+    const n = String(this.data.myName || '').trim()
+    if (!n) {
+      wx.showToast({ title: '请输入称呼', icon: 'none' })
+      return
+    }
+    app.setUserName(n)
+    wx.showToast({ title: '已保存', icon: 'success' })
+  },
+
+  // 取微信昵称（需要用户点一下授权弹窗）
+  getWechatNickname() {
+    wx.showLoading({ title: '获取中' })
+    app.fetchWechatNickname().then(nick => {
+      wx.hideLoading()
+      if (!nick) {
+        wx.showToast({ title: '未获取到昵称', icon: 'none' })
+        return
+      }
+      app.setUserNickname(nick)
+      this.setData({ myNickname: nick })
+      wx.showToast({ title: '已同步到用户管理', icon: 'success' })
+    })
+  },
+
   // ===== 工作年设置（1.9.66 从独立页面搬进设置页） =====
   loadWorkYears() {
     const now = new Date().getFullYear()
@@ -174,6 +207,11 @@ Page({
   },
 
   onShow() {
+    this.setData({
+      myName: app.getUserName(),
+      myNickname: app.getUserNickname(),
+      myDevice: app.getDeviceLabel()
+    })
     this.loadWorkYears()
     // 启动异常直接摆出来，别让用户靠猜
     try {

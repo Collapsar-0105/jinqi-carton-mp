@@ -44,6 +44,8 @@ Page({
         openid: u._id,
         shortId: u._id ? (u._id.slice(0, 8) + '…' + u._id.slice(-6)) : '',
         name: u.name || '',
+        nickname: u.nickname || '',
+        device: u.device || '',
         allowed: !!u.allowed,
         admin: !!u.admin,
         self: u._id === ((app.globalData.cloud && app.globalData.cloud.openid) || ''),
@@ -58,6 +60,38 @@ Page({
       if (d < 2 && this.data.loading) {
         clearTimeout(this._retry)
         this._retry = setTimeout(() => this.load(d + 1), 1200)
+      }
+    })
+  },
+
+  // 管理员给设备起个名字（只改名字，不改变授权状态）
+  rename(e) {
+    const { openid, name, allowed } = e.currentTarget.dataset
+    wx.showModal({
+      title: '给这台设备起个名字',
+      editable: true,
+      content: name || '',
+      placeholderText: '例如：张三 / 车间小李',
+      success: r => {
+        if (!r.confirm) return
+        const nm = String(r.content || '').trim()
+        if (!nm) {
+          wx.showToast({ title: '名字不能为空', icon: 'none' })
+          return
+        }
+        // allowed 必须原样带上：云端 setAllowed 收到 undefined 会当成 false，把待授权的设备给禁了
+        app.cloudCall('setAllowed', {
+          openid,
+          allowed: allowed === 'true' || allowed === true,
+          name: nm
+        }).then(res => {
+          if (!res || !res.ok) {
+            wx.showToast({ title: '保存失败', icon: 'none' })
+            return
+          }
+          wx.showToast({ title: '已改名', icon: 'success' })
+          this.load()
+        }).catch(() => wx.showToast({ title: '保存失败', icon: 'none' }))
       }
     })
   },

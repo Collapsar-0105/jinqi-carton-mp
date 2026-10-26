@@ -80,3 +80,13 @@
   text-align: center;
   padding: 24px;
 }
+
+/* 没填称呼时的提示 */
+.noname {
+  color: #999;
+}
+.hint-line {
+  font-size: 13px;
+  color: #e67e22;
+  margin-top: 6px;
+}
