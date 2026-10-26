@@ -133,6 +133,13 @@ exports.main = async (event) => {
     return { ok: true }
   }
 
+  // 清空除本机之外的所有设备记录（待授权的、已放行的都清掉）
+  if (action === 'removeAllUsers') {
+    if (!admin) return { ok: false, error: 'NOT_ADMIN' }
+    const r = await db.collection(USERS).where({ _id: db.command.neq(OPENID) }).remove().catch(() => ({ stats: {} }))
+    return { ok: true, removed: (r && r.stats && r.stats.removed) || 0 }
+  }
+
   if (action === 'clearData') {
     if (!admin) return { ok: false, error: 'NOT_ADMIN' }
     try { await db.collection(DATA).doc(DOC).remove() } catch (e) {}

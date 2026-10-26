@@ -2,6 +2,11 @@
   display: flex;
   align-items: baseline;
   justify-content: space-between;
+  gap: 12px;
+}
+/* 标题占满左边，右边两个操作（「清空其它设备」「刷新」）并排靠右 */
+.head-row .section-title {
+  flex: 1;
 }
 .refresh {
   font-size: 15px;

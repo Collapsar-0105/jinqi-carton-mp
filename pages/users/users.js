@@ -148,6 +148,31 @@ Page({
     })
   },
 
+  // 清空除本机外的所有设备记录
+  removeAll() {
+    wx.showModal({
+      title: '清空其它设备',
+      content: '把除这台设备之外的所有记录都删掉（待授权的、已放行的都删）。确定吗？',
+      confirmColor: '#e94560',
+      success: r => {
+        if (!r.confirm) return
+        wx.showLoading({ title: '清理中' })
+        app.cloudCall('removeAllUsers').then(res => {
+          wx.hideLoading()
+          if (!res || !res.ok) {
+            wx.showToast({ title: '清理失败', icon: 'none' })
+            return
+          }
+          wx.showToast({ title: '已清理 ' + (res.removed || 0) + ' 台', icon: 'success' })
+          this.load()
+        }).catch(() => {
+          wx.hideLoading()
+          wx.showToast({ title: '清理失败', icon: 'none' })
+        })
+      }
+    })
+  },
+
   copyId(e) {
     wx.setClipboardData({ data: e.currentTarget.dataset.openid })
   }

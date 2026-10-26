@@ -2,6 +2,7 @@
   <view class="card">
     <view class="head-row">
       <text class="section-title">用户管理</text>
+      <text class="refresh danger" bindtap="removeAll">清空其它设备</text>
       <text class="refresh" bindtap="load">刷新</text>
     </view>
     <text class="text-xs c-gray">新设备扫码后会自动出现在这里，点「允许」才能同步数据。</text>
@@ -45,7 +46,7 @@
               bindtap="setRole" data-openid="{{item.openid}}" data-role="admin">设为管理员</view>
         <view wx:if="{{item.admin && !item.self}}" class="btn btn-sm btn-outline"
               bindtap="setRole" data-openid="{{item.openid}}" data-role="worker">设为工人</view>
-        <view wx:if="{{!item.admin}}" class="btn btn-sm btn-outline danger"
+        <view wx:if="{{!item.self}}" class="btn btn-sm btn-outline danger"
               bindtap="remove" data-openid="{{item.openid}}">移除</view>
       </view>
     </view>
