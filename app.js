@@ -1895,6 +1895,33 @@ App({
     return true
   },
 
+  // 询问是否获取微信昵称（拿到昵称，管理员就能直接认出是谁）
+  askWechatNickname() {
+    if (this.getUserNickname()) return
+    let asked = 0
+    try { asked = wx.getStorageSync('user_nick_asked') || 0 } catch (e) {}
+    if (asked) return
+    try { wx.setStorageSync('user_nick_asked', 1) } catch (e) {}
+    wx.showModal({
+      title: '带上微信昵称？',
+      content: '拿到微信昵称后，管理员在「用户管理」里能直接认出这台设备是谁。',
+      confirmText: '获取',
+      success: res => {
+        if (!res.confirm) return
+        wx.showLoading({ title: '获取中' })
+        this.fetchWechatNickname().then(nick => {
+          wx.hideLoading()
+          if (!nick) {
+            wx.showToast({ title: '没拿到，可稍后在设置页获取', icon: 'none' })
+            return
+          }
+          this.setUserNickname(nick)
+          wx.showToast({ title: '已同步到用户管理', icon: 'success' })
+        })
+      }
+    })
+  },
+
   // 取微信昵称（需要用户点一下授权）
   fetchWechatNickname() {
     return new Promise(resolve => {
@@ -1907,14 +1934,18 @@ App({
       })
     })
   },
-  // 第一次连上云端时问一次（在设置页里可以随时改）
+  // 连上云端时：机型每次都上报；称呼和微信昵称各只问一次（之后可在设置页里改）
   promptUserName() {
-    if (this._nameAsked) return
-    if (this.getUserName()) return
-    this._nameAsked = true
-    try { wx.setStorageSync('user_name_asked', 1) } catch (e) {}
     // 就算还没填名字，也先把机型报上去，管理员至少看得出是什么设备
     this.reportUserProfile(this.getUserName(), this.getUserNickname())
+
+    if (this.getUserName()) { this.askWechatNickname(); return }
+    if (this._nameAsked) return
+    let asked = 0
+    try { asked = wx.getStorageSync('user_name_asked') || 0 } catch (e) {}
+    if (asked) { this.askWechatNickname(); return }
+    this._nameAsked = true
+    try { wx.setStorageSync('user_name_asked', 1) } catch (e) {}
     setTimeout(() => {
       wx.showModal({
         title: '请输入您的称呼',
@@ -1922,6 +1953,8 @@ App({
         placeholderText: '例如：张三 / 车间小李',
         success: res => {
           if (res.confirm) this.setUserName(res.content)
+          // 再问一次要不要带微信昵称：管理员在用户管理里就能直接认出这台设备
+          setTimeout(() => this.askWechatNickname(), 500)
         }
       })
     }, 1500)
