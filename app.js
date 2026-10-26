@@ -22,6 +22,34 @@ App({
     this.cloudPull(true)
   },
 
+  // 触发微信官方的隐私授权弹窗（底部半屏那张：小程序名 + 申请什么 + 用途 + 拒绝/允许）
+  // 原理：用户还没同意隐私协议时，调用任何隐私接口，微信都会自动弹出官方授权弹窗。
+  // 前提是后台《用户隐私保护指引》里已经声明了对应的信息类型，否则接口是被直接禁用的。
+  triggerPrivacyAuth() {
+    if (!wx.getPrivacySetting) return
+    wx.getPrivacySetting({
+      success: res => {
+        if (!res || !res.needAuthorization) return
+        // 调一个隐私接口把官方弹窗引出来（返回值我们不用，只要那个同意动作）
+        if (wx.requirePrivacyAuthorize) {
+          wx.requirePrivacyAuthorize({
+            success: () => {},
+            fail: () => {}
+          })
+        }
+        if (wx.getUserProfile) {
+          wx.getUserProfile({
+            desc: '用于在用户管理里标识这台设备',
+            lang: 'zh_CN',
+            success: () => {},
+            fail: () => {}
+          })
+        }
+      },
+      fail: () => {}
+    })
+  },
+
   // 身份校验：没填昵称的设备一律先弹身份卡片，不填不让进系统。
   // 用整页 reLaunch 实现（不是每页塞弹层），没有返回键，绕不过去。
   ensureIdentity() {
@@ -31,6 +59,8 @@ App({
     if (cur === 'pages/identity/identity') return
     setTimeout(() => {
       wx.reLaunch({ url: '/pages/identity/identity' })
+      // 身份卡盖上来之后，再让微信的官方授权弹窗盖在它上面
+      setTimeout(() => this.triggerPrivacyAuth(), 500)
     }, 200)
   },
 
