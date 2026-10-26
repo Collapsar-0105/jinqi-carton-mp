@@ -16,12 +16,25 @@
 
   <view class="card">
     <text class="section-title">我的微信身份</text>
-    <text class="text-xs c-gray">授权微信昵称后，管理员在「用户管理」里就能直接认出这台设备。</text>
+    <text class="text-xs c-gray">点下面的输入框，微信会把你微信里的昵称带出来，选一下即可。管理员在「用户管理」里就能直接认出这台设备。</text>
     <view class="flex-row gap-8 mt-8">
-      <text class="text-xs c-gray flex-1">微信昵称：{{myNickname || '未获取'}}</text>
+      <input class="input flex-1" type="nickname" placeholder="点这里使用微信昵称" value="{{myNickname}}" bindchange="onNicknameChange" bindblur="onNicknameBlur" />
+      <view class="btn btn-sm btn-primary" bindtap="saveMyNickname">保存</view>
+    </view>
+    <view class="flex-row gap-8 mt-8">
+      <text class="text-xs c-gray flex-1">微信昵称：{{myNickname || '未填写'}}</text>
       <text class="text-xs c-gray">本机机型：{{myDevice || '未知'}}</text>
     </view>
-    <view class="btn btn-sm btn-outline mt-8" bindtap="getWechatNickname">获取微信昵称</view>
+  </view>
+
+  <view wx:if="{{needPrivacy}}" class="card">
+    <text class="section-title">隐私保护指引</text>
+    <text class="text-xs c-gray">本小程序会收集你的微信昵称（用于管理员识别设备）和设备型号。同意后，微信才会把昵称带出来供你选择。</text>
+    <view class="flex-row gap-8 mt-8">
+      <button class="btn btn-sm btn-primary privacy-btn flex-1" id="agree-privacy-btn"
+              open-type="agreePrivacyAuthorization" bindagreeprivacyauthorization="onAgreePrivacy">同意并继续</button>
+      <view class="btn btn-sm btn-outline flex-1" bindtap="openPrivacy">查看协议</view>
+    </view>
   </view>
 
   <view class="card">

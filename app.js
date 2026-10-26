@@ -1883,44 +1883,31 @@ App({
     return true
   },
 
-  // 询问是否获取微信昵称 → 直接弹微信官方的授权页，不自定义任何弹窗
-  askWechatNickname() {
-    if (this.getUserNickname()) return
-    let asked = 0
-    try { asked = wx.getStorageSync('user_nick_asked') || 0 } catch (e) {}
-    if (asked) return
-    try { wx.setStorageSync('user_nick_asked', 1) } catch (e) {}
-    setTimeout(() => {
-      wx.showLoading({ title: '获取中' })
-      this.fetchWechatNickname().then(nick => {
-        wx.hideLoading()
-        if (!nick) {
-          wx.showToast({ title: '未获取到昵称', icon: 'none' })
-          return
-        }
-        this.setUserNickname(nick)
-        wx.showToast({ title: '已同步', icon: 'success' })
-      })
-    }, 1200)
-  },
+  // 昵称由使用者自己在设置页填（微信的「头像昵称填写能力」：
+  // <input type="nickname"> 聚焦时微信会把真实昵称带出来，用户确认后才有值）。
+  // 老接口 wx.getUserProfile 自基础库 2.27.1 起只返回匿名数据，已废弃不用。
 
-  // 取微信昵称（需要用户点一下授权）
-  fetchWechatNickname() {
+  // 隐私保护指引：后台没申报的信息类型，对应接口会被直接禁用
+  // 这里只做「查状态 + 打开协议页」，同意动作由页面上的
+  // <button open-type="agreePrivacyAuthorization"> 完成
+  checkPrivacySetting() {
     return new Promise(resolve => {
-      if (!wx.getUserProfile) { resolve(''); return }
-      wx.getUserProfile({
-        desc: '用于在用户管理里标识这台设备是谁',
-        lang: 'zh_CN',
-        success: res => resolve((res.userInfo && res.userInfo.nickName) || ''),
-        fail: () => resolve('')
+      if (!wx.getPrivacySetting) { resolve({ needAuthorization: false }); return }
+      wx.getPrivacySetting({
+        success: res => resolve({ needAuthorization: !!res.needAuthorization, contractName: res.privacyContractName || '' }),
+        fail: () => resolve({ needAuthorization: false })
       })
     })
   },
-  // 连上云端时：机型自动上报；昵称只弹一次微信官方的授权页
+
+  openPrivacyContract() {
+    if (!wx.openPrivacyContract) return
+    wx.openPrivacyContract({ fail: () => {} })
+  },
+  // 连上云端时：机型自动上报（不需要用户点任何东西）
   // 称呼（怎么叫他）由管理员在「用户管理」里命名，使用者不需要知道这件事
   promptUserName() {
     this.reportUserProfile()
-    this.askWechatNickname()
   },
 
   // ================= 工作年 =================

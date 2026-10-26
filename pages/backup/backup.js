@@ -26,7 +26,9 @@ Page({
     cloudEnv: '',
     workYears: [],
     myNickname: '',
-    myDevice: ''
+    myDevice: '',
+    needPrivacy: false,
+    privacyName: ''
   },
 
   // 非管理员：危险操作一律拦住
@@ -123,19 +125,51 @@ Page({
     } else done()
   },
   // ===== 我的微信身份 =====
-  // 取微信昵称（需要用户点一下授权弹窗）
-  getWechatNickname() {
-    wx.showLoading({ title: '获取中' })
-    app.fetchWechatNickname().then(nick => {
-      wx.hideLoading()
-      if (!nick) {
-        wx.showToast({ title: '未获取到昵称', icon: 'none' })
-        return
-      }
-      app.setUserNickname(nick)
-      this.setData({ myNickname: nick })
-      wx.showToast({ title: '已同步到用户管理', icon: 'success' })
+  // ===== 微信昵称（官方「头像昵称填写能力」） =====
+  // <input type="nickname"> 聚焦时微信会把自己那份昵称带出来，用户选一下才有值。
+  // 老接口 wx.getUserProfile 自基础库 2.27.1 起只返回匿名数据（"微信用户"），已废弃。
+  onNicknameChange(e) {
+    const v = e.detail.value || ''
+    this.setData({ myNickname: v })
+    this.saveNickname(v)
+  },
+
+  onNicknameBlur(e) {
+    const v = e.detail.value || ''
+    if (v && v !== this.data.myNickname) {
+      this.setData({ myNickname: v })
+      this.saveNickname(v)
+    }
+  },
+
+  saveMyNickname() {
+    const v = String(this.data.myNickname || '').trim()
+    if (!v) {
+      wx.showToast({ title: '还没有昵称', icon: 'none' })
+      return
+    }
+    this.saveNickname(v)
+  },
+
+  saveNickname(v) {
+    app.setUserNickname(v)
+    wx.showToast({ title: '已同步到用户管理', icon: 'success' })
+  },
+
+  // ===== 隐私保护指引 =====
+  checkPrivacy() {
+    app.checkPrivacySetting().then(r => {
+      this.setData({ needPrivacy: !!r.needAuthorization, privacyName: r.contractName || '' })
     })
+  },
+
+  onAgreePrivacy() {
+    this.checkPrivacy()
+    wx.showToast({ title: '已同意', icon: 'success' })
+  },
+
+  openPrivacy() {
+    app.openPrivacyContract()
   },
 
   // ===== 工作年设置（1.9.66 从独立页面搬进设置页） =====
@@ -196,6 +230,7 @@ Page({
       myNickname: app.getUserNickname(),
       myDevice: app.getDeviceLabel()
     })
+    this.checkPrivacy()
     this.loadWorkYears()
     // 启动异常直接摆出来，别让用户靠猜
     try {
