@@ -1,0 +1,95 @@
+.page {
+  padding: 0;
+}
+
+/* 全屏遮罩 + 居中卡片，做出「弹窗」的感觉，但用整页实现更可靠 */
+.mask {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 32px;
+  z-index: 999;
+}
+
+.id-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 20px 18px;
+  border-radius: 16px;
+}
+
+.id-title {
+  display: block;
+  font-size: 18px;
+  font-weight: bold;
+  color: #111;
+  margin-bottom: 8px;
+}
+
+/* 头像 + 昵称并排 */
+.id-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.id-avatar-btn {
+  width: 48px;
+  height: 48px;
+  min-height: 48px;
+  padding: 0;
+  margin: 0;
+  border-radius: 50%;
+  background: #f2f2f7;
+  border: 1px solid #e5e5e5;
+  overflow: hidden;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.id-avatar-btn::after {
+  border: none;
+}
+.id-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+}
+.id-avatar-ph {
+  font-size: 12px;
+  color: #999;
+}
+
+.id-input {
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  line-height: 44px;
+  font-size: 16px;
+}
+
+.id-privacy {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #f0f0f0;
+}
+
+/* 原生 button 默认样式要清掉，才能和 .btn 看起来一致 */
+.privacy-btn {
+  margin: 0;
+  padding: 5px 10px;
+  font-size: 12px;
+  line-height: 1.4;
+  font-weight: 600;
+}
+.privacy-btn::after {
+  border: none;
+}

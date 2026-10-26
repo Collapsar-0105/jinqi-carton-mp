@@ -128,6 +128,11 @@ Page({
   // ===== 微信昵称（官方「头像昵称填写能力」） =====
   // <input type="nickname"> 聚焦时微信会把自己那份昵称带出来，用户选一下才有值。
   // 老接口 wx.getUserProfile 自基础库 2.27.1 起只返回匿名数据（"微信用户"），已废弃。
+  // 昵称统一在身份卡里填（扫码进来时强制弹），这里只做跳转
+  goIdentity() {
+    wx.reLaunch({ url: '/pages/identity/identity' })
+  },
+
   onNicknameChange(e) {
     const v = e.detail.value || ''
     this.setData({ myNickname: v })

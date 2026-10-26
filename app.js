@@ -15,10 +15,23 @@ App({
   },
 
   onShow() {
+    this.ensureIdentity()
     const now = Date.now()
     if (now - (this._lastPullAt || 0) < 60000) return
     this._lastPullAt = now
     this.cloudPull(true)
+  },
+
+  // 身份校验：没填昵称的设备一律先弹身份卡片，不填不让进系统。
+  // 用整页 reLaunch 实现（不是每页塞弹层），没有返回键，绕不过去。
+  ensureIdentity() {
+    if (this.isIdentityDone()) return
+    const pages = getCurrentPages()
+    const cur = pages.length ? pages[pages.length - 1].route : ''
+    if (cur === 'pages/identity/identity') return
+    setTimeout(() => {
+      wx.reLaunch({ url: '/pages/identity/identity' })
+    }, 200)
   },
 
   onLaunch() {
@@ -31,6 +44,7 @@ App({
         try { console.error('[启动异常]', msg) } catch (e2) {}
       }
     }
+    step('身份校验', this.ensureIdentity)
     step('自动备份', this.autoBackup)
     step('数据迁移', this.migrate)
     step('云初始化', this.initCloud)
@@ -1868,19 +1882,34 @@ App({
   },
 
   // 把微信昵称 / 机型上报到云端（称呼由管理员在「用户管理」里命名，客户端不碰）
-  reportUserProfile(nickname) {
+  reportUserProfile(nickname, avatar) {
     const nick = String(nickname != null ? nickname : this.getUserNickname()).trim().slice(0, 20)
     const dev = this.getDeviceLabel()
+    const av = String(avatar != null ? avatar : (wx.getStorageSync('user_avatar') || '')).trim()
     if (nick) { try { wx.setStorageSync('user_nickname', nick) } catch (e) {} }
-    this.cloudCall('setMyName', { nickname: nick, device: dev }).catch(() => {})
+    if (av) { try { wx.setStorageSync('user_avatar', av) } catch (e) {} }
+    this.cloudCall('setMyName', { nickname: nick, device: dev, avatar: av }).catch(() => {})
     return nick
   },
 
-  setUserNickname(nickname) {
+  setUserNickname(nickname, avatar) {
     const nick = String(nickname || '').trim().slice(0, 20)
-    if (!nick) return false
-    this.reportUserProfile(nick)
+    if (!nick && !avatar) return false
+    this.reportUserProfile(nick, avatar)
     return true
+  },
+
+  getUserAvatar() {
+    try { return wx.getStorageSync('user_avatar') || '' } catch (e) { return '' }
+  },
+
+  // 身份卡已经确认过没有（确认过就不再拦）
+  isIdentityDone() {
+    try { return !!wx.getStorageSync('identity_done') } catch (e) { return false }
+  },
+
+  markIdentityDone() {
+    try { wx.setStorageSync('identity_done', 1) } catch (e) {}
   },
 
   // 昵称由使用者自己在设置页填（微信的「头像昵称填写能力」：

@@ -91,15 +91,17 @@ exports.main = async (event) => {
     const nm = String(payload.name || '').trim().slice(0, 20)
     const nick = String(payload.nickname || '').trim().slice(0, 20)
     const dev = String(payload.device || '').trim().slice(0, 40)
+    const av = String(payload.avatar || '').trim().slice(0, 300)
     // 只有昵称/机型/称呼都有值时才写：客户端不上报称呼，
     // 这里绝不能用空值把管理员设的名字冲掉
     const patch = {}
     if (nm) patch.name = nm
     if (nick) patch.nickname = nick
     if (dev) patch.device = dev
+    if (av) patch.avatar = av
     if (!Object.keys(patch).length) patch.name = nm
     try { await db.collection(USERS).doc(OPENID).update({ data: patch }) } catch (e) {}
-    return { ok: true, name: nm, nickname: nick, device: dev }
+    return { ok: true, name: nm, nickname: nick, device: dev, avatar: av }
   }
 
   if (action === 'listUsers') {

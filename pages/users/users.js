@@ -45,6 +45,7 @@ Page({
         shortId: u._id ? (u._id.slice(0, 8) + '…' + u._id.slice(-6)) : '',
         name: u.name || '',
         nickname: u.nickname || '',
+        avatar: u.avatar || '',
         device: u.device || '',
         allowed: !!u.allowed,
         admin: !!u.admin,

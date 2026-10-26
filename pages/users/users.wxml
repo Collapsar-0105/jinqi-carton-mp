@@ -15,6 +15,7 @@
   <block wx:for="{{list}}" wx:key="openid">
     <view class="card user-card">
       <view class="flex-row">
+        <image wx:if="{{item.avatar}}" class="user-avatar" src="{{item.avatar}}" mode="aspectFill" />
         <text class="user-name {{item.nickname || item.name ? '' : 'noname'}}">{{item.nickname || item.name || '未命名设备'}}</text>
         <text class="badge {{item.allowed ? 'ok' : 'wait'}}">{{item.allowed ? '已允许' : '待授权'}}</text>
         <text wx:if="{{item.admin}}" class="badge admin">管理员</text>
