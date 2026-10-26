@@ -15,12 +15,8 @@
   </view>
 
   <view class="card">
-    <text class="section-title">我的称呼</text>
-    <text class="text-xs c-gray">填个名字或工号，管理员在「用户管理」里就能一眼认出这台设备，不用对着 openid 猜。</text>
-    <view class="flex-row gap-8 mt-8">
-      <input class="input flex-1" placeholder="例如：张三 / 车间小李" value="{{myName}}" bindinput="onMyNameInput" />
-      <view class="btn btn-sm btn-primary" bindtap="saveMyName">保存</view>
-    </view>
+    <text class="section-title">我的微信身份</text>
+    <text class="text-xs c-gray">授权微信昵称后，管理员在「用户管理」里就能直接认出这台设备。</text>
     <view class="flex-row gap-8 mt-8">
       <text class="text-xs c-gray flex-1">微信昵称：{{myNickname || '未获取'}}</text>
       <text class="text-xs c-gray">本机机型：{{myDevice || '未知'}}</text>

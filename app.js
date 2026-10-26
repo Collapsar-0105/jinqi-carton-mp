@@ -1851,9 +1851,6 @@ App({
 
   // ================= 我的称呼 =================
   // 管理员在「用户管理」里靠这个认出设备，避免只看到一串 openid
-  getUserName() {
-    try { return wx.getStorageSync('user_name') || '' } catch (e) { return '' }
-  },
   getUserNickname() {
     try { return wx.getStorageSync('user_nickname') || '' } catch (e) { return '' }
   },
@@ -1870,56 +1867,41 @@ App({
     } catch (e) { return '' }
   },
 
-  // 把称呼 / 微信昵称 / 机型 一起上报到云端
-  reportUserProfile(name, nickname) {
-    const n = String(name != null ? name : this.getUserName()).trim().slice(0, 20)
+  // 把微信昵称 / 机型上报到云端（称呼由管理员在「用户管理」里命名，客户端不碰）
+  reportUserProfile(nickname) {
     const nick = String(nickname != null ? nickname : this.getUserNickname()).trim().slice(0, 20)
     const dev = this.getDeviceLabel()
-    if (n) { try { wx.setStorageSync('user_name', n) } catch (e) {} }
     if (nick) { try { wx.setStorageSync('user_nickname', nick) } catch (e) {} }
-    this.cloudCall('setMyName', { name: n, nickname: nick, device: dev }).catch(() => {})
-    return n
-  },
-
-  setUserName(name) {
-    const n = String(name || '').trim().slice(0, 20)
-    if (!n) return false
-    this.reportUserProfile(n, null)
-    return true
+    this.cloudCall('setMyName', { nickname: nick, device: dev }).catch(() => {})
+    return nick
   },
 
   setUserNickname(nickname) {
     const nick = String(nickname || '').trim().slice(0, 20)
     if (!nick) return false
-    this.reportUserProfile(null, nick)
+    this.reportUserProfile(nick)
     return true
   },
 
-  // 询问是否获取微信昵称（拿到昵称，管理员就能直接认出是谁）
+  // 询问是否获取微信昵称 → 直接弹微信官方的授权页，不自定义任何弹窗
   askWechatNickname() {
     if (this.getUserNickname()) return
     let asked = 0
     try { asked = wx.getStorageSync('user_nick_asked') || 0 } catch (e) {}
     if (asked) return
     try { wx.setStorageSync('user_nick_asked', 1) } catch (e) {}
-    wx.showModal({
-      title: '带上微信昵称？',
-      content: '拿到微信昵称后，管理员在「用户管理」里能直接认出这台设备是谁。',
-      confirmText: '获取',
-      success: res => {
-        if (!res.confirm) return
-        wx.showLoading({ title: '获取中' })
-        this.fetchWechatNickname().then(nick => {
-          wx.hideLoading()
-          if (!nick) {
-            wx.showToast({ title: '没拿到，可稍后在设置页获取', icon: 'none' })
-            return
-          }
-          this.setUserNickname(nick)
-          wx.showToast({ title: '已同步到用户管理', icon: 'success' })
-        })
-      }
-    })
+    setTimeout(() => {
+      wx.showLoading({ title: '获取中' })
+      this.fetchWechatNickname().then(nick => {
+        wx.hideLoading()
+        if (!nick) {
+          wx.showToast({ title: '未获取到昵称', icon: 'none' })
+          return
+        }
+        this.setUserNickname(nick)
+        wx.showToast({ title: '已同步', icon: 'success' })
+      })
+    }, 1200)
   },
 
   // 取微信昵称（需要用户点一下授权）
@@ -1934,30 +1916,11 @@ App({
       })
     })
   },
-  // 连上云端时：机型每次都上报；称呼和微信昵称各只问一次（之后可在设置页里改）
+  // 连上云端时：机型自动上报；昵称只弹一次微信官方的授权页
+  // 称呼（怎么叫他）由管理员在「用户管理」里命名，使用者不需要知道这件事
   promptUserName() {
-    // 就算还没填名字，也先把机型报上去，管理员至少看得出是什么设备
-    this.reportUserProfile(this.getUserName(), this.getUserNickname())
-
-    if (this.getUserName()) { this.askWechatNickname(); return }
-    if (this._nameAsked) return
-    let asked = 0
-    try { asked = wx.getStorageSync('user_name_asked') || 0 } catch (e) {}
-    if (asked) { this.askWechatNickname(); return }
-    this._nameAsked = true
-    try { wx.setStorageSync('user_name_asked', 1) } catch (e) {}
-    setTimeout(() => {
-      wx.showModal({
-        title: '请输入您的称呼',
-        editable: true,
-        placeholderText: '例如：张三 / 车间小李',
-        success: res => {
-          if (res.confirm) this.setUserName(res.content)
-          // 再问一次要不要带微信昵称：管理员在用户管理里就能直接认出这台设备
-          setTimeout(() => this.askWechatNickname(), 500)
-        }
-      })
-    }, 1500)
+    this.reportUserProfile()
+    this.askWechatNickname()
   },
 
   // ================= 工作年 =================

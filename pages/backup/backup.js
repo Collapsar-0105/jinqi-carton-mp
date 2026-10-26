@@ -25,7 +25,6 @@ Page({
     cloud: { mode: 'local', error: '', lastSyncText: '-' },
     cloudEnv: '',
     workYears: [],
-    myName: '',
     myNickname: '',
     myDevice: ''
   },
@@ -123,21 +122,7 @@ Page({
       cur.setData({ __perfProbe: t }, () => { renderMs = (Date.now() - t) + 'ms'; done() })
     } else done()
   },
-  // ===== 我的称呼 =====
-  onMyNameInput(e) {
-    this.setData({ myName: e.detail.value })
-  },
-
-  saveMyName() {
-    const n = String(this.data.myName || '').trim()
-    if (!n) {
-      wx.showToast({ title: '请输入称呼', icon: 'none' })
-      return
-    }
-    app.setUserName(n)
-    wx.showToast({ title: '已保存', icon: 'success' })
-  },
-
+  // ===== 我的微信身份 =====
   // 取微信昵称（需要用户点一下授权弹窗）
   getWechatNickname() {
     wx.showLoading({ title: '获取中' })
@@ -208,7 +193,6 @@ Page({
 
   onShow() {
     this.setData({
-      myName: app.getUserName(),
       myNickname: app.getUserNickname(),
       myDevice: app.getDeviceLabel()
     })
