@@ -354,3 +354,7 @@
 .outsource-card .field.half.row-between > .label {
   margin-bottom: 8px;
 }
+
+/* 附加纸板：输入框窄一点，一行放得下 长×宽 mm + 张数 */
+.bp-sub { margin-top: 10px; padding-top: 8px; border-top: 1px dashed #dfe6ef; }
+.bp-input-sm { width: 58px; }

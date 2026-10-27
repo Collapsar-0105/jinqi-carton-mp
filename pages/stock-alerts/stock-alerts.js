@@ -1,4 +1,5 @@
 const app = getApp()
+const C = require('../../utils/constants.js')
 
 Page({
   data: {
@@ -56,7 +57,7 @@ Page({
     if (mode === '成品箱') {
       lines.push('PO：')
     } else {
-      lines.push('纸板尺寸：' + (p.boardL || 0) + '×' + (p.boardW || 0) + 'mm')
+      C.boardLines(p).forEach(l => lines.push(l))
       lines.push('箱舌：' + (p.tang || 0) + 'mm')
     }
     lines.push('数量：', '送货：')

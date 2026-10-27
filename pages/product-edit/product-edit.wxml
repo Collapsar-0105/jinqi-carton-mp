@@ -143,23 +143,16 @@
       </picker>
     </view>
 
-    <view class="field">
+    <view wx:if="{{!manualBoard}}" class="field">
       <text class="label">纸箱制作尺寸（mm）</text>
-      <view wx:if="{{!isTrapezoid}}" class="flex-row gap-8">
+      <view class="flex-row gap-8">
         <input placeholder-style="color:#555;font-weight:600" class="input flex-1" type="number" placeholder="长" value="{{sizeL}}" bindinput="onSize" data-field="sizeL" />
         <text class="size-x">×</text>
         <input placeholder-style="color:#555;font-weight:600" class="input flex-1" type="number" placeholder="宽" value="{{sizeW}}" bindinput="onSize" data-field="sizeW" />
         <text class="size-x">×</text>
         <input placeholder-style="color:#555;font-weight:600" class="input flex-1" type="number" placeholder="高" value="{{sizeH}}" bindinput="onSize" data-field="sizeH" />
       </view>
-      <view wx:else class="trap-grid">
-        <input placeholder-style="color:#555;font-weight:600" class="input" type="number" placeholder="上长" value="{{sizeTL}}" bindinput="onSize" data-field="sizeTL" />
-        <input placeholder-style="color:#555;font-weight:600" class="input" type="number" placeholder="上宽" value="{{sizeTW}}" bindinput="onSize" data-field="sizeTW" />
-        <input placeholder-style="color:#555;font-weight:600" class="input" type="number" placeholder="中高" value="{{sizeH2}}" bindinput="onSize" data-field="sizeH2" />
-        <input placeholder-style="color:#555;font-weight:600" class="input" type="number" placeholder="下长" value="{{sizeBL}}" bindinput="onSize" data-field="sizeBL" />
-        <input placeholder-style="color:#555;font-weight:600" class="input" type="number" placeholder="下宽" value="{{sizeBW}}" bindinput="onSize" data-field="sizeBW" />
-      </view>
-      <text wx:if="{{isTrapezoid}}" class="text-xs c-gray">梯形箱填五个尺寸，纸板尺寸手动填写，成型方式固定两片</text>
+      <text wx:if="{{manualBoard}}" class="text-xs c-gray">该箱型不填纸箱尺寸，纸板尺寸在下面手动填写</text>
     </view>
 
     <view class="board-panel">
@@ -187,6 +180,17 @@
         <text class="bp-k">成型方式</text>
         <text class="bp-v {{twoPiece ? 'c-red text-bold' : ''}}">{{twoPiece ? '两片成型' : '一片成型'}}</text>
       </view>
+
+      <view class="bp-title bp-sub">附加纸板<text class="bp-reset" bindtap="addBoard">+ 添加纸板</text></view>
+      <view wx:for="{{boards}}" wx:key="index" class="bp-row">
+        <text class="bp-k">纸板{{index + 2}}</text>
+        <input placeholder-style="color:#555;font-weight:600" class="bp-input bp-input-sm" type="number" placeholder="长" value="{{item.L}}" bindinput="onBoardField" data-index="{{index}}" data-field="L" />
+        <text class="bp-unit">×</text>
+        <input placeholder-style="color:#555;font-weight:600" class="bp-input bp-input-sm" type="number" placeholder="宽" value="{{item.W}}" bindinput="onBoardField" data-index="{{index}}" data-field="W" />
+        <input placeholder-style="color:#555;font-weight:600" class="bp-input bp-input-sm" type="number" placeholder="张" value="{{item.qty}}" bindinput="onBoardField" data-index="{{index}}" data-field="qty" />
+        <text class="del" bindtap="removeBoard" data-index="{{index}}">✕</text>
+      </view>
+      <text wx:if="{{boards.length === 0}}" class="text-xs c-gray">一款只用一种纸板就不用加</text>
     </view>
 
 

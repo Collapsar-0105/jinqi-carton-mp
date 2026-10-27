@@ -448,6 +448,7 @@ App({
           }))
           .filter(s => ['压痕', '烫金', 'UV', '压纹', '送货'].indexOf(s.name) === -1),
         purchases: o.purchases || [],
+        boards: (o.boards || []).map(b => ({ L: Number(b.L) || 0, W: Number(b.W) || 0, qty: Number(b.qty) || 1 })),
         factoryMode: o.factoryMode || '本厂生产',
         factoryName: o.factoryName || '',
         factoryPrice: o.factoryPrice || 0,

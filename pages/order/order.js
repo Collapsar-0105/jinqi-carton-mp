@@ -300,7 +300,10 @@ Page({
     if (it.po) lines.push('PO：' + it.po)
     lines.push(
       '面纸颜色：' + (it.paperColor || ''),
-      '尺寸：' + sizeText,
+      '尺寸：' + sizeText
+    )
+    C.boardLines(it).forEach(l => lines.push(l))
+    lines.push(
       '数量：' + ((parseInt(it.quantity) || 0) + 5),
       '收货：'
     )

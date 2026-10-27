@@ -16,7 +16,7 @@ const CRAFTS = ['草箱', '彩箱']
 const PAPER_COLORS = ['黄面', '白面']
 
 // 楞型（本厂主做 5 层 BA / BC，排在最前）
-const FLUTES = ['五层 BA 瓦', '五层 BC 瓦', '三层 B 瓦', '三层 C 瓦', '三层 E 瓦', '五层 BE 瓦', '七层']
+const FLUTES = ['五层 BA 瓦', '五层 BC 瓦', '三层 A 瓦', '三层 B 瓦', '三层 C 瓦', '三层 E 瓦', '五层 BE 瓦', '七层']
 
 // 垫片类型
 const PAD_TYPES = ['3层', '5层', '蜂窝']
@@ -62,11 +62,21 @@ function feedLimit(craft) {
   return craft === '彩箱' ? 1600 : MAX_FEED_WIDTH
 }
 
-// 箱舌：水箱、小盒没有箱舌，其余 48
+// 箱舌：水箱 38、小盒 30，其余 48
 function defaultTang(boxType) {
-  if (boxType === '水箱' || boxType === '小盒') return 38
+  if (boxType === '小盒') return 30
+  if (boxType === '水箱') return 38
   return 48
 }
+
+// 小盒默认用三层 A 瓦
+function defaultFlute(boxType) {
+  if (boxType === '小盒') return '三层 A 瓦'
+  return ''
+}
+
+// 这些箱型不按纸箱尺寸推算纸板：纸板尺寸一律手动填写，纸箱尺寸栏隐藏
+const MANUAL_BOARD_TYPES = ['梯形箱', '连体', '异型箱']
 
 // 纸板尺寸计算
 // 一片：长 = (长 + 宽) × 2 + 箱舌；宽 = 宽 + 高 + 4
@@ -84,6 +94,22 @@ function calcBoard(l, w, h, tang, craft) {
     return { length: L + W + T, width: boardWidth, twoPiece: true }
   }
   return { length: onePiece, width: boardWidth, twoPiece: false }
+}
+
+// 纸板信息文本：主纸板 + 附加纸板（复制信息时统一用这个）
+function boardLines(item) {
+  const src = item || {}
+  const lines = []
+  const main = []
+  if (src.boardL) main.push(Number(src.boardL) || 0)
+  if (src.boardW) main.push(Number(src.boardW) || 0)
+  if (src.sizeH) main.push(Number(src.sizeH) || 0)
+  lines.push('纸板尺寸：' + (main.length ? main.join('×') + 'mm' : ''))
+  ;(src.boards || []).forEach((b, i) => {
+    if (!b || (!b.L && !b.W)) return
+    lines.push('附加纸板' + (i + 2) + '：' + (Number(b.L) || 0) + '×' + (Number(b.W) || 0) + 'mm × ' + (Number(b.qty) || 1) + '张')
+  })
+  return lines
 }
 
 function needTwoPiece(l, w, h, tang, craft) {
@@ -137,6 +163,9 @@ module.exports = {
   APP_VERSION,
   BOX_TYPES,
   DIE_CUT_BOX_TYPES,
+  MANUAL_BOARD_TYPES,
+  defaultFlute,
+  boardLines,
   CRAFTS,
   PAPER_COLORS,
   FLUTES,

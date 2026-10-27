@@ -264,11 +264,9 @@ Page({
       '楞型：' + (it.flute || '')
     ]
     if (it.po) lines.push('PO：' + it.po)
-    lines.push(
-      '面纸颜色：' + (it.paperColor || ''),
-      '纸板尺寸：' + it.boardL + '×' + it.boardW + '×' + (it.sizeH || 0) + 'mm',
-      '纸板数量：' + boardQty + ' 张'
-    )
+    lines.push('面纸颜色：' + (it.paperColor || ''))
+    C.boardLines(it).forEach(l => lines.push(l))
+    lines.push('纸板数量：' + boardQty + ' 张')
     if (this.data.order.urgent) lines.unshift('【加急！加急！】')
 
     wx.setClipboardData({
@@ -290,6 +288,7 @@ Page({
     ]
     if (it.po) lines.splice(1, 0, 'PO：' + it.po)
     if (this.data.order.urgent) lines.unshift('【加急！加急！】')
+    C.boardLines(it).forEach(l => lines.push(l))
     lines.push('送货：')
     wx.setClipboardData({
       data: lines.join('\n'),

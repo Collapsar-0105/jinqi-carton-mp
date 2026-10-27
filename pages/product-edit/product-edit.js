@@ -21,6 +21,8 @@ Page({
     boxTypes: C.BOX_TYPES,
     boxTypeIndex: 0,
     isTrapezoid: false,
+    manualBoard: false,
+    boards: [],
 
     sizeL: '',
     sizeW: '',
@@ -145,6 +147,8 @@ Page({
       paperColorIndex: Math.max(0, C.PAPER_COLORS.indexOf(obj.paperColor || '黄面')),
       boxTypeIndex,
       isTrapezoid: boxType === '梯形箱',
+      manualBoard: C.MANUAL_BOARD_TYPES.indexOf(boxType) >= 0,
+      boards: (obj.boards || []).map(b => ({ L: String(b.L || ''), W: String(b.W || ''), qty: String(b.qty || '1') })),
       sizeTL: obj.sizeTL ? String(obj.sizeTL) : '',
       sizeTW: obj.sizeTW ? String(obj.sizeTW) : '',
       sizeH2: obj.sizeH2 ? String(obj.sizeH2) : '',
@@ -371,17 +375,23 @@ Page({
     const boxTypeIndex = Number(e.detail.value)
     const boxType = C.BOX_TYPES[boxTypeIndex]
     const tang = C.defaultTang(boxType)
-    const isTrapezoid = boxType === '梯形箱'
+    // 梯形箱/连体/异型箱：纸板尺寸一律手填，纸箱尺寸栏隐藏
+    const manualBoard = C.MANUAL_BOARD_TYPES.indexOf(boxType) >= 0
+    // 小盒默认三层 A 瓦
+    const dfltFlute = C.defaultFlute(boxType)
+    const fluteIndex = dfltFlute ? Math.max(0, C.FLUTES.indexOf(dfltFlute)) : this.data.fluteIndex
 
     this.setData({
       boxTypeIndex,
-      isTrapezoid,
+      isTrapezoid: boxType === '梯形箱',
+      manualBoard,
+      fluteIndex,
       tang,
-      boardManual: isTrapezoid,
-      twoPiece: isTrapezoid ? true : this.data.twoPiece
+      boardManual: manualBoard,
+      twoPiece: manualBoard ? true : this.data.twoPiece
     }, () => {
       this.applyAutoSteps()
-      if (!isTrapezoid) this.recomputeBoard()
+      if (!manualBoard) this.recomputeBoard()
     })
   },
 
@@ -395,8 +405,8 @@ Page({
 
   onSize(e) {
     const field = e.currentTarget.dataset.field
-    const trapezoid = this.data.isTrapezoid
-    this.setData({ [field]: e.detail.value, boardManual: trapezoid ? true : false }, () => { if (!trapezoid) this.recomputeBoard() })
+    const manual = this.data.manualBoard
+    this.setData({ [field]: e.detail.value, boardManual: manual ? true : false }, () => { if (!manual) this.recomputeBoard() })
   },
 
   onTang(e) {
@@ -410,6 +420,28 @@ Page({
     })
   },
 
+  // ===== 附加纸板（一款纸箱由多个不同规格的纸板做成）=====
+  addBoard() {
+    const boards = (this.data.boards || []).concat([{ L: '', W: '', qty: '1' }])
+    this.setData({ boards })
+  },
+
+  removeBoard(e) {
+    const index = Number(e.currentTarget.dataset.index)
+    const boards = (this.data.boards || []).filter((_, i) => i !== index)
+    this.setData({ boards })
+  },
+
+  onBoardField(e) {
+    const index = Number(e.currentTarget.dataset.index)
+    const field = e.currentTarget.dataset.field
+    const boards = (this.data.boards || []).slice()
+    const row = Object.assign({}, boards[index] || {})
+    row[field] = e.detail.value
+    boards[index] = row
+    this.setData({ boards })
+  },
+
   onBoard(e) {
     const field = e.currentTarget.dataset.field
     const value = e.detail.value
@@ -420,10 +452,10 @@ Page({
   },
 
   recomputeBoard() {
-    if (this.data.isTrapezoid) {
+    if (this.data.manualBoard) {
       this.setData({
         twoPiece: true,
-        formulaText: '梯形箱：纸板尺寸手动填写，两片成型'
+        formulaText: '该箱型：纸板尺寸手动填写'
       })
       return
     }
@@ -557,6 +589,11 @@ Page({
         qty: parseInt(x.qty) || 0
       })),
       stockItem: !!d.stockItem,
+      boards: (d.boards || []).filter(b => b && (b.L || b.W)).map(b => ({
+        L: Number(b.L) || 0,
+        W: Number(b.W) || 0,
+        qty: Number(b.qty) || 1
+      })),
       stockAlertQty: d.stockItem ? (Number(d.stockAlertQty) || 0) : 0,
       outsource: d.outsourceEnabled ? { mode: d.outsourceMode || (d.craft === '彩箱' ? '成品箱' : ''), supplier: (d.outsource && d.outsource.supplier) || '' } : { mode: '', supplier: '' },
       price: Number(d.price) || 0,
@@ -569,7 +606,7 @@ Page({
 
   save() {
     // 保存前按公式兜底重算，避免刚输入完就点保存时纸板尺寸还是旧值
-    if (!this.data.isTrapezoid && !this.data.boardManual) {
+    if (!this.data.manualBoard && !this.data.boardManual) {
       const r = C.calcBoard(this.data.sizeL, this.data.sizeW, this.data.sizeH, this.data.tang, this.data.craft)
       this.setData({
         boardL: r.length ? String(r.length) : '',
@@ -578,13 +615,10 @@ Page({
       })
     }
     const p = this.buildProduct()
-    if (this.data.isTrapezoid) {
+    if (this.data.manualBoard) {
       const d = this.data
-      if (!d.sizeTL || !d.sizeTW || !d.sizeH2 || !d.sizeBL || !d.sizeBW) {
-        wx.showToast({ title: '梯形箱请填完整五个尺寸', icon: 'none' }); return
-      }
       if (!d.boardL || !d.boardW) {
-        wx.showToast({ title: '梯形箱请手动填写纸板尺寸', icon: 'none' }); return
+        wx.showToast({ title: '请手动填写纸板尺寸', icon: 'none' }); return
       }
     }
     if (!p.id) { wx.showToast({ title: '请输入产品编号', icon: 'none' }); return }
