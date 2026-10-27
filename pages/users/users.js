@@ -106,7 +106,7 @@ Page({
         wx.showToast({ title: '操作失败', icon: 'none' })
         return
       }
-      wx.showToast({ title: next ? '已允许' : '已禁止', icon: 'success' })
+      wx.showToast({ title: next ? '已授权' : '已取消授权', icon: 'success' })
       this.load()
     }).catch(() => {
       wx.hideLoading()
@@ -151,7 +151,7 @@ Page({
   removeAll() {
     wx.showModal({
       title: '清空其它设备',
-      content: '把除这台设备之外的所有记录都删掉（待授权的、已放行的都删）。确定吗？',
+      content: '把除这台设备之外的所有记录都删掉（待授权的、已授权的都删）。确定吗？',
       confirmColor: '#e94560',
       success: r => {
         if (!r.confirm) return

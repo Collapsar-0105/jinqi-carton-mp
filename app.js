@@ -240,7 +240,7 @@ App({
       if (!res || !res.ok) {
         if (res && res.error === 'NOT_ALLOWED') {
           this.setCloud({ mode: 'pending', allowed: false, openid: res.openid || '', error: '等待管理员授权' })
-          // 还没被放行也要先把名字报上去，管理员才知道该放行谁
+          // 还没被授权也要先把名字报上去，管理员才知道该授权谁
           this.promptUserName()
         } else {
           this.setCloud({ error: (res && res.error) || '未授权', mode: 'local' })

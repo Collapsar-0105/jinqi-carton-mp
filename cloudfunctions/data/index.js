@@ -65,7 +65,7 @@ exports.main = async (event) => {
     if (cnt.total === 0) {
       user = { _id: OPENID, allowed: true, admin: true, role: 'admin', name: '管理员', createdAt: Date.now(), lastSeen: Date.now() }
     } else {
-      // 新用户先登记为待授权，管理员能看到并放行
+      // 新用户先登记为待授权，管理员能看到并授权
       user = { _id: OPENID, allowed: false, admin: false, role: 'worker', name: '', createdAt: Date.now(), lastSeen: Date.now() }
     }
     try { await db.collection(USERS).add({ data: user }) } catch (e) {}
@@ -86,7 +86,7 @@ exports.main = async (event) => {
   }
 
   // 设置自己的称呼：放在 allowed 检查【之前】，
-  // 这样刚扫码、还没被管理员放行的设备也能先把名字报上去，管理员才能认出该放行谁。
+  // 这样刚扫码、还没被管理员授权的设备也能先把名字报上去，管理员才能认出该授权谁。
   if (action === 'setMyName') {
     const nm = String(payload.name || '').trim().slice(0, 20)
     const nick = String(payload.nickname || '').trim().slice(0, 20)
@@ -135,7 +135,7 @@ exports.main = async (event) => {
     return { ok: true }
   }
 
-  // 清空除本机之外的所有设备记录（待授权的、已放行的都清掉）
+  // 清空除本机之外的所有设备记录（待授权的、已授权的都清掉）
   if (action === 'removeAllUsers') {
     if (!admin) return { ok: false, error: 'NOT_ADMIN' }
     const r = await db.collection(USERS).where({ _id: db.command.neq(OPENID) }).remove().catch(() => ({ stats: {} }))

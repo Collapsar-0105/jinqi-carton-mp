@@ -36,14 +36,14 @@ Page({
     this.load()
   },
 
-  // 云端授权状态：没被放行时，订单会是空的，页面上要说清楚为什么
+  // 云端授权状态：没被授权时，订单会是空的，页面上要说清楚为什么
   syncAuthState() {
     const c = (app.globalData && app.globalData.cloud) || {}
     const pending = c.mode === 'pending' || c.allowed === false
     this.setData({ needAuth: !!pending, myOpenid: c.openid || '' })
   },
 
-  // 管理员放行后点一下就能进，不用重启小程序
+  // 管理员授权后点一下就能进，不用重启小程序
   recheck() {
     wx.showLoading({ title: '检查中' })
     app.cloudPull(true)

@@ -18,7 +18,7 @@
       <view class="flex-row">
         <image wx:if="{{item.avatar}}" class="user-avatar" src="{{item.avatar}}" mode="aspectFill" />
         <text class="user-name {{item.name ? '' : 'noname'}}">{{item.name || '未命名设备'}}</text>
-        <text class="badge {{item.allowed ? 'ok' : 'wait'}}">{{item.allowed ? '已允许' : '待授权'}}</text>
+        <text class="badge {{item.allowed ? 'ok' : 'wait'}}">{{item.allowed ? '已授权' : '待授权'}}</text>
         <text wx:if="{{item.admin}}" class="badge admin">管理员</text>
         <text wx:else class="badge wait">车间工人</text>
       </view>
@@ -38,7 +38,7 @@
               data-openid="{{item.openid}}" data-name="{{item.name}}" data-allowed="{{item.allowed}}">改名</view>
         <view class="btn btn-sm {{item.allowed ? 'btn-outline' : 'btn-primary'}}"
               bindtap="toggle" data-openid="{{item.openid}}" data-allowed="{{item.allowed}}">
-          {{item.allowed ? '禁止访问' : '允许访问'}}
+          {{item.allowed ? '取消授权' : '授权'}}
         </view>
 
         <view wx:if="{{!item.admin}}" class="btn btn-sm btn-outline"

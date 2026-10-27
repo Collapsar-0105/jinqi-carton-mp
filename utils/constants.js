@@ -1,5 +1,5 @@
 // 版本号：每次发版改这里
-const APP_VERSION = '1.9.87'
+const APP_VERSION = '1.9.88'
 
 // 公共常量与小工具
 

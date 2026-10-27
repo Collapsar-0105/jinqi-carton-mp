@@ -537,7 +537,7 @@ page { background: #f2f2f7; color: #1c1c1e; font-family: -apple-system, "PingFan
 .page > .card, .page > block > .card { margin-left: 0; margin-right: 0; margin-bottom: 10px; }
 .page > .card:last-child, .page > block:last-child > .card { margin-bottom: 0; }
 
-/* openid 识别码一行（用户管理页、订单页等待放行提示都用它） */
+/* openid 识别码一行（用户管理页、订单页等待授权提示都用它） */
 .oid-row {
   display: flex;
   align-items: center;
