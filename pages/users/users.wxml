@@ -17,16 +17,16 @@
     <view class="card user-card">
       <view class="flex-row">
         <image wx:if="{{item.avatar}}" class="user-avatar" src="{{item.avatar}}" mode="aspectFill" />
-        <text class="user-name {{item.nickname || item.name ? '' : 'noname'}}">{{item.nickname || item.name || '未命名设备'}}</text>
+        <text class="user-name {{item.name || item.nickname ? '' : 'noname'}}">{{item.name || item.nickname || '未命名设备'}}</text>
         <text class="badge {{item.allowed ? 'ok' : 'wait'}}">{{item.allowed ? '已允许' : '待授权'}}</text>
         <text wx:if="{{item.admin}}" class="badge admin">管理员</text>
         <text wx:else class="badge wait">车间工人</text>
       </view>
       <view class="meta">
         <text wx:if="{{item.device}}">{{item.device}}</text>
-        <text wx:if="{{item.device && item.name && item.name !== item.nickname}}"> · 称呼 {{item.name}}</text>
+        <text wx:if="{{item.device && item.nickname && item.nickname !== item.name}}"> · {{item.nickname}}</text>
       </view>
-      <view wx:if="{{!item.nickname}}" class="hint-line">还没有微信昵称 → 让对方在设置页点「获取微信昵称」，或你直接点下面「改名」</view>
+      <view wx:if="{{!item.nickname}}" class="hint-line">这台设备还没有微信昵称 → 直接点下面「改名」给他起个名</view>
       <view class="oid-row" bindtap="copyId" data-openid="{{item.openid}}">
         <text class="oid-text">{{item.shortId}}</text>
         <text class="copy">复制</text>
