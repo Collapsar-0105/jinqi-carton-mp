@@ -91,15 +91,3 @@
   font-size: 15px;
   padding: 0 4px;
 }
-
-/* 原生 button 默认样式要清掉，才能和 .btn 看起来一致 */
-.privacy-btn {
-  margin: 0;
-  padding: 5px 10px;
-  font-size: 12px;
-  line-height: 1.4;
-  font-weight: 600;
-}
-.privacy-btn::after {
-  border: none;
-}

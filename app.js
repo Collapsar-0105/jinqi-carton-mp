@@ -15,7 +15,7 @@ App({
   },
 
   onShow() {
-    this.ensureIdentity()
+    this.triggerPrivacyAuth()
     const now = Date.now()
     if (now - (this._lastPullAt || 0) < 60000) return
     this._lastPullAt = now
@@ -50,19 +50,7 @@ App({
     })
   },
 
-  // 身份校验：没填昵称的设备一律先弹身份卡片，不填不让进系统。
-  // 用整页 reLaunch 实现（不是每页塞弹层），没有返回键，绕不过去。
-  ensureIdentity() {
-    if (this.isIdentityDone()) return
-    const pages = getCurrentPages()
-    const cur = pages.length ? pages[pages.length - 1].route : ''
-    if (cur === 'pages/identity/identity') return
-    setTimeout(() => {
-      wx.reLaunch({ url: '/pages/identity/identity' })
-      // 身份卡盖上来之后，再让微信的官方授权弹窗盖在它上面
-      setTimeout(() => this.triggerPrivacyAuth(), 500)
-    }, 200)
-  },
+  // 身份卡已废弃（只要微信官方那一个授权弹窗），这里不再拦任何页面。
 
   onLaunch() {
     // 每一步单独兜底：任何一步出错都不能拖累云端初始化，否则整台设备会像"崩了"
@@ -74,7 +62,7 @@ App({
         try { console.error('[启动异常]', msg) } catch (e2) {}
       }
     }
-    step('身份校验', this.ensureIdentity)
+    step('隐私授权', this.triggerPrivacyAuth)
     step('自动备份', this.autoBackup)
     step('数据迁移', this.migrate)
     step('云初始化', this.initCloud)
@@ -1933,22 +1921,8 @@ App({
     try { return wx.getStorageSync('user_avatar') || '' } catch (e) { return '' }
   },
 
-  // 身份卡已经确认过没有（确认过就不再拦）
-  isIdentityDone() {
-    try { return !!wx.getStorageSync('identity_done') } catch (e) { return false }
-  },
-
-  markIdentityDone() {
-    try { wx.setStorageSync('identity_done', 1) } catch (e) {}
-  },
-
-  // 昵称由使用者自己在设置页填（微信的「头像昵称填写能力」：
-  // <input type="nickname"> 聚焦时微信会把真实昵称带出来，用户确认后才有值）。
-  // 老接口 wx.getUserProfile 自基础库 2.27.1 起只返回匿名数据，已废弃不用。
-
-  // 隐私保护指引：后台没申报的信息类型，对应接口会被直接禁用
-  // 这里只做「查状态 + 打开协议页」，同意动作由页面上的
-  // <button open-type="agreePrivacyAuthorization"> 完成
+  // 隐私保护指引：后台没申报的信息类型，对应接口会被直接禁用。
+  // 这里只做「查状态 + 打开协议页」；同意动作交给微信官方弹窗（triggerPrivacyAuth 触发）。
   checkPrivacySetting() {
     return new Promise(resolve => {
       if (!wx.getPrivacySetting) { resolve({ needAuthorization: false }); return }

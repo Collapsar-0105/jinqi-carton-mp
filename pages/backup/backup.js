@@ -25,10 +25,6 @@ Page({
     cloud: { mode: 'local', error: '', lastSyncText: '-' },
     cloudEnv: '',
     workYears: [],
-    myNickname: '',
-    myDevice: '',
-    needPrivacy: false,
-    privacyName: ''
   },
 
   // 非管理员：危险操作一律拦住
@@ -124,58 +120,8 @@ Page({
       cur.setData({ __perfProbe: t }, () => { renderMs = (Date.now() - t) + 'ms'; done() })
     } else done()
   },
-  // ===== 我的微信身份 =====
-  // ===== 微信昵称（官方「头像昵称填写能力」） =====
-  // <input type="nickname"> 聚焦时微信会把自己那份昵称带出来，用户选一下才有值。
-  // 老接口 wx.getUserProfile 自基础库 2.27.1 起只返回匿名数据（"微信用户"），已废弃。
-  // 昵称统一在身份卡里填（扫码进来时强制弹），这里只做跳转
-  goIdentity() {
-    wx.reLaunch({ url: '/pages/identity/identity' })
-  },
-
-  onNicknameChange(e) {
-    const v = e.detail.value || ''
-    this.setData({ myNickname: v })
-    this.saveNickname(v)
-  },
-
-  onNicknameBlur(e) {
-    const v = e.detail.value || ''
-    if (v && v !== this.data.myNickname) {
-      this.setData({ myNickname: v })
-      this.saveNickname(v)
-    }
-  },
-
-  saveMyNickname() {
-    const v = String(this.data.myNickname || '').trim()
-    if (!v) {
-      wx.showToast({ title: '还没有昵称', icon: 'none' })
-      return
-    }
-    this.saveNickname(v)
-  },
-
-  saveNickname(v) {
-    app.setUserNickname(v)
-    wx.showToast({ title: '已同步到用户管理', icon: 'success' })
-  },
-
-  // ===== 隐私保护指引 =====
-  checkPrivacy() {
-    app.checkPrivacySetting().then(r => {
-      this.setData({ needPrivacy: !!r.needAuthorization, privacyName: r.contractName || '' })
-    })
-  },
-
-  onAgreePrivacy() {
-    this.checkPrivacy()
-    wx.showToast({ title: '已同意', icon: 'success' })
-  },
-
-  openPrivacy() {
-    app.openPrivacyContract()
-  },
+  // 头像昵称相关的界面已全部撤掉：只要微信官方的授权弹窗（app.js triggerPrivacyAuth 触发），
+  // 不在本页做任何自定义的昵称/头像输入。
 
   // ===== 工作年设置（1.9.66 从独立页面搬进设置页） =====
   loadWorkYears() {
@@ -231,11 +177,6 @@ Page({
   },
 
   onShow() {
-    this.setData({
-      myNickname: app.getUserNickname(),
-      myDevice: app.getDeviceLabel()
-    })
-    this.checkPrivacy()
     this.loadWorkYears()
     // 启动异常直接摆出来，别让用户靠猜
     try {
