@@ -1,6 +1,7 @@
 {
   "entryPagePath": "pages/orders/orders",
   "pages": [
+    "pages/identity/identity",
     "pages/orders/orders",
     "pages/samples/samples",
     "pages/stock-alerts/stock-alerts",

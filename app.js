@@ -16,6 +16,7 @@ App({
 
   onShow() {
     this.triggerPrivacyAuth()
+    this.ensureIdentity()
     const now = Date.now()
     if (now - (this._lastPullAt || 0) < 60000) return
     this._lastPullAt = now
@@ -50,7 +51,23 @@ App({
     })
   },
 
-  // 身份卡已废弃（只要微信官方那一个授权弹窗），这里不再拦任何页面。
+  // 扫码进入先让使用者取一下微信昵称（官方昵称输入框，聚焦即弹微信昵称小卡片）。
+  // 只是官方组件，不自造弹窗；取完（或跳过）就进系统。
+  ensureIdentity() {
+    if (this.hasNickname()) return
+    // 点过「暂不填写」就不再拦
+    let skipped = 0
+    try { skipped = wx.getStorageSync('identity_skipped') || 0 } catch (e) {}
+    if (skipped) return
+    if (this._identityShown) return
+    this._identityShown = true
+    const pages = getCurrentPages()
+    const cur = pages.length ? pages[pages.length - 1].route : ''
+    if (cur === 'pages/identity/identity') return
+    setTimeout(() => {
+      wx.reLaunch({ url: '/pages/identity/identity' })
+    }, 300)
+  },
 
   onLaunch() {
     // 每一步单独兜底：任何一步出错都不能拖累云端初始化，否则整台设备会像"崩了"
@@ -63,6 +80,7 @@ App({
       }
     }
     step('隐私授权', this.triggerPrivacyAuth)
+    step('身份确认', this.ensureIdentity)
     step('自动备份', this.autoBackup)
     step('数据迁移', this.migrate)
     step('云初始化', this.initCloud)
@@ -1906,8 +1924,14 @@ App({
     const av = String(avatar != null ? avatar : (wx.getStorageSync('user_avatar') || '')).trim()
     if (nick) { try { wx.setStorageSync('user_nickname', nick) } catch (e) {} }
     if (av) { try { wx.setStorageSync('user_avatar', av) } catch (e) {} }
+    // 云端只有一个显示字段 name：昵称自动填入后，管理员手动改过的不会被覆盖
     this.cloudCall('setMyName', { nickname: nick, device: dev, avatar: av }).catch(() => {})
     return nick
+  },
+
+  // 昵称是否已经取过（取过就不再拦）
+  hasNickname() {
+    return !!this.getUserNickname()
   },
 
   setUserNickname(nickname, avatar) {

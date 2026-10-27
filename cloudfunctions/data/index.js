@@ -95,13 +95,15 @@ exports.main = async (event) => {
     // 只有昵称/机型/称呼都有值时才写：客户端不上报称呼，
     // 这里绝不能用空值把管理员设的名字冲掉
     const patch = {}
-    if (nm) patch.name = nm
-    if (nick) patch.nickname = nick
+    // 昵称与称呼合并成一个字段 name：
+    // 首次从微信昵称自动填入，之后管理员手动改过的就不再被自动覆盖
+    if (nm && !user.name) patch.name = nm
+    if (nick && !user.name) patch.name = nick
     if (dev) patch.device = dev
     if (av) patch.avatar = av
     if (!Object.keys(patch).length) patch.name = nm
     try { await db.collection(USERS).doc(OPENID).update({ data: patch }) } catch (e) {}
-    return { ok: true, name: nm, nickname: nick, device: dev, avatar: av }
+    return { ok: true, name: nm, device: dev, avatar: av }
   }
 
   if (action === 'listUsers') {

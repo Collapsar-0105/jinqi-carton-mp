@@ -1,0 +1,56 @@
+/* 头像 + 昵称并排（都是微信官方组件） */
+.id-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.id-avatar-btn {
+  width: 48px;
+  height: 48px;
+  min-height: 48px;
+  padding: 0;
+  margin: 0;
+  border-radius: 50%;
+  background: #f2f2f7;
+  border: 1px solid #e5e5e5;
+  overflow: hidden;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.id-avatar-btn::after {
+  border: none;
+}
+.id-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+}
+.id-avatar-ph {
+  font-size: 12px;
+  color: #999;
+}
+
+.id-input {
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  line-height: 44px;
+  font-size: 16px;
+}
+
+.id-skip {
+  margin-top: 14px;
+  text-align: center;
+  font-size: 13px;
+  color: #999;
+}
+
+/* 标题独占一行 */
+.section-title {
+  display: block;
+  margin-bottom: 6px;
+}
