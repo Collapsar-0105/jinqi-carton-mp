@@ -95,13 +95,16 @@ exports.main = async (event) => {
     // 只有昵称/机型/称呼都有值时才写：客户端不上报称呼，
     // 这里绝不能用空值把管理员设的名字冲掉
     const patch = {}
-    // 昵称与称呼合并成一个字段 name：
-    // 首次从微信昵称自动填入，之后管理员手动改过的就不再被自动覆盖
-    if (nm && !user.name) patch.name = nm
-    if (nick && !user.name) patch.name = nick
+    // 昵称与称呼合并成一个字段 name。
+    // nameManual=true 表示这个名字是管理员手动改过的 → 微信昵称不再自动覆盖它；
+    // 没手动改过（nameManual 不为 true）→ 微信昵称可以填进去。
+    // 注意：不能用「name 是否为空」来判断，
+    // 因为第一个用户注册时云端会自动命名成「管理员」，会把昵称挡掉。
+    if (nm && !user.nameManual && !user.name) patch.name = nm
+    if (nick && !user.nameManual) patch.name = nick
     if (dev) patch.device = dev
     if (av) patch.avatar = av
-    if (!Object.keys(patch).length) patch.name = nm
+    if (!Object.keys(patch).length && nm) patch.name = nm
     try { await db.collection(USERS).doc(OPENID).update({ data: patch }) } catch (e) {}
     return { ok: true, name: nm, device: dev, avatar: av }
   }
@@ -117,7 +120,11 @@ exports.main = async (event) => {
     const id = payload.openid
     if (!id) return { ok: false, error: 'NO_OPENID' }
     const patch = { allowed: !!payload.allowed }
-    if (payload.name !== undefined) patch.name = payload.name
+    if (payload.name !== undefined) {
+      patch.name = payload.name
+      // 管理员手动改过的名字，以后微信昵称不再自动覆盖
+      patch.nameManual = true
+    }
     if (payload.role !== undefined) patch.role = payload.role
     if (payload.admin !== undefined) {
       if (id === OPENID && !payload.admin) return { ok: false, error: 'CANNOT_DEMOTE_SELF' }
