@@ -15,6 +15,7 @@ Page({
     canStock: false,
     stockEarly: false,
     allStocked: false,
+    canBackActive: false,
     addr: {}
   },
 
@@ -162,7 +163,8 @@ Page({
       stockEarly: canStock && items.some(x => !x.stocked && app.completedQtyOf(x) < (Number(x.quantity) || 0)),
       canUndo: app.canUndo(),
       isWorker: wx.getStorageSync('role') === 'worker',
-      allStocked: app.allStocked(order)
+      allStocked: app.allStocked(order),
+      canBackActive: app.canBackToActive(order)
     })
   },
 
@@ -343,6 +345,27 @@ Page({
   },
 
   // 单款入库：这一款达到 90% 就能入库；不是最后一款就拆子单
+  // 回到进行中：撤销最近一次入库，订单从「已入库」流回「进行中」
+  backToActive() {
+    const id = this.data.orderId
+    if (!id) return
+    wx.showModal({
+      title: '回到进行中',
+      content: '这单会退回「进行中」，入库数量和工序进度还原成入库前的状态，之后可以重新入库正确的数量。确定吗？',
+      confirmColor: '#e94560',
+      success: r => {
+        if (!r.confirm) return
+        const res = app.backToActive(id)
+        if (!res) {
+          wx.showToast({ title: '操作失败', icon: 'none' })
+          return
+        }
+        wx.showToast({ title: res.exact ? '已回到进行中' : '已退回（数量可能不精确）', icon: 'success' })
+        this.loadOrder()
+      }
+    })
+  },
+
   stockItem(e) {
     const idx = Number(e.currentTarget.dataset.item)
     const it = this.data.items[idx]

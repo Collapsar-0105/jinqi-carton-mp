@@ -18,6 +18,8 @@
     <view wx:if="{{order.status !== 'done'}}" class="urgent-row">
       <text class="urgent-state {{order.urgent ? 'on' : ''}}">{{order.urgent ? '已加急' : '未加急'}}</text>
       <view wx:if="{{!isWorker}}" class="btn btn-sm {{order.urgent ? 'btn-outline' : 'btn-primary'}}" bindtap="toggleUrgent">{{order.urgent ? '取消加急' : '标记加急'}}</view>
+      <view class="flex-1"></view>
+      <view wx:if="{{canBackActive}}" class="btn btn-sm btn-outline back-btn" bindtap="backToActive">回到进行中</view>
     </view>
     <view wx:if="{{order.status === 'paused'}}" class="paused-tip">暂缓中：不推进工序</view>
   </view>

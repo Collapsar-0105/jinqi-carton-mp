@@ -251,3 +251,9 @@
   margin-top: 8px; padding-top: 8px; border-top: 1px dashed #ecdfc8;
 }
 .unassigned-hint { font-size: 12px; color: #a07840; }
+/* 回到进行中按钮：放在加急行最右 */
+.back-btn {
+  flex-shrink: 0;
+  color: #e94560;
+  border-color: #f3b6c1;
+}

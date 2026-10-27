@@ -1151,6 +1151,8 @@ App({
     // 入库前拍个快照，填错数量能撤销
     let parentSnap = null
     try { parentSnap = JSON.parse(JSON.stringify(parent)) } catch (e) {}
+    // 再拍一份存在订单上的快照，供「回到进行中」用
+    this.takeStockSnapshot(parent)
 
     const ordered = Number(it.quantity) || 0
     const limit = this.stockLimitOf(it)
@@ -1231,9 +1233,104 @@ App({
     return sub
   },
 
+  // ===== 已入库 → 回到进行中（1.9.90）=====
+  // 入库会改写数量、工序进度，还会拆/并子单，光靠反推还原不出来，
+  // 所以入库前先拍一份完整快照存在订单上（随云端同步，换台手机也能用）
+  takeStockSnapshot(order) {
+    if (!order) return
+    const clone = v => { try { return JSON.parse(JSON.stringify(v)) } catch (e) { return null } }
+    // 只存「入库会改动的字段」：订单文档要跟着云端走，体积必须小
+    const items = (order.items || []).map(it => ({
+      productId: it.productId,
+      stocked: !!it.stocked,
+      producedQty: it.producedQty,
+      shortQty: it.shortQty,
+      splitQty: it.splitQty,
+      finished: !!it.finished,
+      deliveredQty: it.deliveredQty,
+      steps: clone(it.steps || []) || []
+    }))
+    const subs = this.getAllOrders()
+      .filter(o => o.isSub && o.parentId === order.id && o.status !== 'deleted')
+      .map(o => clone(o))
+      .filter(Boolean)
+    order._stockSnap = {
+      at: Date.now(),
+      status: order.status,
+      items: items,
+      shipments: clone(order.shipments || []) || [],
+      subs: subs
+    }
+  },
+
+  // 已入库的母单可以「回到进行中」（子单不行，它由母单管）
+  canBackToActive(order) {
+    if (!order || order.isSub) return false
+    return order.status === 'stocked'
+  },
+
+  // 回到进行中：撤销最近一次入库，订单从「已入库」流回「进行中」
+  backToActive(orderId) {
+    const data = this.getData()
+    const order = data.orders.find(o => o.id === orderId)
+    if (!order || order.isSub || order.status !== 'stocked') return null
+    const clone = v => { try { return JSON.parse(JSON.stringify(v)) } catch (e) { return v } }
+    const snap = order._stockSnap
+
+    // 母单下现有的子单一律清掉（入库时可能拆出去、或被 autoMerge 合并删了）
+    const oldSubs = data.orders.filter(o => o.isSub && o.parentId === orderId && o.status !== 'deleted')
+    const oldSubIds = oldSubs.map(o => o.id)
+    data.orders = data.orders.filter(o => !(o.isSub && o.parentId === orderId && o.status !== 'deleted'))
+
+    if (snap && snap.items) {
+      // 有快照：按款还原入库前的状态
+      order.status = snap.status || 'active'
+      const snapItems = snap.items || []
+      ;(order.items || []).forEach(it => {
+        const s = snapItems.find(x => x.productId === it.productId)
+        if (!s) return
+        it.stocked = !!s.stocked
+        it.producedQty = s.producedQty
+        if (s.shortQty == null) delete it.shortQty
+        else it.shortQty = s.shortQty
+        it.splitQty = s.splitQty
+        it.finished = !!s.finished
+        it.deliveredQty = s.deliveredQty
+        it.steps = clone(s.steps || [])
+      })
+      order.shipments = clone(snap.shipments || [])
+      // 入库前就存在的子单（原样放回来）
+      ;(snap.subs || []).forEach(s => { if (s && s.id) data.orders.push(clone(s)) })
+    } else {
+      // 老订单没有快照：尽力还原（入库数量可能不精确）
+      order.status = 'active'
+      ;(order.items || []).forEach(it => {
+        it.stocked = false
+        it.finished = false
+        it.splitQty = 0
+        delete it.shortQty
+        it.producedQty = this.completedQtyOf(it)
+      })
+    }
+
+    delete order.stockedAt
+    delete order.deliveredAt
+    delete order._stockSnap
+    order.updatedAt = Date.now()
+
+    this.persistLocal(data)
+    this.pushOrderCloud(order.id)
+    // 云端上：删掉的子单要清干净，还原回来的子单要推回去
+    oldSubIds.forEach(id => this.removeOrderCloud(id))
+    ;(snap && snap.subs ? snap.subs : []).forEach(s => { if (s && s.id) this.pushOrderCloud(s.id) })
+
+    return { ok: true, exact: !!(snap && snap.items) }
+  },
+
   // 整单入库：所有还没入库的款一起入库
   stockIn(orderId, qtys) {
     const changed = this.updateOrder(orderId, order => {
+      this.takeStockSnapshot(order)
       ;(order.items || []).forEach((it, i) => {
         // 已经入过库的（含刚合并进来的子单）不再改数量
         if (it.stocked && Number(it.producedQty) > 0) return
