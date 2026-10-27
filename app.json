@@ -1,5 +1,6 @@
 {
   "entryPagePath": "pages/orders/orders",
+  "__usePrivacyCheck__": false,
   "pages": [
     "pages/identity/identity",
     "pages/orders/orders",
