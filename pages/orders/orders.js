@@ -29,10 +29,34 @@ Page({
     const tb = this.getTabBar && this.getTabBar()
     if (tb) tb.setData({ selected: 0 })
     this.setData({ fontClass: app.getFontClass(), undoLabel: app.undoLabel(), workerMode: wx.getStorageSync('role') === 'worker' })
+    this.syncAuthState()
     if (!this.data.monthValue) this.setData({ monthValue: app.month() })
     const f = wx.getStorageSync('pending_order_filter')
     if (f) { wx.removeStorageSync('pending_order_filter') }
     this.load()
+  },
+
+  // 云端授权状态：没被放行时，订单会是空的，页面上要说清楚为什么
+  syncAuthState() {
+    const c = (app.globalData && app.globalData.cloud) || {}
+    const pending = c.mode === 'pending' || c.allowed === false
+    this.setData({ needAuth: !!pending, myOpenid: c.openid || '' })
+  },
+
+  // 管理员放行后点一下就能进，不用重启小程序
+  recheck() {
+    wx.showLoading({ title: '检查中' })
+    app.cloudPull(true)
+    setTimeout(() => {
+      wx.hideLoading()
+      this.syncAuthState()
+      this.load()
+    }, 900)
+  },
+
+  copyOpenid() {
+    if (!this.data.myOpenid) return
+    wx.setClipboardData({ data: this.data.myOpenid })
   },
 
   periodRange() {

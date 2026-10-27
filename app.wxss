@@ -536,3 +536,24 @@ page { background: #f2f2f7; color: #1c1c1e; font-family: -apple-system, "PingFan
 .page { padding-left: 12px; padding-right: 12px; box-sizing: border-box; }
 .page > .card, .page > block > .card { margin-left: 0; margin-right: 0; margin-bottom: 10px; }
 .page > .card:last-child, .page > block:last-child > .card { margin-bottom: 0; }
+
+/* openid 识别码一行（用户管理页、订单页等待放行提示都用它） */
+.oid-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+.oid-text {
+  font-size: 14px;
+  color: #2b5bb3;
+  font-family: monospace;
+  flex: 1;
+  min-width: 0;
+  word-break: break-all;
+}
+.copy {
+  font-size: 14px;
+  color: #888;
+  flex-shrink: 0;
+}

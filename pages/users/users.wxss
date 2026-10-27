@@ -48,21 +48,6 @@
   background: #eaf0fb;
   color: #2b5bb3;
 }
-.oid-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 8px;
-}
-.oid-text {
-  font-size: 14px;
-  color: #2b5bb3;
-  font-family: monospace;
-}
-.copy {
-  font-size: 14px;
-  color: #888;
-}
 .meta {
   font-size: 14px;
   color: #666;

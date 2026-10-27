@@ -933,3 +933,15 @@
    .row1 的 gap: 10px 是左右两块之间的固定间隙，这里收掉，把空间让给标题。
    标题更长时仍然会正常换行，不会截断。 */
 .fs-2 .row1 { gap: 0; }
+
+/* 等待管理员放行 */
+.auth-wait {
+  border-left: 4px solid #e94560;
+}
+.auth-title {
+  display: block;
+  font-size: 16px;
+  font-weight: bold;
+  color: #e94560;
+  margin-bottom: 6px;
+}
