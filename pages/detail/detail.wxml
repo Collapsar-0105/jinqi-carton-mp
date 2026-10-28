@@ -39,6 +39,7 @@
         <view>{{it.craft}} · {{it.boxType}} · {{it.flute}}<text wx:if="{{it.paperColor}}"> · {{it.paperColor}}</text></view>
         <view>尺寸：{{it._sizeText}} · {{(!order.isSub && it.originalQty > it.quantity) ? "剩余数量" : "数量"}}<text wx:if="{{it.overQty > 0}}" class="qty-box">{{it.quantity}}</text><text wx:else>{{it.quantity}}</text></view>
         <view wx:if="{{it.boardL}}">纸板：{{it.boardL}}×{{it.boardW}}mm（{{it.twoPiece ? '两片' : '一片'}}成型）· 箱舌 {{it.tang}}mm</view>
+        <view wx:if="{{it.boards.length > 0}}" class="extra-boards">附加纸板：<text wx:for="{{it.boards}}" wx:key="index" wx:for-item="bd">{{bd.L}}×{{bd.W}}mm ×{{bd.qty}}张；</text></view>
 
         <view wx:if="{{it.pads.length > 0}}">
           垫片：<text wx:for="{{it.pads}}" wx:key="index" wx:for-item="pd">{{pd.type}} {{pd.L}}×{{pd.W}} ×{{pd.qty}}；</text>

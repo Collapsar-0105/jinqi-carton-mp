@@ -125,6 +125,8 @@ Page({
         originalQty: isSub ? qty : (Number(it.originalQty) || (qty + (Number(it.splitQty) || 0))),
         splitQty: isSub ? 0 : (Number(it.splitQty) || 0),
         _sizeText: sizeText,
+        // 附加纸板（一款由多种不同规格纸板做成时）
+        boards: (it.boards || []).filter(b => b && (b.L || b.W)),
         addrList: app.itemAddrList(order, it),
         note
       })
