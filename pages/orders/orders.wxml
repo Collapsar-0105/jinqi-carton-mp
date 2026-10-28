@@ -62,12 +62,15 @@
     <view class="sort-head" bindtap="toggleSort">
       <text class="sort-caret">{{sortOpen ? '▴' : '▾'}}</text>
       <text class="sort-title">排序</text>
-      <text class="sort-cur">{{sortLabel}}</text>
+      <text class="sort-cur">{{sortLabel}} {{sortArrow}}</text>
     </view>
     <view wx:if="{{sortOpen}}" class="sort-opts">
-      <view wx:for="{{sortOptions}}" wx:key="key"
-            class="sort-opt {{sortKey === item.key ? 'on' : ''}}"
-            bindtap="setSort" data-key="{{item.key}}">{{item.label}}</view>
+      <view wx:for="{{sortOptions}}" wx:key="key" class="sort-opt-wrap">
+        <view class="sort-opt {{sortKey === item.key ? 'on' : ''}}"
+              bindtap="setSort" data-key="{{item.key}}">{{item.label}}</view>
+        <view class="sort-dir {{sortKey === item.key ? 'on' : ''}}"
+              catchtap="toggleSortDir" data-key="{{item.key}}">{{item.dir === 'asc' ? '↑' : '↓'}}</view>
+      </view>
     </view>
   </view>
 

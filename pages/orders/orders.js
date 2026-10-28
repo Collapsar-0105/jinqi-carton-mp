@@ -9,9 +9,14 @@ Page({
     chipsMain: [],
     filterKey: 'active',
     sortKey: 'days',
+    // 每种排序各自的方向：{ days:'desc', orderNo:'asc', customer:'asc', stock:'desc' }
+    // 'desc' 倒序（多的在前） / 'asc' 正序
+    sortDirs: {},
     sortOpen: false,
     sortOptions: [],
     sortLabel: '持续天数',
+    // 标题上显示的方向箭头（↓ 倒序 / ↑ 正序）
+    sortArrow: '↓',
     list: [],
     alertCount: 0,
     periodType: 0,
@@ -27,8 +32,13 @@ Page({
     const years = []
     for (let y = THIS_YEAR + 1; y >= THIS_YEAR - 6; y--) years.push(y)
     let sortKey = 'days'
-    try { sortKey = wx.getStorageSync('order_sort_key') || 'days' } catch (e) {}
-    this.setData({ monthValue: app.month(), years, yearIndex: years.indexOf(THIS_YEAR), sortKey })
+    let sortDirs = {}
+    try {
+      sortKey = wx.getStorageSync('order_sort_key') || 'days'
+      sortDirs = wx.getStorageSync('order_sort_dirs') || {}
+    } catch (e) {}
+    if (!sortDirs || typeof sortDirs !== 'object') sortDirs = {}
+    this.setData({ monthValue: app.month(), years, yearIndex: years.indexOf(THIS_YEAR), sortKey, sortDirs })
   },
 
   onShow() {
@@ -148,9 +158,14 @@ Page({
     // 缓存「筛选+搜索+排序」后的源列表：showMore 据此增量追加，
     // 避免每次「显示更多」都把已渲染的卡片整片重建（1026 单曾达 ~1000ms）
     // 排序选项随板块变：已入库多一个「库存数量」
+    // 每项带上各自的方向（↑正序 / ↓倒序），供选项上的箭头显示
     this.setData({
-      sortOptions: this.sortOptionList(),
-      sortLabel: this.sortLabel()
+      sortOptions: this.sortOptionList().map(o => Object.assign({}, o, {
+        dir: this.currentSortDir(o.key),
+        isCur: o.key === this.data.sortKey
+      })),
+      sortLabel: this.sortLabel(),
+      sortArrow: this.sortArrow()
     })
     this._srcList = list
     const lim = Number(this.data.renderLimit) || 120
@@ -190,21 +205,30 @@ Page({
   },
 
   // 排序选项：已入库板块多一个「库存数量」
+  // 每种排序有自己的默认方向（第一次选中时用），之后用户可以自己切换正/倒序
   sortOptionList() {
+    return this.sortOptionListFor(this.data.filterKey)
+  },
+
+  // 按指定板块算排序选项（切板块时要先算，不能用 data 里还没更新的 filterKey）
+  sortOptionListFor(board) {
     const opts = [
-      { key: 'days', label: this.daysLabel() },
-      { key: 'orderNo', label: '订单号' },
-      { key: 'customer', label: '客户' }
+      { key: 'days', label: this.daysLabelFor(board), defDir: 'desc' },
+      { key: 'orderNo', label: '订单号', defDir: 'asc' },
+      { key: 'customer', label: '客户', defDir: 'asc' }
     ]
-    if (this.data.filterKey === 'stocked') opts.push({ key: 'stock', label: '库存数量' })
+    if (board === 'stocked') opts.push({ key: 'stock', label: '库存数量', defDir: 'desc' })
     return opts
   },
 
   // 天数那一档的名字，按板块说清楚是哪种天数
   daysLabel() {
-    const k = this.data.filterKey
-    if (k === 'stocked') return '入库天数'
-    if (k === 'done') return '完成天数'
+    return this.daysLabelFor(this.data.filterKey)
+  },
+
+  daysLabelFor(board) {
+    if (board === 'stocked') return '入库天数'
+    if (board === 'done') return '完成天数'
     return '持续天数'
   },
 
@@ -213,15 +237,33 @@ Page({
     return hit ? hit.label : this.daysLabel()
   },
 
+  // 标题上的方向箭头
+  sortArrow() {
+    return this.currentSortDir() === 'asc' ? '↑' : '↓'
+  },
+
+  // 当前排序类型对应的方向
+  // 每种排序的方向各自记（sortDirs），没记过就用该类型的默认方向
+  currentSortDir(key) {
+    const k = key || this.data.sortKey || 'days'
+    const saved = (this.data.sortDirs || {})[k]
+    if (saved === 'asc' || saved === 'desc') return saved
+    const opt = this.sortOptionList().find(o => o.key === k)
+    return opt ? opt.defDir : 'desc'
+  },
+
+  // 排序列表：按当前排序类型 + 当前方向
   sortList(list) {
     const key = this.data.sortKey || 'days'
+    const asc = this.currentSortDir() === 'asc'
     const arr = list.slice()
     if (key === 'orderNo') {
-      // 订单号升序（ORD-001 在前）
+      // 订单号：默认正序（ORD-001 在前），可切成倒序
       return arr.sort((a, b) => {
         const x = String((a && (a.orderNo || a.id)) || '')
         const y = String((b && (b.orderNo || b.id)) || '')
-        return x.localeCompare(y)
+        const c = x.localeCompare(y)
+        return asc ? c : -c
       })
     }
     if (key === 'customer') {
@@ -229,22 +271,28 @@ Page({
         const x = String((a && a.customer) || '其他')
         const y = String((b && b.customer) || '其他')
         const c = x.localeCompare(y, 'zh-Hans-CN')
-        if (c !== 0) return c
-        return String((a && a.id) || '').localeCompare(String((b && b.id) || ''))
+        if (c !== 0) return asc ? c : -c
+        const t = String((a && a.id) || '').localeCompare(String((b && b.id) || ''))
+        return asc ? t : -t
       })
     }
     if (key === 'stock') {
-      // 库存多的在前
-      return arr.sort((a, b) => this.sortStockQty(b) - this.sortStockQty(a))
+      // 库存数量：默认多的在前，可切成少的在前
+      return arr.sort((a, b) => {
+        const c = this.sortStockQty(a) - this.sortStockQty(b)
+        return asc ? c : -c
+      })
     }
-    // 默认：天数多的在前（最压手的排最前）；加急仍然置顶
+    // 默认：天数。默认多的在前（最压手的排最前），可切成少的在前
+    // 加急始终置顶（不管什么方向，加急的单都要在最上面）
     return arr.sort((a, b) => {
       const ua = (a.urgent && a.status !== 'done') ? 1 : 0
       const ub = (b.urgent && b.status !== 'done') ? 1 : 0
       if (ua !== ub) return ub - ua
-      const d = this.sortDays(b) - this.sortDays(a)
-      if (d !== 0) return d
-      return String(b.createdAt || '').localeCompare(String(a.createdAt || ''))
+      const d = this.sortDays(a) - this.sortDays(b)
+      if (d !== 0) return asc ? d : -d
+      const t = String(a.createdAt || '').localeCompare(String(b.createdAt || ''))
+      return asc ? t : -t
     })
   },
 
@@ -256,14 +304,48 @@ Page({
   setSort(e) {
     const key = e.currentTarget.dataset.key
     if (!key) return
-    try { wx.setStorageSync('order_sort_key', key) } catch (e) {}
-    this.setData({ sortKey: key, sortOpen: false, renderLimit: 120 }, () => this.load())
+    // 换排序类型：这一项之前调过的方向继续用，没调过就用它的默认方向
+    const dirs = Object.assign({}, this.data.sortDirs || {})
+    if (dirs[key] !== 'asc' && dirs[key] !== 'desc') {
+      const opt = this.sortOptionList().find(o => o.key === key)
+      dirs[key] = opt ? opt.defDir : 'desc'
+    }
+    try {
+      wx.setStorageSync('order_sort_key', key)
+      wx.setStorageSync('order_sort_dirs', dirs)
+    } catch (e) {}
+    this.setData({ sortKey: key, sortDirs: dirs, sortOpen: false, renderLimit: 120 }, () => this.load())
+  },
+
+  // 点方向箭头：
+  //   点当前项的箭头 → 只翻这一项的方向
+  //   点别的项的箭头 → 先切到那一项，再翻它的方向
+  toggleSortDir(e) {
+    const key = (e && e.currentTarget && e.currentTarget.dataset.key) || this.data.sortKey
+    const dirs = Object.assign({}, this.data.sortDirs || {})
+    const cur = this.currentSortDir(key)
+    dirs[key] = cur === 'asc' ? 'desc' : 'asc'
+    try {
+      wx.setStorageSync('order_sort_key', key)
+      wx.setStorageSync('order_sort_dirs', dirs)
+    } catch (e) {}
+    this.setData({ sortKey: key, sortDirs: dirs, renderLimit: 120 }, () => this.load())
   },
 
   setFilter(e) {
     const key = e.currentTarget.dataset.key
     if (key === 'alerts') { this.goAlerts(); return }
-    this.setData({ filterKey: key, renderLimit: 120 }, () => this.load())
+    // 换板块后，当前排序类型可能在新板块里不存在
+    //（比如在「已入库」选了「库存数量」，切到「进行中」就没这一项了），
+    // 这时要回落成天数排序，不然标题显示的和实际排的不一致
+    // 注意：sortOptionList() 读的是 this.data.filterKey，这里要按新板块算
+    const opts = this.sortOptionListFor(key)
+    let sortKey = this.data.sortKey
+    if (!opts.some(o => o.key === sortKey)) {
+      sortKey = 'days'
+      try { wx.setStorageSync('order_sort_key', sortKey) } catch (e) {}
+    }
+    this.setData({ filterKey: key, sortKey, renderLimit: 120 }, () => this.load())
   },
   setPeriod(e) { this.setData({ periodType: Number(e.currentTarget.dataset.index), renderLimit: 120 }, () => this.load()) },
   onMonthChange(e) { this.setData({ monthValue: e.detail.value, renderLimit: 120 }, () => this.load()) },

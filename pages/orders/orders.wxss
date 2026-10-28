@@ -979,17 +979,39 @@
   gap: 8px;
   padding: 0 10px 10px;
 }
-.sort-opt {
-  padding: 5px 12px;
+/* 每个排序项 = 名称胶囊 + 方向按钮（↑正序 / ↓倒序） */
+.sort-opt-wrap {
+  display: flex;
+  align-items: stretch;
   border: 1px solid #ddd;
   border-radius: 14px;
-  font-size: 13px;
-  color: #555;
+  overflow: hidden;
   background: #fafafa;
 }
+.sort-opt {
+  padding: 5px 12px;
+  border: none;
+  border-radius: 0;
+  font-size: 13px;
+  color: #555;
+  background: transparent;
+}
 .sort-opt.on {
-  border-color: #2b5bb3;
   color: #2b5bb3;
   background: #eef3fb;
   font-weight: 600;
+}
+.sort-dir {
+  padding: 5px 9px;
+  border-left: 1px solid #e4e8ef;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #888;
+  text-align: center;
+  background: #f2f4f8;
+}
+.sort-dir.on {
+  color: #fff;
+  background: #2b5bb3;
+  font-weight: 700;
 }
