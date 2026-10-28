@@ -257,7 +257,7 @@ Page({
     const key = e.currentTarget.dataset.key
     if (!key) return
     try { wx.setStorageSync('order_sort_key', key) } catch (e) {}
-    this.setData({ sortKey: key, sortOpen: false }, () => this.loadLocal())
+    this.setData({ sortKey: key, sortOpen: false, renderLimit: 120 }, () => this.load())
   },
 
   setFilter(e) {
