@@ -945,3 +945,50 @@
   color: #e94560;
   margin-bottom: 6px;
 }
+
+/* 排序条（可收起） */
+.sort-bar {
+  margin: 0 12px 8px;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.sort-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  font-size: 14px;
+}
+.sort-caret {
+  color: #999;
+  font-size: 13px;
+}
+.sort-title {
+  color: #999;
+}
+.sort-cur {
+  color: #2b5bb3;
+  font-weight: 600;
+}
+.sort-opts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 10px 10px;
+}
+.sort-opt {
+  padding: 5px 12px;
+  border: 1px solid #ddd;
+  border-radius: 14px;
+  font-size: 13px;
+  color: #555;
+  background: #fafafa;
+}
+.sort-opt.on {
+  border-color: #2b5bb3;
+  color: #2b5bb3;
+  background: #eef3fb;
+  font-weight: 600;
+}

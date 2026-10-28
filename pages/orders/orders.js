@@ -8,6 +8,10 @@ Page({
     chipsTop: [],
     chipsMain: [],
     filterKey: 'active',
+    sortKey: 'days',
+    sortOpen: false,
+    sortOptions: [],
+    sortLabel: '持续天数',
     list: [],
     alertCount: 0,
     periodType: 0,
@@ -22,7 +26,9 @@ Page({
   onLoad() {
     const years = []
     for (let y = THIS_YEAR + 1; y >= THIS_YEAR - 6; y--) years.push(y)
-    this.setData({ monthValue: app.month(), years, yearIndex: years.indexOf(THIS_YEAR) })
+    let sortKey = 'days'
+    try { sortKey = wx.getStorageSync('order_sort_key') || 'days' } catch (e) {}
+    this.setData({ monthValue: app.month(), years, yearIndex: years.indexOf(THIS_YEAR), sortKey })
   },
 
   onShow() {
@@ -137,16 +143,15 @@ Page({
       list = list.filter(o => app.matchKeywords(app.orderSearchText(o), kw))
     }
 
-    list = list.slice().sort((a, b) => {
-      // 加急置顶同样排除已完成
-      const ua = (a.urgent && a.status !== 'done') ? 1 : 0
-      const ub = (b.urgent && b.status !== 'done') ? 1 : 0
-      if (ua !== ub) return ub - ua
-      return String(b.createdAt || '').localeCompare(String(a.createdAt || ''))
-    })
+    list = this.sortList(list)
 
     // 缓存「筛选+搜索+排序」后的源列表：showMore 据此增量追加，
     // 避免每次「显示更多」都把已渲染的卡片整片重建（1026 单曾达 ~1000ms）
+    // 排序选项随板块变：已入库多一个「库存数量」
+    this.setData({
+      sortOptions: this.sortOptionList(),
+      sortLabel: this.sortLabel()
+    })
     this._srcList = list
     const lim = Number(this.data.renderLimit) || 120
     const shown = list.slice(0, lim)
@@ -166,6 +171,95 @@ Page({
 
   // 筛选/搜索/周期变化都重置 renderLimit=120，避免「先加载很多再切筛选」时重建大片卡片
   onSearch(e) { this.setData({ keyword: e.detail.value, renderLimit: 120 }, () => this.load()) },
+  // ===== 排序 =====
+  // 天数口径：进行中/加急/全部/已完成按「已持续天数」，
+  // 已入库按「已入库天数」（和卡片上显示的数一致，1.9.53）
+  sortDays(o) {
+    return o && o.status === 'stocked' ? app.stockedDays(o) : app.elapsedDays(o)
+  },
+
+  // 库存数量：已入库但还没送出的数量（入库数 - 已送数）
+  sortStockQty(o) {
+    let n = 0
+    ;((o && o.items) || []).forEach(it => {
+      const made = Number(it.producedQty) || 0
+      const sent = Number(it.deliveredQty) || 0
+      n += Math.max(0, made - sent)
+    })
+    return n
+  },
+
+  // 排序选项：已入库板块多一个「库存数量」
+  sortOptionList() {
+    const opts = [
+      { key: 'days', label: this.daysLabel() },
+      { key: 'orderNo', label: '订单号' },
+      { key: 'customer', label: '客户' }
+    ]
+    if (this.data.filterKey === 'stocked') opts.push({ key: 'stock', label: '库存数量' })
+    return opts
+  },
+
+  // 天数那一档的名字，按板块说清楚是哪种天数
+  daysLabel() {
+    const k = this.data.filterKey
+    if (k === 'stocked') return '入库天数'
+    if (k === 'done') return '完成天数'
+    return '持续天数'
+  },
+
+  sortLabel() {
+    const hit = this.sortOptionList().find(o => o.key === this.data.sortKey)
+    return hit ? hit.label : this.daysLabel()
+  },
+
+  sortList(list) {
+    const key = this.data.sortKey || 'days'
+    const arr = list.slice()
+    if (key === 'orderNo') {
+      // 订单号升序（ORD-001 在前）
+      return arr.sort((a, b) => {
+        const x = String((a && (a.orderNo || a.id)) || '')
+        const y = String((b && (b.orderNo || b.id)) || '')
+        return x.localeCompare(y)
+      })
+    }
+    if (key === 'customer') {
+      return arr.sort((a, b) => {
+        const x = String((a && a.customer) || '其他')
+        const y = String((b && b.customer) || '其他')
+        const c = x.localeCompare(y, 'zh-Hans-CN')
+        if (c !== 0) return c
+        return String((a && a.id) || '').localeCompare(String((b && b.id) || ''))
+      })
+    }
+    if (key === 'stock') {
+      // 库存多的在前
+      return arr.sort((a, b) => this.sortStockQty(b) - this.sortStockQty(a))
+    }
+    // 默认：天数多的在前（最压手的排最前）；加急仍然置顶
+    return arr.sort((a, b) => {
+      const ua = (a.urgent && a.status !== 'done') ? 1 : 0
+      const ub = (b.urgent && b.status !== 'done') ? 1 : 0
+      if (ua !== ub) return ub - ua
+      const d = this.sortDays(b) - this.sortDays(a)
+      if (d !== 0) return d
+      return String(b.createdAt || '').localeCompare(String(a.createdAt || ''))
+    })
+  },
+
+  // 展开 / 收起排序条
+  toggleSort() {
+    this.setData({ sortOpen: !this.data.sortOpen })
+  },
+
+  setSort(e) {
+    const key = e.currentTarget.dataset.key
+    if (!key) return
+    try { wx.setStorageSync('order_sort_key', key) } catch (e) {}
+    this.setData({ sortKey: key, sortOpen: false }, () => this.loadLocal())
+  },
+
   setFilter(e) {
     const key = e.currentTarget.dataset.key
     if (key === 'alerts') { this.goAlerts(); return }
