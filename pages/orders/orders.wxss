@@ -636,7 +636,8 @@
 /* 搜索框上下间距统一 12 */
 .home-card { margin-bottom: 12px !important; }
 .search-bar { padding: 0 12px !important; margin: 0 0 12px !important; }
-.bottom-actions { margin-top: 0 !important; margin-bottom: 12px !important; }
+/* 按钮栏下就是排序条，间距交给排序条自己的 margin */
+.bottom-actions { margin-top: 0 !important; margin-bottom: 0 !important; }
 
 /* 超量入库标记 */
 .ptag.over { background:#e8f4fd; color:#2980b9; border:1px solid #aed6f1; }
@@ -946,9 +947,9 @@
   margin-bottom: 6px;
 }
 
-/* 排序条（可收起） */
+/* 排序条（可收起）：放在「新建订单」按钮下方 */
 .sort-bar {
-  margin: 0 12px 8px;
+  margin: 12px 12px 12px;
   background: #fff;
   border: 1px solid #eee;
   border-radius: 8px;

@@ -47,6 +47,17 @@
     </view>
   </view>
 
+  </view>
+
+  <view class="search-bar">
+    <input placeholder-style="color:#555;font-weight:600" class="input search-input" placeholder="搜订单号 / 客户 / 产品" value="{{keyword}}" bindinput="onSearch" />
+  </view>
+
+  <view wx:if="{{!workerMode}}" class="bottom-actions">
+    <view class="btn btn-primary new-order-btn" bindtap="goNew">＋ 新建订单</view>
+    <view class="btn btn-outline sample-btn" bindtap="goSamples">打样单</view>
+  </view>
+
   <view class="sort-bar">
     <view class="sort-head" bindtap="toggleSort">
       <text class="sort-caret">{{sortOpen ? '▴' : '▾'}}</text>
@@ -59,17 +70,8 @@
             bindtap="setSort" data-key="{{item.key}}">{{item.label}}</view>
     </view>
   </view>
-  </view>
-
-  <view class="search-bar">
-    <input placeholder-style="color:#555;font-weight:600" class="input search-input" placeholder="搜订单号 / 客户 / 产品" value="{{keyword}}" bindinput="onSearch" />
-  </view>
 
   <view wx:if="{{hasMore}}" class="more-row" bindtap="showMore">显示更多（已显示 {{shownCount}} / 共 {{totalCount}}）</view>
-  <view wx:if="{{!workerMode}}" class="bottom-actions">
-    <view class="btn btn-primary new-order-btn" bindtap="goNew">＋ 新建订单</view>
-    <view class="btn btn-outline sample-btn" bindtap="goSamples">打样单</view>
-  </view>
 
   <block wx:for="{{list}}" wx:key="id">
     <view class="card order {{item.cls}} {{item.urgent ? 'is-urgent' : ''}}" style="{{item.ageStyle}}" bindtap="goDetail" data-id="{{item.id}}">
