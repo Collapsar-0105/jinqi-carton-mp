@@ -98,8 +98,9 @@ Page({
 
     // 纸板尺寸按公式重算，避免产品档案里的旧值不准
     const tang = p.tang != null ? Number(p.tang) : C.defaultTang(p.boxType || '')
-    const isTrap = p.boxType === '梯形箱'
-    const board = isTrap
+    // 手填纸板的箱型（梯形箱/连体/异型箱）：纸板尺寸直接用档案里的值，不按公式推
+    const manualBoard = C.MANUAL_BOARD_TYPES.indexOf(p.boxType || '') >= 0
+    const board = manualBoard
       ? { length: p.boardL || 0, width: p.boardW || 0, twoPiece: true }
       : C.calcBoard(p.sizeL, p.sizeW, p.sizeH, tang, p.craft)
 
@@ -133,11 +134,6 @@ Page({
       sizeL: p.sizeL || 0,
       sizeW: p.sizeW || 0,
       sizeH: p.sizeH || 0,
-      sizeTL: p.sizeTL || 0,
-      sizeTW: p.sizeTW || 0,
-      sizeH2: p.sizeH2 || 0,
-      sizeBL: p.sizeBL || 0,
-      sizeBW: p.sizeBW || 0,
       tang,
       boardL: board.length,
       boardW: board.width,
@@ -298,9 +294,8 @@ Page({
     if (!it) return
     const d = this.data
 
-    const sizeText = it.boxType === '梯形箱'
-      ? '上' + it.sizeTL + '×' + it.sizeTW + ' 中高' + it.sizeH2 + ' 下' + it.sizeBL + '×' + it.sizeBW + 'mm'
-      : it.sizeL + '×' + it.sizeW + '×' + it.sizeH + 'mm'
+    // 手填纸板的箱型（梯形箱/连体/异型箱）没有纸箱尺寸，别复制出 0×0×0mm
+    const sizeText = it.sizeL ? it.sizeL + '×' + it.sizeW + '×' + it.sizeH + 'mm' : ''
 
     // 固定行：没有内容的也留空行，方便复制后手填；PO 例外——没填说明这单没 PO，不输出
     const lines = [

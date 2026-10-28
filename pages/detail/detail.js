@@ -81,9 +81,10 @@ Page({
       const prod = app.getProduct(it.productId)
       const note = (prod && prod.note) ? String(prod.note).trim() : ''
 
-      const sizeText = it.boxType === '梯形箱'
-        ? '上' + it.sizeTL + '×' + it.sizeTW + ' 中高' + it.sizeH2 + ' 下' + it.sizeBL + '×' + it.sizeBW + 'mm'
-        : it.sizeL + '×' + it.sizeW + '×' + it.sizeH + 'mm'
+      // 手填纸板的箱型（梯形箱/连体/异型箱）没有纸箱尺寸，别显示成 0×0×0mm
+      const sizeText = it.sizeL
+        ? it.sizeL + '×' + it.sizeW + '×' + it.sizeH + 'mm'
+        : ''
 
       // 纸板命名：多张纸板时主纸板=大板、第2张=小板、第3张起=附加纸板A/B…
       // 只有一张纸板时不额外起名，仍显示「纸板：」

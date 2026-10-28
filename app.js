@@ -411,6 +411,7 @@ App({
       this.migrateStepQty()
       this.migrateProducts()
       this.migrateOrderSteps()
+      this.migrateTrapezoidSize()
     } catch (e) {}
   },
 
@@ -559,6 +560,44 @@ App({
     data.stepv = 7
     if (changed) this.saveData(data)
     this.migrateOldSubs()
+  },
+
+  // 梯形箱五尺寸（上口长宽/中高/下口长宽）已废弃：梯形箱和连体箱、异型箱一样，
+  // 纸箱尺寸栏不显示，纸板尺寸一律手填，历史数据里这几个字段一并清掉。
+  migrateTrapezoidSize() {
+    const data = this.getData()
+    if (Number(data.stepv) >= 8) return
+    const DEAD = ['sizeTL', 'sizeTW', 'sizeH2', 'sizeBL', 'sizeBW']
+    const hasDead = o => DEAD.some(k => o[k] != null)
+
+    // 产品档案
+    const products = this.getProducts()
+    let pChanged = false
+    const nextProducts = products.map(p => {
+      if (!hasDead(p)) return p
+      const q = Object.assign({}, p)
+      DEAD.forEach(k => { delete q[k] })
+      pChanged = true
+      return q
+    })
+    if (pChanged) this.saveProducts(nextProducts)
+
+    // 订单明细
+    const dirty = []
+    ;(data.orders || []).forEach(o => {
+      let hit = false
+      ;(o.items || []).forEach(it => {
+        if (!hasDead(it)) return
+        DEAD.forEach(k => { delete it[k] })
+        hit = true
+      })
+      if (hit) dirty.push(o.id)
+    })
+
+    data.stepv = 8
+    this.saveData(data)
+    // 订单云端是一单一文档，本地清了还要把云端那份也清掉
+    dirty.forEach(id => this.pushOrderCloud(id))
   },
 
   // 老数据的子单（旧「分批完成」留下的）：母单已经全部入库/拆完的，收回成一个母单

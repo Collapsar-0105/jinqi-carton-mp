@@ -37,7 +37,7 @@
 
       <view class="it-spec">
         <view>{{it.craft}} · {{it.boxType}} · {{it.flute}}<text wx:if="{{it.paperColor}}"> · {{it.paperColor}}</text></view>
-        <view>尺寸：{{it._sizeText}} · {{(!order.isSub && it.originalQty > it.quantity) ? "剩余数量" : "数量"}}<text wx:if="{{it.overQty > 0}}" class="qty-box">{{it.quantity}}</text><text wx:else>{{it.quantity}}</text></view>
+        <view><text wx:if="{{it._sizeText}}">尺寸：{{it._sizeText}} · </text>{{(!order.isSub && it.originalQty > it.quantity) ? "剩余数量" : "数量"}}<text wx:if="{{it.overQty > 0}}" class="qty-box">{{it.quantity}}</text><text wx:else>{{it.quantity}}</text></view>
         <view wx:if="{{it.boardL}}">{{it.boardName ? it.boardName + '尺寸：' : '纸板：'}}{{it.boardL}}×{{it.boardW}}mm（{{it.twoPiece ? '两片' : '一片'}}成型）· 箱舌 {{it.tang}}mm</view>
         <view wx:if="{{it.boards.length > 0}}" class="extra-boards"><text wx:for="{{it.boards}}" wx:key="index" wx:for-item="bd">{{bd.name}} {{bd.L}}×{{bd.W}}mm ×{{bd.qty}}张；</text></view>
 

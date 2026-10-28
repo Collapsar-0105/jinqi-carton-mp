@@ -20,7 +20,6 @@ Page({
 
     boxTypes: C.BOX_TYPES,
     boxTypeIndex: 0,
-    isTrapezoid: false,
     manualBoard: false,
     boards: [],
     // 纸板命名（多张纸板时：主纸板=大板、第2张=小板、第3张起=附加纸板A/B…）
@@ -29,13 +28,6 @@ Page({
     sizeL: '',
     sizeW: '',
     sizeH: '',
-
-    // 梯形箱五尺寸
-    sizeTL: '',
-    sizeTW: '',
-    sizeH2: '',
-    sizeBL: '',
-    sizeBW: '',
 
     flutes: C.FLUTES,
     fluteIndex: 0,
@@ -151,16 +143,10 @@ Page({
       history,
       paperColorIndex: Math.max(0, C.PAPER_COLORS.indexOf(obj.paperColor || '黄面')),
       boxTypeIndex,
-      isTrapezoid: boxType === '梯形箱',
       manualBoard: C.MANUAL_BOARD_TYPES.indexOf(boxType) >= 0,
       boards: (obj.boards || []).map(b => ({ L: String(b.L || ''), W: String(b.W || ''), qty: String(b.qty || '1') })),
       // 纸板命名：多张纸板时主纸板=大板、第2张=小板、第3张起=附加纸板A/B…
       boardNames: C.boardNames(1 + (obj.boards || []).length).slice(1),
-      sizeTL: obj.sizeTL ? String(obj.sizeTL) : '',
-      sizeTW: obj.sizeTW ? String(obj.sizeTW) : '',
-      sizeH2: obj.sizeH2 ? String(obj.sizeH2) : '',
-      sizeBL: obj.sizeBL ? String(obj.sizeBL) : '',
-      sizeBW: obj.sizeBW ? String(obj.sizeBW) : '',
       fluteIndex,
       fluteRaw,
       sizeL: obj.sizeL ? String(obj.sizeL) : '',
@@ -391,7 +377,6 @@ Page({
 
     this.setData({
       boxTypeIndex,
-      isTrapezoid: boxType === '梯形箱',
       manualBoard,
       fluteIndex,
       tang,
@@ -576,11 +561,6 @@ Page({
       sizeL: parseInt(d.sizeL) || 0,
       sizeW: parseInt(d.sizeW) || 0,
       sizeH: parseInt(d.sizeH) || 0,
-      sizeTL: parseInt(d.sizeTL) || 0,
-      sizeTW: parseInt(d.sizeTW) || 0,
-      sizeH2: parseInt(d.sizeH2) || 0,
-      sizeBL: parseInt(d.sizeBL) || 0,
-      sizeBW: parseInt(d.sizeBW) || 0,
       tang: parseInt(d.tang) || 0,
       boardL: parseInt(d.boardL) || 0,
       boardW: parseInt(d.boardW) || 0,
