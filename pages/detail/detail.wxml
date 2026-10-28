@@ -63,7 +63,7 @@
         <view wx:for="{{it.steps}}" wx:key="i" wx:for-item="st" wx:for-index="si" class="step">
           <view class="step-dot {{st.status}}"></view>
           <view class="step-main">
-            <text class="step-name">{{st.name}}</text>
+            <text class="step-name">{{st.name}}<text wx:if="{{st.boardName}}" class="step-board">（{{st.boardName}}）</text></text>
             <text class="step-status">{{st._statusText}}</text>
           </view>
           <view wx:if="{{st.status === 'pending'}}" class="step-actions">

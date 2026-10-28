@@ -99,6 +99,11 @@
   font-size: 14px;
   color: #333;
 }
+/* 多纸板时「纸板到货」按种类拆开，这里标出是哪一种纸板 */
+.step-board {
+  color: #e94560;
+  font-weight: 600;
+}
 .step-status {
   font-size: 14px;
   color: #999;

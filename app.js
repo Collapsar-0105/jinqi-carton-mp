@@ -1063,15 +1063,33 @@ App({
 
   // 本批的"基数"：纸板回来多少就出多少箱；彩箱还要看面纸印刷了多少，取小的
   // 代工类没有「纸板到货」这道工序，直接按订单数量
+  // 一款由多种规格纸板做成时，「纸板到货」有多道（每种纸板一道），
+  // 基数取各道到货数的最小值 —— 缺的纸板没到就做不出整箱
   stepBaseQty(item) {
     const steps = item.steps || []
     // 成品箱 / 代工：没有纸板到货，代工厂回来多少就是多少
     const dai = steps.filter(s => s.name === '代工')[0]
     if (dai) return Number(dai.doneQty) || 0
-    const board = steps.filter(s => s.name === '纸板到货')[0]
+    const boards = steps.filter(s => s.name === '纸板到货')
     const paper = steps.filter(s => s.name === '面纸印刷')[0]
-    if (!board && !paper) return Number(item.quantity) || 0
-    let base = board ? (Number(board.doneQty) || 0) : (Number(paper.doneQty) || 0)
+    if (!boards.length && !paper) return Number(item.quantity) || 0
+    let base = 0
+    if (boards.length) {
+      // 多种纸板：按张数折算成能做多少箱（每箱用几张），再取最小
+      const specs = C.boardSpecs(item)
+      const perBox = {}
+      specs.forEach(s => { perBox[s.key] = s.qty || 1 })
+      let min = 0
+      boards.forEach((s, i) => {
+        const key = s.boardKey || 'main'
+        const n = Number(s.doneQty) || 0
+        // 张数 ÷ 每箱用几张 = 能做多少箱
+        const boxes = Math.floor(n / (perBox[key] || 1))
+        if (i === 0) min = boxes
+        else min = Math.min(min, boxes)
+      })
+      base = min
+    }
     if (paper) {
       const p = Number(paper.doneQty) || 0
       base = base ? Math.min(base, p || base) : p

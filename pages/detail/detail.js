@@ -61,12 +61,17 @@ Page({
       const steps = rawSteps.map(s => {
         const dq = Number(s.doneQty) || 0
         const needQty = C.QTY_STEPS.indexOf(s.name) > -1
+        // 纸板到货记的是「张」，其他工序（面纸印刷/代工）记的是「个」
+        const unit = s.name === '纸板到货' ? '张' : '个'
         let text = '待开始'
-        if (s.status === 'done') text = needQty ? ('已完成 ' + dq + ' 个') : '已完成'
-        else if (s.status === 'in_progress') text = needQty ? ('进行中（已填 ' + dq + '）') : '进行中'
+        if (s.status === 'done') text = needQty ? ('已完成 ' + dq + ' ' + unit) : '已完成'
+        else if (s.status === 'in_progress') text = needQty ? ('进行中（已填 ' + dq + ' ' + unit + '）') : '进行中'
         return {
           i: s.i,
           name: s.name,
+          // 多纸板时，「纸板到货」按种类拆成多道，标出是哪种纸板
+          boardName: s.boardName || '',
+          boardKey: s.boardKey || '',
           status: s.status,
           doneQty: dq,
           needQty,
@@ -199,16 +204,19 @@ Page({
 
   startStep(e) {
     const { item, step } = e.currentTarget.dataset
+    // step 是原始工序下标，取名字也要用原始下标
+    const name = ((this.data.items[item] || {}).steps || []).filter(s => s.i === step)[0];
     app.updateOrder(this.data.orderId, order => {
       order.items[item].steps[step].status = 'in_progress'
-    }, '开始工序 ' + (this.data.items[item].steps[step].name || ''))
+    }, '开始工序 ' + (name && name.name || ''))
     this.loadOrder()
   },
 
   doneStep(e) {
     const { item, step } = e.currentTarget.dataset
     const it = this.data.items[item]
-    const st = it && it.steps[step]
+    // step 是原始工序下标（wxml 传的是 st.i），要回到原单里取，不能用过滤后的 it.steps
+    const st = it && it.steps.find(s => s.i === step)
     if (!st) return
 
     // 只有纸板到货、面纸印刷要填数量；其它工序点一下就完成，数量自动跟着走
@@ -224,22 +232,37 @@ Page({
     // 允许超量制作：上限是订单数量 × 1.1。
     // 注意 1.9.38 起完成数量是「覆盖」不是「累加」，所以校验上限是 limit 本身；
     // 以前用 limit - doneQty，想把 449 改成 500 会被拦住（只剩 101 的额度）
-    const limit = app.stockLimitOf(it)
-    const label = st.name === '纸板到货' ? '到货数量'
+    // 纸板到货记的是「张」：多纸板时每道工序的上限按该种纸板要备的张数算
+    const isBoardStep = st.name === '纸板到货'
+    let limit = app.stockLimitOf(it)
+    let unit = '个'
+    let tip = '订单 ' + (Number(it.quantity) || 0) + '，可超 10%'
+    if (isBoardStep) {
+      unit = '张'
+      if (st.boardKey) {
+        // 这一种纸板：订单数 × 每箱用几张 + 5，允许再超 10%
+        const need = C.boardNeedQty(it, st.boardKey)
+        limit = Math.ceil(need * 1.1)
+        tip = '这种纸板需 ' + need + ' 张，可超 10%'
+      } else {
+        tip = '订单 ' + (Number(it.quantity) || 0) + '，可超 10%'
+      }
+    }
+    const label = isBoardStep ? '到货数量'
       : st.name === '面纸印刷' ? '印刷数量'
       : st.name === '代工' ? '实际回来数量'
       : '完成数量'
 
     wx.showModal({
-      title: st.name + ' · ' + label,
+      title: (st.boardName ? st.boardName + ' · ' : '') + st.name + ' · ' + label,
       editable: true,
       fail: () => wx.showToast({ title: '输入框打不开，请更新微信', icon: 'none' }),
-      placeholderText: '最多 ' + limit + '（订单 ' + (Number(it.quantity) || 0) + '，可超 10%）',
+      placeholderText: '最多 ' + limit + ' ' + unit + '（' + tip + '）',
       success: res => {
         if (!res.confirm) return
         const qty = parseInt(res.content)
         if (!qty || qty <= 0) { wx.showToast({ title: '请输入有效数量', icon: 'none' }); return }
-        if (qty > limit) { wx.showToast({ title: '最多 ' + limit, icon: 'none' }); return }
+        if (qty > limit) { wx.showToast({ title: '最多 ' + limit + ' ' + unit, icon: 'none' }); return }
         this.completeStep(item, step, qty)
       }
     })
@@ -247,7 +270,10 @@ Page({
 
   // qty 传 null 表示不用填数量，自动取「纸板到货 / 面纸印刷」定下的数量
   completeStep(item, step, qty) {
-    const name = (this.data.items[item].steps[step] || {}).name || '工序'
+    // step 是原始工序下标，要用原始下标找，不能用过滤后的数组
+    const stepInfo = (this.data.items[item].steps || []).filter(s => s.i === step)[0] || {}
+    const name = stepInfo.name || '工序'
+    const unit = name === '纸板到货' ? '张' : '个'
     app.updateOrder(this.data.orderId, order => {
       const it = order.items[item]
       const s = it.steps[step]
@@ -255,10 +281,13 @@ Page({
       if (qty == null) {
         s.doneQty = app.stepBaseQty(it)
       } else {
-        const cap = app.stockLimitOf(it)
+        // 纸板到货的上限按该种纸板要备的张数算，其余工序按订单数
+        const cap = name === '纸板到货' && s.boardKey
+          ? Math.ceil(C.boardNeedQty(it, s.boardKey) * 1.1)
+          : app.stockLimitOf(it)
         s.doneQty = Math.min(cap, Math.max(0, Number(qty) || 0))
       }
-    }, '完成' + name + (qty == null ? '' : ' ' + qty + ' 个'))
+    }, '完成' + name + (qty == null ? '' : ' ' + qty + ' ' + unit))
     wx.showToast({ title: '已完成', icon: 'success' })
     this.loadOrder()
   },
@@ -268,8 +297,8 @@ Page({
     const it = this.data.items[idx]
     if (!it) return
 
-    const qty = Number(it.quantity) || 0
-    const boardQty = it.twoPiece ? (qty * 2 + 5) : (qty + 5)
+    const specs = C.boardSpecs(it)
+    const multi = specs.length > 1
 
     const lines = [
       '产品：' + it.productId + ' ' + it.productName,
@@ -278,8 +307,11 @@ Page({
     ]
     if (it.po) lines.push('PO：' + it.po)
     lines.push('面纸颜色：' + (it.paperColor || ''))
-    C.boardLines(it).forEach(l => lines.push(l))
-    lines.push('纸板数量：' + boardQty + ' 张')
+    // 每种纸板各自标出要备多少张：多纸板时分开列清楚，别混成一个总数
+    C.boardLines(it, true).forEach(l => lines.push(l))
+    if (!multi) {
+      lines.push('纸板数量：' + C.boardNeedQty(it, 'main') + ' 张')
+    }
     if (this.data.order.urgent) lines.unshift('【加急！加急！】')
 
     wx.setClipboardData({
@@ -301,7 +333,8 @@ Page({
     ]
     if (it.po) lines.splice(1, 0, 'PO：' + it.po)
     if (this.data.order.urgent) lines.unshift('【加急！加急！】')
-    C.boardLines(it).forEach(l => lines.push(l))
+    // 纸板：多纸板时每种各自标出要备多少张
+    C.boardLines(it, C.boardSpecs(it).length > 1).forEach(l => lines.push(l))
     lines.push('送货：')
     wx.setClipboardData({
       data: lines.join('\n'),

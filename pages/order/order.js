@@ -110,6 +110,30 @@ Page({
 
     const steps = C.normalizeSteps(p.steps && p.steps.length ? p.steps : C.defaultSteps(p.craft || '草箱'))
 
+    // 一款由多种规格纸板做成时，「纸板到货」按纸板种类拆成多道，各记各的数量
+    const boards = (p.boards || []).filter(b => b && (b.L || b.W)).map(b => ({
+      L: Number(b.L) || 0,
+      W: Number(b.W) || 0,
+      qty: Number(b.qty) || 1
+    }))
+    const stepList = []
+    steps.forEach(name => {
+      if (name !== '纸板到货') { stepList.push({ name, status: 'pending', doneQty: 0 }); return }
+      // 主纸板一道：单纸板时沿用老名字，多纸板时按「大板/小板/附加纸板A」区分
+      const specs = C.boardSpecs({
+        boardL: board.length, boardW: board.width, twoPiece: board.twoPiece, boards: boards
+      })
+      specs.forEach((sp, i) => {
+        stepList.push({
+          name: '纸板到货',
+          boardKey: sp.key,
+          boardName: sp.name || '',
+          status: 'pending',
+          doneQty: 0
+        })
+      })
+    })
+
     const materials = (p.materials || []).map(m => {
       const matched = suppliers.filter(s => (s.types || []).indexOf(m.type) > -1)
       return {
@@ -155,7 +179,7 @@ Page({
       factoryPrice: '',
       factories: app.getServiceSuppliers().map(s => s.name),
       purchases: materials,
-      steps: steps.map(name => ({ name, status: 'pending', doneQty: 0 })),
+      steps: stepList,
       // 该产品当前还剩多少可送（已入库未送完 + 超量多出来的），选品时算一次，
       // 填单过程中库存不会变，不用反复重算
       stockQty: app.productStockQty(p.id)
@@ -308,7 +332,8 @@ Page({
       '面纸颜色：' + (it.paperColor || ''),
       '尺寸：' + sizeText
     )
-    C.boardLines(it).forEach(l => lines.push(l))
+    // 纸板：多纸板时每种各自标出要备多少张
+    C.boardLines(it, C.boardSpecs(it).length > 1).forEach(l => lines.push(l))
     lines.push(
       '数量：' + ((parseInt(it.quantity) || 0) + 5),
       '收货：'

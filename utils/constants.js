@@ -121,8 +121,52 @@ function boardNameAt(index, count) {
   return names[index] || ''
 }
 
+// 每一张纸板的规格清单：主纸板 + 附加纸板
+// 每项 = { key, name, L, W, qty（每个箱子用几张）, perBox（每个箱子用几张，含主纸板两片的情况） }
+// key 用来标识「哪张纸板」，工序（纸板到货）按 key 分开记数量时用它
+function boardSpecs(item) {
+  const src = item || {}
+  const extra = (src.boards || []).filter(b => b && (b.L || b.W))
+  const names = boardNames(1 + extra.length)
+  const list = []
+  // 主纸板：两片成型时每个箱子用 2 张
+  list.push({
+    key: 'main',
+    name: names[0] || '',
+    L: Number(src.boardL) || 0,
+    W: Number(src.boardW) || 0,
+    qty: src.twoPiece ? 2 : 1
+  })
+  extra.forEach((b, i) => {
+    list.push({
+      key: 'b' + i,
+      name: names[i + 1] || ('附加纸板' + (i + 2)),
+      L: Number(b.L) || 0,
+      W: Number(b.W) || 0,
+      qty: Number(b.qty) || 1
+    })
+  })
+  return list
+}
+
+// 每种纸板要备多少张
+// 主纸板沿用老规矩：订单数 + 5（多两片时按张数算）
+// 附加纸板：每个箱子用 qty 张，订单数 × qty，再 +5 损耗
+function boardNeedQty(item, key) {
+  const src = item || {}
+  const orderQty = Number(src.quantity) || 0
+  const specs = boardSpecs(src)
+  const spec = key ? specs.filter(s => s.key === key)[0] : specs[0]
+  if (!spec) return 0
+  if (spec.key === 'main') {
+    return src.twoPiece ? (orderQty * 2 + 5) : (orderQty + 5)
+  }
+  return orderQty * (Number(spec.qty) || 1) + 5
+}
+
 // 纸板信息文本：主纸板 + 附加纸板（复制信息时统一用这个）
-function boardLines(item) {
+// withQty 为 true 时，每种纸板后面标出要备多少张（多张纸板时必须分开标注）
+function boardLines(item, withQty) {
   const src = item || {}
   const lines = []
   const main = []
@@ -132,10 +176,12 @@ function boardLines(item) {
   // 有效纸板总数（主纸板 + 附加纸板），决定用不用「大板/小板」这套叫法
   const extra = (src.boards || []).filter(b => b && (b.L || b.W))
   const names = boardNames(1 + extra.length)
-  lines.push((names.length ? names[0] + '尺寸：' : '纸板尺寸：') + (main.length ? main.join('×') + 'mm' : ''))
+  const specs = boardSpecs(src)
+  const qtyText = s => withQty ? ('，需 ' + boardNeedQty(src, s.key) + ' 张') : ''
+  lines.push((names.length ? names[0] + '尺寸：' : '纸板尺寸：') + (main.length ? main.join('×') + 'mm' : '') + qtyText(specs[0]))
   extra.forEach((b, i) => {
     const nm = names[i + 1] || ('附加纸板' + (i + 2))
-    lines.push(nm + '：' + (Number(b.L) || 0) + '×' + (Number(b.W) || 0) + 'mm × ' + (Number(b.qty) || 1) + '张')
+    lines.push(nm + '：' + (Number(b.L) || 0) + '×' + (Number(b.W) || 0) + 'mm × ' + (Number(b.qty) || 1) + '张' + qtyText(specs[i + 1]))
   })
   return lines
 }
@@ -196,6 +242,8 @@ module.exports = {
   boardLines,
   boardNames,
   boardNameAt,
+  boardSpecs,
+  boardNeedQty,
   CRAFTS,
   PAPER_COLORS,
   FLUTES,
