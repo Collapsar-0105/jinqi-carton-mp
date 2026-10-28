@@ -144,7 +144,7 @@ Page({
       paperColorIndex: Math.max(0, C.PAPER_COLORS.indexOf(obj.paperColor || '黄面')),
       boxTypeIndex,
       manualBoard: C.MANUAL_BOARD_TYPES.indexOf(boxType) >= 0,
-      boards: (obj.boards || []).map(b => ({ L: String(b.L || ''), W: String(b.W || ''), qty: String(b.qty || '1') })),
+      boards: C.arr(obj.boards).map(b => ({ L: String(b.L || ''), W: String(b.W || ''), qty: String(b.qty || '1') })),
       // 纸板命名：多张纸板时主纸板=大板、第2张=小板、第3张起=附加纸板A/B…
       boardNames: C.boardNames(1 + (obj.boards || []).length).slice(1),
       fluteIndex,
@@ -171,9 +171,9 @@ Page({
       outsourceMode: (obj.outsource && obj.outsource.mode) || '',
       price: obj.price ? String(obj.price) : '',
       note: obj.note || '',
-      selectedCustomers: (obj.customers || []).slice(),
+      selectedCustomers: C.arr(obj.customers).slice(),
       steps,
-      materials: (obj.materials || []).map(m => ({
+      materials: C.arr(obj.materials).map(m => ({
         name: m.name,
         typeIndex: Math.max(0, C.MATERIAL_TYPES.indexOf(m.type)),
         price: m.price ? String(m.price) : ''
@@ -431,14 +431,14 @@ Page({
 
   removeBoard(e) {
     const index = Number(e.currentTarget.dataset.index)
-    const boards = (this.data.boards || []).filter((_, i) => i !== index)
+    const boards = C.arr(this.data.boards).filter((_, i) => i !== index)
     this.setData({ boards }, () => this.syncBoardNames(boards))
   },
 
   onBoardField(e) {
     const index = Number(e.currentTarget.dataset.index)
     const field = e.currentTarget.dataset.field
-    const boards = (this.data.boards || []).slice()
+    const boards = C.arr(this.data.boards).slice()
     const row = Object.assign({}, boards[index] || {})
     row[field] = e.detail.value
     boards[index] = row
@@ -587,7 +587,7 @@ Page({
         qty: parseInt(x.qty) || 0
       })),
       stockItem: !!d.stockItem,
-      boards: (d.boards || []).filter(b => b && (b.L || b.W)).map(b => ({
+      boards: C.arr(d.boards).filter(b => b && (b.L || b.W)).map(b => ({
         L: Number(b.L) || 0,
         W: Number(b.W) || 0,
         qty: Number(b.qty) || 1

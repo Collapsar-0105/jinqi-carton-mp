@@ -43,18 +43,18 @@ Page({
     const addr = (customer.addresses && customer.addresses.length) ? customer.addresses[0] : {}
 
     const isSub = !!order.isSub
-    const items = (order.items || []).map((it, idx) => {
+    const items = C.arr(order.items).map((it, idx) => {
       const qty = Number(it.quantity) || 0
       const DEAD = ['开手扣孔', '内衬格挡', '垫片']
       // 子单是已入库成品，不再走工序
-      const rawSteps = isSub ? [] : (it.steps || [])
+      const rawSteps = isSub ? [] : C.arr(it.steps)
         .map((s, i) => Object.assign({}, s, { i }))
         .filter(s => DEAD.indexOf(s.name) === -1)
         .filter(s => !(it.stocked && s.status === 'done'))
       const itemTotal = Number(it.originalQty) || qty || (Number(it.splitQty) || 0) || 0
       const leftQty = qty || itemTotal
       let minDone = leftQty
-      ;(it.steps || []).forEach(s => {
+      ;C.arr(it.steps).forEach(s => {
         const v = (s.status === 'done' && !Number(s.doneQty)) ? itemTotal : (Number(s.doneQty) || 0)
         if (v < minDone) minDone = v
       })
@@ -93,7 +93,7 @@ Page({
 
       // 纸板命名：多张纸板时主纸板=大板、第2张=小板、第3张起=附加纸板A/B…
       // 只有一张纸板时不额外起名，仍显示「纸板：」
-      const extraBoards = (it.boards || []).filter(b => b && (b.L || b.W))
+      const extraBoards = C.arr(it.boards).filter(b => b && (b.L || b.W))
       const boardNames = C.boardNames(1 + extraBoards.length)
       const boardName = boardNames[0] || ''
 
@@ -105,8 +105,8 @@ Page({
         delivered,
         shipments: (function() {
           const addrList = app.itemAddrList(order, it)
-          return (order.shipments || []).map(s => {
-            const row = (s.items || []).find(r => r.index === idx)
+          return C.arr(order.shipments).map(s => {
+            const row = C.arr(s.items).find(r => r.index === idx)
             if (!row) return null
             const ai = (row.addrIndex == null) ? 0 : Number(row.addrIndex)
             const a = addrList[ai] || {}
@@ -129,18 +129,18 @@ Page({
           return Math.max(0, (Number(it.quantity) || 0) - s)
         })(),
         // 只在「还有别的款没入库」时才给单款入库按钮；只剩最后一款交给底部按钮，避免两个按钮做同一件事
-        canStockItem: !isSub && !it.stocked && order.status !== 'done' && app.canStockItem(it)
-          && (order.items || []).filter(x => !x.stocked).length > 1,
+        canStockItem: !isSub && !it.stocked && order.status !== 'done' && app.canStockItem(it, order)
+          && C.arr(order.items).filter(x => !x.stocked).length > 1,
         // 保留 1 位小数：round 后 89.8% 会显示成 90%，和 90% 才能入库的规则对不上，让人困惑
         itemRatioPct: Math.round(app.itemRatio(it) * 1000) / 10,
-        stockLeft: (order.items || []).filter(x => !x.stocked).length,
+        stockLeft: C.arr(order.items).filter(x => !x.stocked).length,
         originalQty: isSub ? qty : (Number(it.originalQty) || (qty + (Number(it.splitQty) || 0))),
         splitQty: isSub ? 0 : (Number(it.splitQty) || 0),
         _sizeText: sizeText,
         // 纸板命名：多张纸板时主纸板=大板、第2张=小板、第3张起=附加纸板A/B…
         // 只有一张纸板时不额外起名，仍显示「纸板：」
         boardName: boardName,
-        boards: (it.boards || []).filter(b => b && (b.L || b.W)).map((b, i) => Object.assign({}, b, {
+        boards: C.arr(it.boards).filter(b => b && (b.L || b.W)).map((b, i) => Object.assign({}, b, {
           name: boardNames[i + 1] || ('附加纸板' + (i + 2))
         })),
         addrList: app.itemAddrList(order, it),
@@ -349,7 +349,7 @@ Page({
     // 复制哪个地址的送货单（多地址时按钮各带一个）
     const ai = Number(e.currentTarget.dataset.ai) || 0
     const a = (it.addrList && it.addrList[ai]) ? it.addrList[ai] : (this.data.addr || {})
-    const pads = (it.pads || []).map(p => p.type + ' ' + p.L + '×' + p.W + ' ×' + p.qty).join('；')
+    const pads = C.arr(it.pads).map(p => p.type + ' ' + p.L + '×' + p.W + ' ×' + p.qty).join('；')
     const d = new Date()
 
     const lines = [
@@ -477,7 +477,7 @@ Page({
     }
 
     const targets = []
-    ;(order.items || []).forEach((it, i) => { if (!it.stocked) targets.push({ i, it }) })
+    ;C.arr(order.items).forEach((it, i) => { if (!it.stocked) targets.push({ i, it }) })
     if (!targets.length) { wx.showToast({ title: '已经入库了', icon: 'none' }); return }
 
     const qtys = {}
@@ -533,7 +533,7 @@ Page({
 
         const updated = app.getOrder(this.data.orderId)
         // 常备预警：库存掉到阈值（300）以下就提示补货
-        app.checkStockAlerts((updated.items || []).map(x => x.productId), updated.id)
+        app.checkStockAlerts(C.arr(updated.items).map(x => x.productId), updated.id)
 
         wx.showToast({ title: '已送货', icon: 'success' })
         this.loadOrder()

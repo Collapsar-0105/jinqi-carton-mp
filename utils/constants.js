@@ -96,6 +96,12 @@ function calcBoard(l, w, h, tang, craft) {
   return { length: onePiece, width: boardWidth, twoPiece: false }
 }
 
+// 取数组，脏数据（非数组）一律当空数组
+// 历史数据/外部导入可能把数组字段存成空串或 null，直接 .map/.filter 会炸
+function arr(v) {
+  return Array.isArray(v) ? v : []
+}
+
 // 多张纸板时的命名（车间习惯）
 // 只有一张纸板：还是叫「纸板尺寸」，不额外起名
 // 两张纸板：主纸板 = 大板，第 2 张 = 小板
@@ -244,6 +250,7 @@ module.exports = {
   boardNameAt,
   boardSpecs,
   boardNeedQty,
+  arr,
   CRAFTS,
   PAPER_COLORS,
   FLUTES,

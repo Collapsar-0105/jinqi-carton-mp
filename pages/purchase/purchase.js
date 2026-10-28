@@ -1,4 +1,5 @@
 const app = getApp()
+const C = require('../../utils/constants.js')
 
 Page({
   data: {
@@ -18,10 +19,10 @@ Page({
     const data = app.getData()
     const items = []
 
-    ;(data.orders || []).forEach(order => {
+    ;C.arr(data.orders).forEach(order => {
       if (order.status !== 'active' && order.status !== 'paused') return
-      ;(order.items || []).forEach((it, itemIdx) => {
-        (it.purchases || []).forEach((p, idx) => {
+      ;C.arr(order.items).forEach((it, itemIdx) => {
+        C.arr(it.purchases).forEach((p, idx) => {
           if (p.status !== 'pending') return
           items.push({
             type: p.type || '其他',

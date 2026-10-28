@@ -111,7 +111,7 @@ Page({
     const steps = C.normalizeSteps(p.steps && p.steps.length ? p.steps : C.defaultSteps(p.craft || '草箱'))
 
     // 一款由多种规格纸板做成时，「纸板到货」按纸板种类拆成多道，各记各的数量
-    const boards = (p.boards || []).filter(b => b && (b.L || b.W)).map(b => ({
+    const boards = C.arr(p.boards).filter(b => b && (b.L || b.W)).map(b => ({
       L: Number(b.L) || 0,
       W: Number(b.W) || 0,
       qty: Number(b.qty) || 1
@@ -134,7 +134,7 @@ Page({
       })
     })
 
-    const materials = (p.materials || []).map(m => {
+    const materials = C.arr(p.materials).map(m => {
       const matched = suppliers.filter(s => (s.types || []).indexOf(m.type) > -1)
       return {
         type: m.type,
@@ -163,7 +163,7 @@ Page({
       boardW: board.width,
       twoPiece: board.twoPiece,
       // 附加纸板（一款由多种不同规格纸板做成时，选产品就要一起带过来）
-      boards: (p.boards || []).filter(b => b && (b.L || b.W)).map(b => ({
+      boards: C.arr(p.boards).filter(b => b && (b.L || b.W)).map(b => ({
         L: Number(b.L) || 0,
         W: Number(b.W) || 0,
         qty: Number(b.qty) || 1
@@ -391,7 +391,7 @@ Page({
       const opts = it.addrOptions || []
       if (opts.length) {
         const q = parseInt(it.quantity) || 0
-        const sum = (it.addrList || []).reduce((s, a) => s + (Number(a.qty) || 0), 0)
+        const sum = C.arr(it.addrList).reduce((s, a) => s + (Number(a.qty) || 0), 0)
         if (sum > q) {
           wx.showToast({ title: '第 ' + (i + 1) + ' 款分配 ' + sum + ' 超过数量 ' + q, icon: 'none' })
           return
@@ -424,7 +424,7 @@ Page({
       boardW: it.boardW,
       twoPiece: it.twoPiece,
       // 附加纸板：从别处复制/带入的明细也要带上
-      boards: (it.boards || []).filter(b => b && (b.L || b.W)).map(b => ({
+      boards: C.arr(it.boards).filter(b => b && (b.L || b.W)).map(b => ({
         L: Number(b.L) || 0,
         W: Number(b.W) || 0,
         qty: Number(b.qty) || 1
@@ -447,7 +447,7 @@ Page({
         factoryPrice: it.factoryModeIndex === 1 ? (Number(it.factoryPrice) || 0) : 0,
         stocked: false,
         deliveredQty: 0,
-        addrList: (it.addrList || [])
+        addrList: C.arr(it.addrList)
           .filter(a => Number(a.qty) > 0)
           .map(a => ({ address: a.address, contact: a.contact || '', phone: a.phone || '', qty: Number(a.qty) }))
       })),

@@ -125,13 +125,13 @@ App({
   mergeList(localList, remoteList, keyFn, timeFn) {
     const map = {}
     const order = []
-    ;(localList || []).forEach(x => {
+    ;C.arr(localList).forEach(x => {
       const k = keyFn(x)
       if (!k) return
       if (!map[k]) order.push(k)
       map[k] = x
     })
-    ;(remoteList || []).forEach(r => {
+    ;C.arr(remoteList).forEach(r => {
       const k = keyFn(r)
       if (!k) return
       const l = map[k]
@@ -421,7 +421,7 @@ App({
     if (data.v === 2) return
     try { wx.setStorageSync('order_migrate_backup', JSON.stringify(data)) } catch (e) {}
 
-    data.orders = (data.orders || []).map(o => {
+    data.orders = C.arr(data.orders).map(o => {
       if (o.items) return o
       const qty = Number(o.quantity) || 0
       const item = {
@@ -441,7 +441,7 @@ App({
         pads: o.pads || [],
         quantity: qty,
         price: Number(o.price) || 0,
-        steps: (o.steps || [])
+        steps: C.arr(o.steps)
           .map(s => ({
             name: s.name,
             status: s.status,
@@ -449,7 +449,7 @@ App({
           }))
           .filter(s => ['压痕', '烫金', 'UV', '压纹', '送货'].indexOf(s.name) === -1),
         purchases: o.purchases || [],
-        boards: (o.boards || []).map(b => ({ L: Number(b.L) || 0, W: Number(b.W) || 0, qty: Number(b.qty) || 1 })),
+        boards: C.arr(o.boards).map(b => ({ L: Number(b.L) || 0, W: Number(b.W) || 0, qty: Number(b.qty) || 1 })),
         factoryMode: o.factoryMode || '本厂生产',
         factoryName: o.factoryName || '',
         factoryPrice: o.factoryPrice || 0,
@@ -519,14 +519,14 @@ App({
     // 用 >= 不用 ===：seed 脚本/备份里出现过 stepv=8，=== 判断会让这些数据每次启动都重跑一遍迁移
     if (Number(data.stepv) >= 7) return
     let changed = false
-    ;(data.orders || []).forEach(o => {
+    ;C.arr(data.orders).forEach(o => {
       // 交期 / 工期 整块删除（1.9.10）
       if (o.deliveryDate != null || o.productionDays != null) {
         delete o.deliveryDate
         delete o.productionDays
         changed = true
       }
-      ;(o.items || []).forEach(it => {
+      ;C.arr(o.items).forEach(it => {
         const next = C.normalizeSteps(it.steps || [])
         if (JSON.stringify(next) !== JSON.stringify(it.steps || [])) {
           it.steps = next
@@ -536,7 +536,7 @@ App({
           delete it.factoryDeliveryDate
           changed = true
         }
-        ;(it.purchases || []).forEach(p => {
+        ;C.arr(it.purchases).forEach(p => {
           if (p.promiseDate != null) { delete p.promiseDate; changed = true }
         })
         if (it.colorText != null) { delete it.colorText; changed = true }
@@ -553,7 +553,7 @@ App({
     // 打样草稿里的「要求交期」
     const drafts = this.getDrafts()
     let draftChanged = false
-    ;(drafts || []).forEach(d => {
+    ;C.arr(drafts).forEach(d => {
       if (d.deliveryDate != null) { delete d.deliveryDate; draftChanged = true }
     })
     if (draftChanged) this.saveDrafts(drafts)
@@ -584,9 +584,9 @@ App({
 
     // 订单明细
     const dirty = []
-    ;(data.orders || []).forEach(o => {
+    ;C.arr(data.orders).forEach(o => {
       let hit = false
-      ;(o.items || []).forEach(it => {
+      ;C.arr(o.items).forEach(it => {
         if (!hasDead(it)) return
         DEAD.forEach(k => { delete it[k] })
         hit = true
@@ -606,7 +606,7 @@ App({
     const orders = this.getAllOrders()
     const parents = orders.filter(o => !o.isSub && orders.some(s => s.isSub && s.parentId === o.id))
     parents.forEach(p => {
-      const allGone = (p.items || []).every(it =>
+      const allGone = C.arr(p.items).every(it =>
         it.stocked || it.finished || Number(it.quantity) === 0)
       if (!allGone) return
       try { this.mergeSubOrders(p.id) } catch (e) {}
@@ -617,10 +617,10 @@ App({
   migrateStepQty() {
     const data = this.getData()
     let changed = false
-    ;(data.orders || []).forEach(o => {
-      (o.items || []).forEach(it => {
+    ;C.arr(data.orders).forEach(o => {
+      C.arr(o.items).forEach(it => {
         const total = Number(it.originalQty) || Number(it.quantity) || 0
-        ;(it.steps || []).forEach(s => {
+        ;C.arr(it.steps).forEach(s => {
           if (s.status === 'done' && !Number(s.doneQty) && total) {
             s.doneQty = total
             changed = true
@@ -813,7 +813,7 @@ App({
 
     const loadPage = (page, acc) => cloudOrders.list({ page, size: 100, since }).then(res => {
       if (!res || !res.ok) return acc
-      const list = (res.list || []).map(o => Object.assign({}, o, { id: o._id || o.id }))
+      const list = C.arr(res.list).map(o => Object.assign({}, o, { id: o._id || o.id }))
       const all = acc.concat(list)
       if (list.length === 100 && page < 20) return loadPage(page + 1, all)
       return all
@@ -823,7 +823,7 @@ App({
       const data = this.getData()
       let changed = 0
       const map = {}
-      ;(data.orders || []).forEach(o => { if (o && o.id) map[o.id] = o })
+      ;C.arr(data.orders).forEach(o => { if (o && o.id) map[o.id] = o })
       all.forEach(o => {
         if (!o || !o.id) return
         if (o.status === 'deleted') { if (map[o.id]) { delete map[o.id]; changed++ } return }
@@ -939,12 +939,12 @@ App({
       this._subsCache = null
     } else if (item.kind === 'orders') {
       const data = this.getData()
-      ;(item.data || []).forEach(s => {
+      ;C.arr(item.data).forEach(s => {
         const i = data.orders.findIndex(o => o.id === s.id)
         if (i > -1) data.orders[i] = Object.assign({}, s.order, { updatedAt: Date.now() })
       })
       this.saveData(data)
-      ;(item.data || []).forEach(s => this.pushOrderCloud(s.id))
+      ;C.arr(item.data).forEach(s => this.pushOrderCloud(s.id))
       this._subsCache = null
     } else if (item.kind === 'stockItem') {
       const data = this.getData()
@@ -975,7 +975,7 @@ App({
   },
 
   orderQty(order) {
-    return (order.items || []).reduce((s, it) => s + (Number(it.quantity) || 0), 0)
+    return C.arr(order.items).reduce((s, it) => s + (Number(it.quantity) || 0), 0)
   },
 
 
@@ -983,9 +983,9 @@ App({
   ownShippedQty(order) {
     if (order.shipments && order.shipments.length) {
       return order.shipments.reduce((s, x) =>
-        s + (x.items || []).reduce((t, i) => t + (Number(i.qty) || 0), 0), 0)
+        s + C.arr(x.items).reduce((t, i) => t + (Number(i.qty) || 0), 0), 0)
     }
-    const byItem = (order.items || []).reduce((s, it) => s + (Number(it.deliveredQty) || 0), 0)
+    const byItem = C.arr(order.items).reduce((s, it) => s + (Number(it.deliveredQty) || 0), 0)
     if (byItem > 0) return byItem
     return order.status === 'done' ? this.orderQty(order) : 0
   },
@@ -1005,7 +1005,7 @@ App({
     let n = Number(item.deliveredQty) || 0
     if (order && !order.isSub) {
       this.getSubs(order.id).forEach(s => {
-        (s.items || []).forEach(si => {
+        C.arr(s.items).forEach(si => {
           if (si.productId === item.productId) n += Number(si.deliveredQty) || 0
         })
       })
@@ -1119,6 +1119,21 @@ App({
     return Number(item.quantity) || 0
   },
 
+  // 这一款是不是已经送完（可以标「已完成」了）
+  // 口径：实际送出的数量 ≥ 这一款该送的数量
+  //   该送多少：已入库按实际入库数算，没入库按订单数量算
+  // 以前卡片上的「已完成」标签直接读 it.finished 这个标记，而 App 里从没代码把它置 true，
+  // 结果是数据里带了 true 就一直显示「已完成」，哪怕一件都没送出去。
+  // 现在改成实时按送货量判断，送没送完一眼就准。
+  itemFinished(order, item) {
+    if (!item) return false
+    const qty = Number(item.quantity) || 0
+    if (qty <= 0) return false
+    const should = item.stocked ? this.producedQtyOf(item) : qty
+    if (should <= 0) return false
+    return this.deliveredOf(order, item) >= should
+  },
+
   // 某产品当前还剩多少可送：所有已入库订单里「实际入库 - 已送」的总和。
   // 含两部分：正常还没送完的 + 超量生产多出来的。拆到子单的款在子单上算，母单那部分
   // shippableQty 会返回 0，不会重复计。
@@ -1126,7 +1141,7 @@ App({
     if (!productId) return 0
     let n = 0
     this.getAllOrders().forEach(o => {
-      (o.items || []).forEach(it => {
+      C.arr(o.items).forEach(it => {
         if (!it || it.productId !== productId || !it.stocked) return
         n += this.shippableQty(o, it)
       })
@@ -1161,9 +1176,11 @@ App({
     return Math.min(this.completedQtyOf(item), q) / q
   },
 
-  canStockItem(item) {
+  canStockItem(item, order) {
     if (!item) return false
     if (item.stocked) return false
+    // 已经送完的款不用再入库（送货量不够说明还没送完，能送完的才算完）
+    if (order && this.itemFinished(order, item)) return false
     if (item.finished) return false
     return this.itemRatio(item) >= 0.9
   },
@@ -1171,9 +1188,9 @@ App({
   // 整单入库：所有还没入库的款都达到 90%
   canStockIn(order) {
     if (!order || order.status === 'done' || order.status === 'deleted') return false
-    if (!(order.items || []).length) return false
+    if (!C.arr(order.items).length) return false
     if (this.allStocked(order)) return false
-    return order.items.every(it => it.stocked || this.canStockItem(it))
+    return order.items.every(it => it.stocked || this.canStockItem(it, order))
   },
 
   // 入库后的状态：全部送完才算 done，否则 stocked
@@ -1220,7 +1237,7 @@ App({
     if (n <= 0) return null
 
     // 只剩这一款没入库，就直接整单入库，不拆子单
-    const left = (parent.items || []).filter(x => !x.stocked)
+    const left = C.arr(parent.items).filter(x => !x.stocked)
     if (left.length <= 1) {
       const qtys = {}
       const i = (parent.items || []).indexOf(it)
@@ -1230,7 +1247,7 @@ App({
     }
 
     let sub = data.orders.find(o => o.isSub && o.parentId === parent.id &&
-      o.status !== 'deleted' && (o.items || []).some(x => x.productId === it.productId))
+      o.status !== 'deleted' && C.arr(o.items).some(x => x.productId === it.productId))
     const now = Date.now()
 
     if (!sub) {
@@ -1244,7 +1261,7 @@ App({
       copy.finished = false
       if (n < ordered) copy.shortQty = ordered - n
       else delete copy.shortQty
-      copy.steps = (copy.steps || []).map(s => Object.assign({}, s, { status: 'done', doneQty: Math.min(n, ordered) }))
+      copy.steps = C.arr(copy.steps).map(s => Object.assign({}, s, { status: 'done', doneQty: Math.min(n, ordered) }))
       const id = 'ORD-' + String(data.seq || 1).padStart(3, '0')
       data.seq = (data.seq || 1) + 1
       sub = {
@@ -1276,7 +1293,7 @@ App({
     it.stocked = true
     it.finished = false
     it.deliveredQty = Number(it.deliveredQty) || 0
-    it.steps = (it.steps || []).map(s => Object.assign({}, s, { status: 'done', doneQty: Math.min(n, ordered) }))
+    it.steps = C.arr(it.steps).map(s => Object.assign({}, s, { status: 'done', doneQty: Math.min(n, ordered) }))
     if (n < ordered) it.shortQty = ordered - n
     else delete it.shortQty
 
@@ -1297,7 +1314,7 @@ App({
   // 文本格式： producedQty|shortQty|splitQty|finished|deliveredQty|工序状态:完成数,工序状态:完成数
   // 例：       96|0|0|0|0|done:100,done:96
   encodeStockRec(it) {
-    const steps = (it.steps || [])
+    const steps = C.arr(it.steps)
       .map(s => (s.status || '') + ':' + (Number(s.doneQty) || 0))
       .join(',')
     return [
@@ -1328,7 +1345,7 @@ App({
   // 入库时登记：给所有还没入库的款记一条文本（已记过的不覆盖，保留「最初未入库」的状态）
   markStockRecs(order) {
     if (!order) return
-    ;(order.items || []).forEach(it => {
+    ;C.arr(order.items).forEach(it => {
       if (it.stocked || it._stk) return
       it._stk = this.encodeStockRec(it)
     })
@@ -1349,7 +1366,7 @@ App({
     let restored = 0
 
     let exact = true
-    ;(order.items || []).forEach(it => {
+    ;C.arr(order.items).forEach(it => {
       if (it._stk) {
         // 有记录：精确还原入库前的状态
         const r = this.decodeStockRec(it._stk)
@@ -1360,7 +1377,7 @@ App({
         it.finished = r.finished
         it.deliveredQty = r.deliveredQty
         // 工序按位置还原，工序名保持不变
-        it.steps = (it.steps || []).map((s, i) => {
+        it.steps = C.arr(it.steps).map((s, i) => {
           const rec = r.steps[i]
           if (!rec) return s
           return Object.assign({}, s, { status: rec.status, doneQty: rec.doneQty })
@@ -1405,7 +1422,7 @@ App({
   stockIn(orderId, qtys) {
     const changed = this.updateOrder(orderId, order => {
       this.markStockRecs(order)
-      ;(order.items || []).forEach((it, i) => {
+      ;C.arr(order.items).forEach((it, i) => {
         // 已经入过库的（含刚合并进来的子单）不再改数量
         if (it.stocked && Number(it.producedQty) > 0) return
         const ordered = Number(it.quantity) || 0
@@ -1427,7 +1444,7 @@ App({
   // 超量生产且订单要求已送完、还剩超量的货 → 卡片标「库存」
   hasStockExtra(order) {
     // 订单要的送完了、还剩下多做的货，才显示「库存」
-    return (order.items || []).some(it => {
+    return C.arr(order.items).some(it => {
       const ordered = Number(it.quantity) || 0
       const produced = this.producedQtyOf(it)
       const sent = this.deliveredOf(order, it)
@@ -1452,11 +1469,11 @@ App({
     const subs = data.orders.filter(o => o.isSub && o.parentId === parentId && o.status !== 'deleted')
     if (!subs.length) return 0
 
-    ;(parent.items || []).forEach(it => {
+    ;C.arr(parent.items).forEach(it => {
       const ordered = Number(it.originalQty) || Number(it.quantity) || 0
       const subItems = []
       subs.forEach(s => {
-        (s.items || []).forEach(si => {
+        C.arr(s.items).forEach(si => {
           if (si.productId === it.productId) subItems.push(si)
         })
       })
@@ -1475,13 +1492,13 @@ App({
       it.finished = false
       if (produced < ordered) it.shortQty = ordered - produced
       else delete it.shortQty
-      it.steps = (it.steps || []).map(s => Object.assign({}, s, { status: 'done', doneQty: Math.min(produced, ordered) }))
+      it.steps = C.arr(it.steps).map(s => Object.assign({}, s, { status: 'done', doneQty: Math.min(produced, ordered) }))
     })
 
     const mergedShipments = []
     subs.forEach(s => {
-      (s.shipments || []).forEach(sh => {
-        const items = (sh.items || []).map(row => {
+      C.arr(s.shipments).forEach(sh => {
+        const items = C.arr(sh.items).map(row => {
           const si = (s.items || [])[row.index]
           const pi = (parent.items || []).findIndex(x => x.productId === (si && si.productId))
           if (pi < 0) return null
@@ -1554,8 +1571,8 @@ App({
     if (idx < 0) return 0
     let n = 0
     let found = false
-    ;(order.shipments || []).forEach(s => {
-      (s.items || []).forEach(r => {
+    ;C.arr(order.shipments).forEach(s => {
+      C.arr(s.items).forEach(r => {
         if (Number(r.index) !== idx) return
         const ai = (r.addrIndex == null) ? 0 : Number(r.addrIndex)
         if (ai !== addrIndex) return
@@ -1626,7 +1643,7 @@ App({
   getLastPrice(productId) {
     if (!productId) return null
     const priced = []
-    this.getAllOrders().forEach(o => (o.items || []).forEach(it => {
+    this.getAllOrders().forEach(o => C.arr(o.items).forEach(it => {
       if (it.productId === productId && Number(it.price) > 0) {
         priced.push({
           price: Number(it.price),
@@ -1650,7 +1667,7 @@ App({
   getPriceHistory(productId) {
     const map = {}
     this.getAllOrders().forEach(o => {
-      (o.items || []).forEach(it => {
+      C.arr(o.items).forEach(it => {
         if (it.productId !== productId) return
         const price = Number(it.price) || 0
         if (!price) return
@@ -1742,7 +1759,7 @@ App({
       const raw = wx.getStorageSync('customer_list')
       if (raw) list = JSON.parse(raw)
     } catch (e) {}
-    return (list || []).map(c => (typeof c === 'string'
+    return C.arr(list).map(c => (typeof c === 'string'
       ? { name: c, contact: '', phone: '', addresses: [] }
       : Object.assign({ addresses: [] }, c)))
   },
@@ -1752,7 +1769,7 @@ App({
   },
 
   saveCustomers(list) {
-    this._kvWrite('customer_list', (list || []).map(c =>
+    this._kvWrite('customer_list', C.arr(list).map(c =>
       (typeof c === 'string'
         ? { name: c, contact: '', phone: '', addresses: [] }
         : c)))
@@ -1777,7 +1794,7 @@ App({
 
   getServiceSuppliers() {
     const SERVICE = ['代印', '成品箱']
-    return this.getSuppliers().filter(s => (s.types || []).some(t => SERVICE.indexOf(t) > -1))
+    return this.getSuppliers().filter(s => C.arr(s.types).some(t => SERVICE.indexOf(t) > -1))
   },
 
   // 代工厂（老数据）
@@ -1797,7 +1814,7 @@ App({
   // 代工信息记在订单明细上（item.factoryName/factoryPrice），
   // 所以统计某代工厂一律按明细汇总，不要读订单层
   factoryItems(order, name) {
-    return (order.items || []).filter(it => it.factoryName === name)
+    return C.arr(order.items).filter(it => it.factoryName === name)
   },
 
   factoryAmount(order, name) {
@@ -1847,7 +1864,7 @@ App({
   // 预警数量在产品编辑页勾选「常备款」时手动录入（存在产品上 stockAlertQty），
   // 没设置过时用默认阈值 C.STOCK_ALERT_THRESHOLD（300）。
   checkStockAlerts(productIds, orderId) {
-    ;(productIds || []).forEach(pid => {
+    ;C.arr(productIds).forEach(pid => {
       const p = this.getProduct(pid)
       if (!p || !p.stockItem) return
       const th = Number(p.stockAlertQty) || C.STOCK_ALERT_THRESHOLD
@@ -1875,7 +1892,7 @@ App({
     if (!o) return ''
     return [
       o.id, o.orderNo, o.customer, o.urgent ? '加急' : '',
-      (o.items || []).map(it => [it.productId, it.productName, it.po].filter(Boolean).join(' ')).join(' ')
+      C.arr(o.items).map(it => [it.productId, it.productName, it.po].filter(Boolean).join(' ')).join(' ')
     ].filter(Boolean).join(' ')
   },
 
@@ -1938,7 +1955,8 @@ App({
             doneQty: q,
             doneQtyProd: q,
             splitQty: 0,
-            finished: !!it.finished,
+            // 子单的款：按实际送出的量判断送完没送完
+            finished: subSent >= subStock,
             showProgress: false,
             lowStock: false,
             stockedTag: true,
@@ -1965,7 +1983,8 @@ App({
           stockedQty: stockQty,
           overQty: Math.max(0, doneProd - q),
           splitQty: Number(it.splitQty) || 0,
-          finished: !!it.finished,
+          // 「已完成」按实际送货量判断：没全部送完就不能标完成
+          finished: this.itemFinished(o, it),
           showProgress: false,
           lowStock: !!(p && p.stockItem) && q > 0 && d / q >= 0.8 && d < q,
           sentQty: sent,
