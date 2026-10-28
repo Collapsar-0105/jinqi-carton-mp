@@ -96,6 +96,31 @@ function calcBoard(l, w, h, tang, craft) {
   return { length: onePiece, width: boardWidth, twoPiece: false }
 }
 
+// 多张纸板时的命名（车间习惯）
+// 只有一张纸板：还是叫「纸板尺寸」，不额外起名
+// 两张纸板：主纸板 = 大板，第 2 张 = 小板
+// 三张及以上：主纸板 = 大板，第 2 张 = 小板，第 3 张起 = 附加纸板A、附加纸板B…
+function boardNames(count) {
+  const n = Number(count) || 0
+  if (n <= 1) return []
+  const names = ['大板', '小板']
+  // 从第 3 张开始用字母：附加纸板A、附加纸板B…
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  for (let i = 2; i < n; i++) {
+    const idx = i - 2
+    names.push('附加纸板' + (letters[idx] || (idx + 1)))
+  }
+  return names
+}
+
+// 第 i 张纸板（i 从 0 开始）的名字
+// 单张纸板没有名字（返回空串，走「纸板尺寸」的旧文案）
+function boardNameAt(index, count) {
+  const names = boardNames(count)
+  if (!names.length) return ''
+  return names[index] || ''
+}
+
 // 纸板信息文本：主纸板 + 附加纸板（复制信息时统一用这个）
 function boardLines(item) {
   const src = item || {}
@@ -104,10 +129,13 @@ function boardLines(item) {
   if (src.boardL) main.push(Number(src.boardL) || 0)
   if (src.boardW) main.push(Number(src.boardW) || 0)
   if (src.sizeH) main.push(Number(src.sizeH) || 0)
-  lines.push('纸板尺寸：' + (main.length ? main.join('×') + 'mm' : ''))
-  ;(src.boards || []).forEach((b, i) => {
-    if (!b || (!b.L && !b.W)) return
-    lines.push('附加纸板' + (i + 2) + '：' + (Number(b.L) || 0) + '×' + (Number(b.W) || 0) + 'mm × ' + (Number(b.qty) || 1) + '张')
+  // 有效纸板总数（主纸板 + 附加纸板），决定用不用「大板/小板」这套叫法
+  const extra = (src.boards || []).filter(b => b && (b.L || b.W))
+  const names = boardNames(1 + extra.length)
+  lines.push((names.length ? names[0] + '尺寸：' : '纸板尺寸：') + (main.length ? main.join('×') + 'mm' : ''))
+  extra.forEach((b, i) => {
+    const nm = names[i + 1] || ('附加纸板' + (i + 2))
+    lines.push(nm + '：' + (Number(b.L) || 0) + '×' + (Number(b.W) || 0) + 'mm × ' + (Number(b.qty) || 1) + '张')
   })
   return lines
 }
@@ -166,6 +194,8 @@ module.exports = {
   MANUAL_BOARD_TYPES,
   defaultFlute,
   boardLines,
+  boardNames,
+  boardNameAt,
   CRAFTS,
   PAPER_COLORS,
   FLUTES,

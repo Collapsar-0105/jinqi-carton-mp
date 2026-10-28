@@ -35,7 +35,8 @@
         <text wx:if="{{it.paperColor}}"> · {{it.paperColor}}</text>
         <text wx:if="{{it.boxType === '梯形箱'}}"> · 上{{it.sizeTL}}×{{it.sizeTW}} 中高{{it.sizeH2}} 下{{it.sizeBL}}×{{it.sizeBW}}mm</text>
         <text wx:elif="{{it.sizeL}}"> · {{it.sizeL}}×{{it.sizeW}}×{{it.sizeH}}mm</text>
-        <text wx:if="{{it.boardL}}"> · 纸板 {{it.boardL}}×{{it.boardW}}{{it.twoPiece ? '（两片）' : ''}}</text>
+        <text wx:if="{{it.boardL}}"> · {{it.boardName ? it.boardName : '纸板'}} {{it.boardL}}×{{it.boardW}}{{it.twoPiece ? '（两片）' : ''}}</text>
+        <text wx:if="{{it.boards && it.boards.length > 0}}"> · <text wx:for="{{it.boards}}" wx:key="index" wx:for-item="bd">{{it.boardNames[index]}} {{bd.L}}×{{bd.W}}×{{bd.qty}}张{{index < it.boards.length - 1 ? '、' : ''}}</text></text>
       </view>
 
       <view class="field mt-8">

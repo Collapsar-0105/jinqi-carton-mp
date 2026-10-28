@@ -183,7 +183,7 @@
 
       <view class="bp-title bp-sub">附加纸板<text class="bp-reset" bindtap="addBoard">+ 添加纸板</text></view>
       <view wx:for="{{boards}}" wx:key="index" class="bp-row">
-        <text class="bp-k">纸板{{index + 2}}</text>
+        <text class="bp-k">{{boardNames[index]}}</text>
         <input placeholder-style="color:#555;font-weight:600" class="bp-input bp-input-sm" type="number" placeholder="长" value="{{item.L}}" bindinput="onBoardField" data-index="{{index}}" data-field="L" />
         <text class="bp-unit">×</text>
         <input placeholder-style="color:#555;font-weight:600" class="bp-input bp-input-sm" type="number" placeholder="宽" value="{{item.W}}" bindinput="onBoardField" data-index="{{index}}" data-field="W" />

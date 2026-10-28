@@ -142,6 +142,12 @@ Page({
       boardL: board.length,
       boardW: board.width,
       twoPiece: board.twoPiece,
+      // 附加纸板（一款由多种不同规格纸板做成时，选产品就要一起带过来）
+      boards: (p.boards || []).filter(b => b && (b.L || b.W)).map(b => ({
+        L: Number(b.L) || 0,
+        W: Number(b.W) || 0,
+        qty: Number(b.qty) || 1
+      })),
       po: '',
       pads,
       quantity: '',
@@ -158,6 +164,11 @@ Page({
       // 填单过程中库存不会变，不用反复重算
       stockQty: app.productStockQty(p.id)
     }
+
+    // 纸板命名：多张纸板时主纸板=大板、第2张=小板、第3张起=附加纸板A/B…
+    const bNames = C.boardNames(1 + (item.boards || []).length)
+    item.boardName = bNames[0] || ''
+    item.boardNames = bNames.slice(1)
 
     // 收货地址：默认带出产品档案预设的（必须属于本单客户）
     Object.assign(item, this.buildAddrState(this.data.customer, p, ''))
@@ -389,9 +400,15 @@ Page({
         sizeW: it.sizeW,
         sizeH: it.sizeH,
         tang: it.tang,
-        boardL: it.boardL,
-        boardW: it.boardW,
-        twoPiece: it.twoPiece,
+      boardL: it.boardL,
+      boardW: it.boardW,
+      twoPiece: it.twoPiece,
+      // 附加纸板：从别处复制/带入的明细也要带上
+      boards: (it.boards || []).filter(b => b && (b.L || b.W)).map(b => ({
+        L: Number(b.L) || 0,
+        W: Number(b.W) || 0,
+        qty: Number(b.qty) || 1
+      })),
         pads: it.pads || [],
         quantity: parseInt(it.quantity),
         splitQty: 0,

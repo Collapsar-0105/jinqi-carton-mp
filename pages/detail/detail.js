@@ -85,6 +85,12 @@ Page({
         ? '上' + it.sizeTL + '×' + it.sizeTW + ' 中高' + it.sizeH2 + ' 下' + it.sizeBL + '×' + it.sizeBW + 'mm'
         : it.sizeL + '×' + it.sizeW + '×' + it.sizeH + 'mm'
 
+      // 纸板命名：多张纸板时主纸板=大板、第2张=小板、第3张起=附加纸板A/B…
+      // 只有一张纸板时不额外起名，仍显示「纸板：」
+      const extraBoards = (it.boards || []).filter(b => b && (b.L || b.W))
+      const boardNames = C.boardNames(1 + extraBoards.length)
+      const boardName = boardNames[0] || ''
+
 
       return Object.assign({}, it, {
         idx,
@@ -125,8 +131,12 @@ Page({
         originalQty: isSub ? qty : (Number(it.originalQty) || (qty + (Number(it.splitQty) || 0))),
         splitQty: isSub ? 0 : (Number(it.splitQty) || 0),
         _sizeText: sizeText,
-        // 附加纸板（一款由多种不同规格纸板做成时）
-        boards: (it.boards || []).filter(b => b && (b.L || b.W)),
+        // 纸板命名：多张纸板时主纸板=大板、第2张=小板、第3张起=附加纸板A/B…
+        // 只有一张纸板时不额外起名，仍显示「纸板：」
+        boardName: boardName,
+        boards: (it.boards || []).filter(b => b && (b.L || b.W)).map((b, i) => Object.assign({}, b, {
+          name: boardNames[i + 1] || ('附加纸板' + (i + 2))
+        })),
         addrList: app.itemAddrList(order, it),
         note
       })

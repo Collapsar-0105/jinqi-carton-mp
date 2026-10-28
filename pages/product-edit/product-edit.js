@@ -23,6 +23,8 @@ Page({
     isTrapezoid: false,
     manualBoard: false,
     boards: [],
+    // 纸板命名（多张纸板时：主纸板=大板、第2张=小板、第3张起=附加纸板A/B…）
+    boardNames: [],
 
     sizeL: '',
     sizeW: '',
@@ -152,6 +154,8 @@ Page({
       isTrapezoid: boxType === '梯形箱',
       manualBoard: C.MANUAL_BOARD_TYPES.indexOf(boxType) >= 0,
       boards: (obj.boards || []).map(b => ({ L: String(b.L || ''), W: String(b.W || ''), qty: String(b.qty || '1') })),
+      // 纸板命名：多张纸板时主纸板=大板、第2张=小板、第3张起=附加纸板A/B…
+      boardNames: C.boardNames(1 + (obj.boards || []).length).slice(1),
       sizeTL: obj.sizeTL ? String(obj.sizeTL) : '',
       sizeTW: obj.sizeTW ? String(obj.sizeTW) : '',
       sizeH2: obj.sizeH2 ? String(obj.sizeH2) : '',
@@ -426,15 +430,24 @@ Page({
   },
 
   // ===== 附加纸板（一款纸箱由多个不同规格的纸板做成）=====
+  // 纸板命名：多张纸板时主纸板=大板、第2张=小板、第3张起=附加纸板A/B…
+  // 这里只列附加纸板的名字（主纸板是「大板」，在上面的规格区显示）
+  syncBoardNames(boards) {
+    const list = boards || []
+    // 附加纸板的名字从第 2 张算起，所以总张数 = 1(主) + 附加数
+    const all = C.boardNames(1 + list.length)
+    this.setData({ boardNames: all.slice(1) })
+  },
+
   addBoard() {
     const boards = (this.data.boards || []).concat([{ L: '', W: '', qty: '1' }])
-    this.setData({ boards })
+    this.setData({ boards }, () => this.syncBoardNames(boards))
   },
 
   removeBoard(e) {
     const index = Number(e.currentTarget.dataset.index)
     const boards = (this.data.boards || []).filter((_, i) => i !== index)
-    this.setData({ boards })
+    this.setData({ boards }, () => this.syncBoardNames(boards))
   },
 
   onBoardField(e) {
