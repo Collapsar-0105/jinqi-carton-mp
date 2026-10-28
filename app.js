@@ -11,14 +11,19 @@ const SYNC_KEYS = [
 
 App({
   globalData: {
-    cloud: { ready: false, allowed: false, openid: '', lastSync: 0, error: '', mode: 'local' }
+    // mode: 'local' 本地 / 'checking' 正在查授权 / 'pending' 未授权（等管理员）/ 'cloud' 已授权
+    // checking 是关键：进入小程序时云端校验还没回来，这时不能弹「等待授权」，
+    // 等 pull 回来再说 —— 已授权的直接进，没授权的才提示
+    cloud: { ready: false, allowed: false, openid: '', lastSync: 0, error: '', mode: 'local', checking: false }
   },
 
   onShow() {
     this.triggerPrivacyAuth()
     this.ensureIdentity()
     const now = Date.now()
-    if (now - (this._lastPullAt || 0) < 60000) return
+    // 10 秒节流：切回前台时能较快拿到最新的授权状态
+    // （管理员在后台授权后，用户切回来不用等太久才看到订单）
+    if (now - (this._lastPullAt || 0) < 10000) return
     this._lastPullAt = now
     this.cloudPull(true)
   },
@@ -203,6 +208,15 @@ App({
     this.globalData.cloud = Object.assign({}, this.globalData.cloud, patch)
   },
 
+  // 授权状态变了：通知当前页面刷新提示（已授权的自动把订单拉出来，不用用户点按钮）
+  notifyAuthChanged() {
+    try {
+      const pages = getCurrentPages()
+      const cur = pages[pages.length - 1]
+      if (cur && typeof cur.onAuthStateChanged === 'function') cur.onAuthStateChanged()
+    } catch (e) {}
+  },
+
   watchNetwork() {
     if (!wx.onNetworkStatusChange) return
     wx.onNetworkStatusChange(res => {
@@ -236,18 +250,21 @@ App({
   },
 
   cloudPull(silent, force) {
+    // 标记「正在查授权」：页面据此判断该不该弹「等待授权」提示
+    this.setCloud({ checking: true })
     return cloudApi.call('pull').then(res => {
       if (!res || !res.ok) {
         if (res && res.error === 'NOT_ALLOWED') {
-          this.setCloud({ mode: 'pending', allowed: false, openid: res.openid || '', error: '等待管理员授权' })
+          this.setCloud({ mode: 'pending', allowed: false, checking: false, openid: res.openid || '', error: '等待管理员授权' })
           // 还没被授权也要先把名字报上去，管理员才知道该授权谁
           this.promptUserName()
         } else {
-          this.setCloud({ error: (res && res.error) || '未授权', mode: 'local' })
+          this.setCloud({ error: (res && res.error) || '未授权', mode: 'local', checking: false })
         }
+        this.notifyAuthChanged()
         return null
       }
-      this.setCloud({ ready: true, allowed: true, admin: !!res.admin, role: res.role || (res.admin ? 'admin' : 'worker'), openid: res.openid || '', error: '', mode: 'cloud' })
+      this.setCloud({ ready: true, allowed: true, checking: false, admin: !!res.admin, role: res.role || (res.admin ? 'admin' : 'worker'), openid: res.openid || '', error: '', mode: 'cloud' })
       this._cloudBaseAt = Number(res.updatedAt) || 0
       this.flushPendingPush()
       // 云端为准：订单集合全量覆盖本地
@@ -266,6 +283,7 @@ App({
 
       if (!res.payload) {
         // 云端为空：把本机数据推上去
+        this.notifyAuthChanged()
         return this.cloudPush(true)
       }
       if (force || remoteAt > localAt || localEmpty || remoteByOther) {
@@ -274,15 +292,19 @@ App({
     this.refreshCollFromCloud()
         this.setCloud({ lastSync: remoteAt })
         this.reloadCurrentPage()
+        this.notifyAuthChanged()
         return res
       }
       if (localAt > remoteAt) {
+        this.notifyAuthChanged()
         return this.cloudPush(true)
       }
       this.setCloud({ lastSync: remoteAt })
+      this.notifyAuthChanged()
       return res
     }).catch(err => {
-      this.setCloud({ error: (err && err.errMsg) || '云函数未部署', mode: 'local' })
+      this.setCloud({ error: (err && err.errMsg) || '云函数未部署', mode: 'local', checking: false })
+      this.notifyAuthChanged()
       return null
     })
   },

@@ -1,7 +1,7 @@
 <view class="page {{fontClass}}">
   <view wx:if="{{needAuth}}" class="card auth-wait">
     <text class="auth-title">等待管理员授权</text>
-    <text class="text-xs c-gray">你的账号已经登记好了，但管理员还没授权你同步数据。授权后点下面按钮就能看到订单。</text>
+    <text class="text-xs c-gray">你的账号已经登记好了，但管理员还没授权你同步数据。授权后本页会自动显示订单，不用再点任何按钮。</text>
     <view class="oid-row" bindtap="copyOpenid">
       <text class="oid-text">本机识别码：{{myOpenid}}</text>
       <text class="copy">复制</text>

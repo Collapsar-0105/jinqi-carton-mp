@@ -53,10 +53,27 @@ Page({
   },
 
   // 云端授权状态：没被授权时，订单会是空的，页面上要说清楚为什么
+  // 关键：云端校验是异步的，刚进小程序时结果还没回来（checking=true），
+  // 这时不能弹「等待授权」——已授权的用户每次进来都要点一下才能看到订单，太烦人。
+  // 只有云端明确回了 NOT_ALLOWED（mode='pending'）才提示。
   syncAuthState() {
     const c = (app.globalData && app.globalData.cloud) || {}
-    const pending = c.mode === 'pending' || c.allowed === false
+    // mode='pending' = 云端已确认未授权；其余情况（还没查/已授权/本地模式）都不提示
+    const pending = c.mode === 'pending'
     this.setData({ needAuth: !!pending, myOpenid: c.openid || '' })
+    return !!pending
+  },
+
+  // 授权状态变化时的回调（app.js 在 pull 结束后会调）
+  onAuthStateChanged() {
+    const wasNeedAuth = this.data.needAuth
+    const pending = this.syncAuthState()
+    // 从「待授权」变成已授权：自动把订单拉出来，不用用户点「重新检查」
+    if (wasNeedAuth && !pending) {
+      this.load()
+      return
+    }
+    if (pending !== wasNeedAuth) this.load()
   },
 
   // 管理员授权后点一下就能进，不用重启小程序
