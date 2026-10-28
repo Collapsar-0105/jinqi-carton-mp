@@ -36,7 +36,7 @@
     <view class="rule-row"><text class="rule-k">名称</text><text class="rule-v">和编号一一对应</text></view>
     <view class="rule-row"><text class="rule-k">工艺</text><text class="rule-v">草箱 / 彩箱</text></view>
     <view class="rule-row"><text class="rule-k">箱型</text><text class="rule-v">普通方箱 / 水箱 / 梯形箱 / 连体 / 包盖 / 小盒 / 异型箱</text></view>
-    <view class="rule-row"><text class="rule-k">楞型</text><text class="rule-v">五层 BA 瓦 / 五层 BC 瓦 / 三层 B 瓦 / 三层 C 瓦 / 三层 E 瓦 / 五层 BE 瓦 / 七层</text></view>
+    <view class="rule-row"><text class="rule-k">楞型</text><text class="rule-v">五层 BA 瓦 / 五层 BC 瓦 / 三层 A 瓦 / 三层 C 瓦 / 三层 E 瓦 / 五层 BE 瓦 / 七层</text></view>
     <view class="rule-row"><text class="rule-k">长宽高</text><text class="rule-v">毫米，只填数字</text></view>
     <view class="rule-row"><text class="rule-k">工序</text><text class="rule-v">顿号分隔，可留空自动生成</text></view>
     <view class="rule-row"><text class="rule-k">客户</text><text class="rule-v">顿号分隔，会自动加进客户名单</text></view>

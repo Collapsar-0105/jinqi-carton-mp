@@ -16,7 +16,7 @@ const CRAFTS = ['草箱', '彩箱']
 const PAPER_COLORS = ['黄面', '白面']
 
 // 楞型（本厂主做 5 层 BA / BC，排在最前）
-const FLUTES = ['五层 BA 瓦', '五层 BC 瓦', '三层 A 瓦', '三层 B 瓦', '三层 C 瓦', '三层 E 瓦', '五层 BE 瓦', '七层']
+const FLUTES = ['五层 BA 瓦', '五层 BC 瓦', '三层 A 瓦', '三层 C 瓦', '三层 E 瓦', '五层 BE 瓦', '七层']
 
 // 垫片类型
 const PAD_TYPES = ['3层', '5层', '蜂窝']

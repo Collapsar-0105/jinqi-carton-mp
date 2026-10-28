@@ -132,6 +132,9 @@ Page({
     const craftIndex = Math.max(0, C.CRAFTS.indexOf(obj.craft || '草箱'))
     const flute = obj.flute || C.FLUTES[0]
     const fluteIndex = Math.max(0, C.FLUTES.indexOf(flute))
+    // 档案里存的楞型已不在选项里（如下线的「三层 B 瓦」）：原样保留，
+    // 用户主动改选择器之前不要把它悄悄改成别的楞型
+    const fluteRaw = flute && C.FLUTES.indexOf(flute) < 0 ? flute : ''
     const boxType = obj.boxType || C.BOX_TYPES[0]
     const boxTypeIndex = Math.max(0, C.BOX_TYPES.indexOf(boxType))
     const steps = C.normalizeSteps((obj.steps && obj.steps.length) ? obj.steps : C.defaultSteps(obj.craft || '草箱'))
@@ -155,6 +158,7 @@ Page({
       sizeBL: obj.sizeBL ? String(obj.sizeBL) : '',
       sizeBW: obj.sizeBW ? String(obj.sizeBW) : '',
       fluteIndex,
+      fluteRaw,
       sizeL: obj.sizeL ? String(obj.sizeL) : '',
       sizeW: obj.sizeW ? String(obj.sizeW) : '',
       sizeH: obj.sizeH ? String(obj.sizeH) : '',
@@ -400,6 +404,7 @@ Page({
     const flute = C.FLUTES[fluteIndex]
     this.setData({
       fluteIndex,
+      fluteRaw: ''
     })
   },
 
@@ -546,7 +551,7 @@ Page({
   buildProduct() {
     const d = this.data
     const craft = C.CRAFTS[d.craftIndex]
-    const flute = C.FLUTES[d.fluteIndex]
+    const flute = d.fluteRaw || C.FLUTES[d.fluteIndex]
 
     return {
       id: (d.id || '').trim(),
