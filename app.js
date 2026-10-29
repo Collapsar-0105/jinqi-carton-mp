@@ -20,12 +20,71 @@ App({
   onShow() {
     this.triggerPrivacyAuth()
     this.ensureIdentity()
+    // 版本更新检查：必须放在最前面，不能被下面的节流 return 拦掉
+    this.checkUpdate()
     const now = Date.now()
     // 10 秒节流：切回前台时能较快拿到最新的授权状态
     // （管理员在后台授权后，用户切回来不用等太久才看到订单）
     if (now - (this._lastPullAt || 0) < 10000) return
     this._lastPullAt = now
     this.cloudPull(true)
+  },
+
+  // ===== 小程序版本更新 =====
+  // 微信的 getUpdateManager 返回的是单例，onUpdateReady 等是「加监听器」语义，
+  // 重复调用会重复注册 → 弹窗弹好几次。所以只注册一次，之后直接复用。
+  // 微信客户端的更新检查本身由系统触发（onShow 时系统会自己查），我们只负责听结果。
+  //
+  // 本地怎么测（开发者工具）：
+  //   1) 点工具栏「编译」旁的小箭头 → 「添加编译模式」
+  //   2) 在「自定义编译条件」弹窗里勾选「下次编译时模拟更新」，
+  //      状态选「成功」或「失败」
+  //   3) 确定后重新编译 —— 模拟器会走一遍更新流程，
+  //      onUpdateReady / onUpdateFailed 会被触发，弹窗和重启逻辑都能看到
+  //   注意：这个模拟只生效一次，再测要重新勾选。
+  //   （模拟更新是开发者工具的「模拟器运行时状态」，不在项目配置文件里，
+  //     所以改 project.private.config.json 的 condition 是没用的）
+  checkUpdate() {
+    if (!wx.getUpdateManager) return
+    if (this._updateMgr) return          // 已注册过，不重复注册
+    try {
+      const mgr = wx.getUpdateManager()
+      if (!mgr) return
+      this._updateMgr = mgr
+
+      mgr.onUpdateReady(() => {
+        // 新版本已下载好，询问用户是否立即重启应用
+        wx.showModal({
+          title: '有新版本',
+          content: '新版本已经下载完成，是否立即重启应用？',
+          confirmText: '立即更新',
+          cancelText: '稍后再说',
+          success: res => {
+            if (res.confirm) {
+              // applyUpdate 会重启小程序并加载新版本
+              mgr.applyUpdate()
+            }
+          }
+        })
+      })
+
+      mgr.onUpdateFailed(() => {
+        // 更新包下载失败：只能让用户手动删除小程序重新进入
+        wx.showModal({
+          title: '更新失败',
+          content: '新版本下载失败，请删除小程序后重新打开以获取最新版本。',
+          showCancel: false,
+          confirmText: '知道了'
+        })
+      })
+
+      mgr.onCheckForUpdate(() => {
+        // 有新版本时微信会接着回调 onUpdateReady；没有新版本这里什么都不用做
+      })
+    } catch (e) {
+      // 老基础库没有这个接口，忽略即可
+      this._updateMgr = null
+    }
   },
 
   // 触发微信官方的隐私授权弹窗（底部半屏那张：小程序名 + 申请什么 + 用途 + 拒绝/允许）
