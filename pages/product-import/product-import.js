@@ -1,22 +1,9 @@
 const app = getApp()
 const C = require('../../utils/constants.js')
+const T = require('../../utils/product-template.js')
 
-const HEADER = [
-  '编号', '产品名称', '工艺', '箱型', '楞型', '长(mm)', '宽(mm)', '高(mm)',
-  '面纸颜色',
-  '工序(顿号分隔，可留空自动生成)',
-  '垫片(层数 长×宽×数量，顿号分隔)', '代工模式(代印/成品箱)',
-  '代工方', '客户(顿号分隔)', '默认收货地址(客户|地址)', '参考单价', '备注'
-]
-
-const SAMPLE_ROWS = [
-  ['P001', '美的 KFR-35W 彩箱', '彩箱', '普通方箱', '五层 BC 瓦', '520', '380', '300',
-    '', '',
-    '5层 500×300×2、3层 550×350×1', '', '', '美的', '', '3.50', '示例行，可删除'],
-  ['P002', '格力挂机箱', '草箱', '普通方箱', '三层 A 瓦', '600', '400', '350',
-    '黄面', '',
-    '', '代印', '金彩印务', '格力', '格力|珠海市香洲区XX仓', '4.20', '']
-]
+const HEADER = T.HEADER
+const SAMPLE_ROWS = T.SAMPLE_ROWS
 
 Page({
   data: {
@@ -59,6 +46,25 @@ Page({
       })
     } catch (e) {
       wx.showToast({ title: '生成失败：' + e.message, icon: 'none' })
+    }
+  },
+
+  // 生成带下拉的 .xlsx（工艺/箱型/楞型/面纸颜色/代工模式可下拉选择，也能手填；工序列已去掉）
+  saveTemplateXlsx() {
+    const fs = wx.getFileSystemManager()
+    const path = wx.env.USER_DATA_PATH + '/产品导入模板(带下拉).xlsx'
+    try {
+      const bytes = T.buildProductTemplateXlsx()
+      // 微信 writeFileSync 接受 ArrayBuffer/Uint8Array 作为二进制写入
+      fs.writeFileSync(path, bytes.buffer)
+      this.setData({ savedPath: path })
+      wx.showModal({
+        title: '模板已生成（带下拉）',
+        content: '已保存为 xlsx：工艺/箱型/楞型/面纸颜色/代工模式这几列在 Excel/WPS 里可直接下拉选择，也能自己打字填新值；工序列已去掉，会按箱型/代工方式自动生成。可转发到电脑填写，或在手机上用 Excel 打开。',
+        showCancel: false
+      })
+    } catch (e) {
+      wx.showToast({ title: '生成失败：' + (e.message || e.errMsg || e), icon: 'none' })
     }
   },
 
@@ -217,9 +223,10 @@ Page({
       const name = c[1]
       if (!id || !name) { skipped++; return }
 
-      const craft = C.CRAFTS.indexOf(c[2]) > -1 ? c[2] : '草箱'
-      const boxType = C.BOX_TYPES.indexOf(c[3]) > -1 ? c[3] : C.BOX_TYPES[0]
-      const flute = C.FLUTES.indexOf(c[4]) > -1 ? c[4] : C.FLUTES[0]
+      // 这几项是「可下拉选择，也可手动输入」：填了就用填的（即使是表外自定义值），空才回退默认
+      const craft = (c[2] || '').trim() || '草箱'
+      const boxType = (c[3] || '').trim() || C.BOX_TYPES[0]
+      const flute = (c[4] || '').trim() || C.FLUTES[0]
       const tang = C.defaultTang(boxType)
       const sizeL = parseInt(c[5]) || 0
       const sizeW = parseInt(c[6]) || 0
@@ -228,27 +235,20 @@ Page({
 
       const split = v => String(v || '').split(/[、；;|]/).map(s => s.trim()).filter(Boolean)
 
-      // 垫片：5层 500×300×2
+      // 垫片：5层 500×300×2（删除工序列后，垫片前移到第 10 列 = c[9]）
       const pads = []
-      split(c[10]).forEach(seg => {
+      split(c[9]).forEach(seg => {
         const m = seg.match(/(\d+层)\s*(\d+)\s*[×xX*]\s*(\d+)(?:\s*[×xX*]\s*(\d+))?/)
         if (m) pads.push({ type: m[1], L: Number(m[2]) || 0, W: Number(m[3]) || 0, qty: Number(m[4]) || 1 })
       })
 
-      // 代工
-      const outMode = c[11] === '代印' ? '代印' : (c[11] === '成品箱' || c[11] === '代工成品箱' ? '成品箱' : '')
-      const outsource = { mode: craft === '彩箱' && outMode === '代印' ? '' : outMode, supplier: c[12] || '' }
+      // 代工（工序列已从模板删除，统一按箱型/代工方式自动生成）
+      const rawMode = (c[10] || '').trim()
+      const outMode = rawMode === '代印' ? '代印' : (rawMode === '成品箱' || rawMode === '代工成品箱' ? '成品箱' : '')
+      const outsource = { mode: craft === '彩箱' && outMode === '代印' ? '' : outMode, supplier: (c[11] || '').trim() }
 
-      // 工序：填了以填的为准，留空自动生成
-      let steps = split(c[9]).filter(x => C.STEPS.indexOf(x) > -1)
-      if (steps.length) {
-        steps.sort((a, b) => C.STEPS.indexOf(a) - C.STEPS.indexOf(b))
-      } else {
-        steps = C.buildSteps({
-          craft, boxType,
-          outsource
-        })
-      }
+      // 工序：永远按规则自动生成（草箱→纸板到货/生产；彩箱→纸板到货/面纸印刷/裱纸；代印/成品箱另算）
+      const steps = C.buildSteps({ craft, boxType, outsource })
 
       items.push({
         id,
@@ -263,20 +263,20 @@ Page({
         boardL: board.length,
         boardW: board.width,
         twoPiece: board.twoPiece,
-        paperColor: C.PAPER_COLORS.indexOf(c[8]) > -1 ? c[8] : '黄面',
+        paperColor: (c[8] || '').trim() || '黄面',
         steps,
         outsource,
-        customers: split(c[13]),
+        customers: split(c[12]),
         addrPreset: (function() {
-          const raw = String(c[14] || '').trim()
+          const raw = String(c[13] || '').trim()
           if (!raw) return null
           const parts = raw.split('|')
           const customer = parts.length > 1 ? parts[0].trim() : ''
           const address = (parts.length > 1 ? parts[1] : parts[0]).trim()
           return address ? { customer, address, contact: '', phone: '' } : null
         })(),
-        price: Number(c[15]) || 0,
-        note: c[16] || '',
+        price: Number(c[14]) || 0,
+        note: c[15] || '',
         pads,
         materials: [],
         updatedAt: app.now()
@@ -320,7 +320,7 @@ Page({
         p.id, p.name, p.craft || '草箱', p.boxType || '', p.flute || '',
         p.sizeL || '', p.sizeW || '', p.sizeH || '',
         p.paperColor || '',
-        (p.steps || []).join('、'), pads, outMode, outSup,
+        pads, outMode, outSup,
         (p.customers || []).join('、'),
         (p.addrPreset && p.addrPreset.address) ? ((p.addrPreset.customer || '') + '|' + p.addrPreset.address) : '',
         p.price || '', p.note || ''

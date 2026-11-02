@@ -1,10 +1,13 @@
 <view class="page {{fontClass}}">
   <view class="card">
     <text class="section-title">第一步：拿模板</text>
-    <text class="text-sm c-gray">模板 17 列：编号、名称必填。</text>
+    <text class="text-sm c-gray">模板 16 列：编号、名称必填。工艺/箱型/楞型/面纸颜色/代工模式这几列可下拉选择，也能手填；工序列已去掉，按箱型/代工方式自动生成。</text>
 
-    <view class="btn btn-primary btn-block mt-12" bindtap="copyTemplate">复制模板（推荐）</view>
-    <text class="text-xs c-gray mt-8">复制后到 Excel 的 A1 单元格粘贴，会自动分成 17 列。</text>
+    <view class="btn btn-primary btn-block mt-12" bindtap="saveTemplateXlsx">另存为带下拉的 Excel（.xlsx，推荐）</view>
+    <text class="text-xs c-gray mt-8">用 Excel/WPS 打开后，这几列直接下拉选，也能自己打字填新值。</text>
+
+    <view class="btn btn-outline btn-block mt-12" bindtap="copyTemplate">复制模板（粘贴到 Excel）</view>
+    <text class="text-xs c-gray mt-8">复制后到 Excel 的 A1 单元格粘贴，会自动分成 16 列（纯文本，无下拉）。</text>
 
     <view class="btn btn-outline btn-block mt-12" bindtap="saveTemplate">另存为 CSV 文件</view>
     <text wx:if="{{savedPath}}" class="text-xs c-gray mt-8">已保存：{{savedPath}}</text>
@@ -34,11 +37,13 @@
     <text class="section-title">每列怎么填</text>
     <view class="rule-row"><text class="rule-k">编号</text><text class="rule-v">唯一，如 P001</text></view>
     <view class="rule-row"><text class="rule-k">名称</text><text class="rule-v">和编号一一对应</text></view>
-    <view class="rule-row"><text class="rule-k">工艺</text><text class="rule-v">草箱 / 彩箱</text></view>
-    <view class="rule-row"><text class="rule-k">箱型</text><text class="rule-v">普通方箱 / 水箱 / 梯形箱 / 连体 / 包盖 / 小盒 / 异型箱</text></view>
-    <view class="rule-row"><text class="rule-k">楞型</text><text class="rule-v">五层 BA 瓦 / 五层 BC 瓦 / 三层 A 瓦 / 三层 C 瓦 / 三层 E 瓦 / 五层 BE 瓦 / 七层</text></view>
+    <view class="rule-row"><text class="rule-k">工艺</text><text class="rule-v">草箱 / 彩箱（可下拉选择，也可手填）</text></view>
+    <view class="rule-row"><text class="rule-k">箱型</text><text class="rule-v">普通方箱 / 水箱 / 梯形箱 / 连体 / 包盖 / 小盒 / 异型箱（可下拉，也可手填）</text></view>
+    <view class="rule-row"><text class="rule-k">楞型</text><text class="rule-v">五层 BA 瓦 / 五层 BC 瓦 / 三层 A 瓦 / 三层 C 瓦 / 三层 E 瓦 / 五层 BE 瓦 / 七层（可下拉，也可手填）</text></view>
     <view class="rule-row"><text class="rule-k">长宽高</text><text class="rule-v">毫米，只填数字</text></view>
-    <view class="rule-row"><text class="rule-k">工序</text><text class="rule-v">顿号分隔，可留空自动生成</text></view>
+    <view class="rule-row"><text class="rule-k">面纸颜色</text><text class="rule-v">黄面 / 白面（可下拉，也可手填）</text></view>
+    <view class="rule-row"><text class="rule-k">代工模式</text><text class="rule-v">代印 / 成品箱（可下拉，也可手填）；留空 = 不代工</text></view>
+    <view class="rule-row"><text class="rule-k">工序</text><text class="rule-v">已删除：按箱型 / 代工方式自动生成，不用填</text></view>
     <view class="rule-row"><text class="rule-k">客户</text><text class="rule-v">顿号分隔，会自动加进客户名单</text></view>
       <view class="rule-row"><text class="rule-k">默认收货地址</text><text class="rule-v">填「客户名|详细地址」，下单自动带出；可留空</text></view>
     <view class="rule-row"><text class="rule-k">单价</text><text class="rule-v">数字，如 3.5</text></view>

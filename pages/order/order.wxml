@@ -34,8 +34,8 @@
         <text>{{it.craft}} · {{it.boxType}} · {{it.flute}}</text>
         <text wx:if="{{it.paperColor}}"> · {{it.paperColor}}</text>
         <text wx:if="{{it.sizeL}}"> · {{it.sizeL}}×{{it.sizeW}}×{{it.sizeH}}mm</text>
-        <text wx:if="{{it.boardL}}"> · {{it.boardName ? it.boardName : '纸板'}} {{it.boardL}}×{{it.boardW}}{{it.twoPiece ? '（两片）' : ''}}</text>
-        <text wx:if="{{it.boards && it.boards.length > 0}}"> · <text wx:for="{{it.boards}}" wx:key="index" wx:for-item="bd">{{it.boardNames[index]}} {{bd.L}}×{{bd.W}}×{{bd.qty}}张{{index < it.boards.length - 1 ? '、' : ''}}</text></text>
+        <text wx:if="{{it.boardL}}"> · {{it.boardName ? it.boardName : '纸板'}} {{it.boardL}}×{{it.boardW}}<text wx:if="{{it.twoPiece}}" class="text-bold">（两片）</text></text>
+        <text wx:if="{{it.boards && it.boards.length > 0}}"> · <text wx:for="{{it.boards}}" wx:key="index" wx:for-item="bd">{{it.boardNames[index]}} {{bd.L}}×{{bd.W}}<text class="{{bd.qty > 1 ? 'text-bold' : ''}}">×{{bd.qty}}张</text>{{index < it.boards.length - 1 ? '、' : ''}}</text></text>
       </view>
 
       <view class="field mt-8">
