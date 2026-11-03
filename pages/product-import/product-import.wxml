@@ -3,7 +3,7 @@
     <text class="section-title">第一步：拿模板</text>
     <text class="text-sm c-gray">模板 16 列：编号、名称必填。工艺/箱型/楞型/面纸颜色/代工模式这几列可下拉选择，也能手填；工序列已去掉，按箱型/代工方式自动生成。</text>
 
-    <view class="btn btn-primary btn-block mt-12" bindtap="saveTemplateXlsx">另存为带下拉的 Excel（.xlsx，推荐）</view>
+    <view class="btn btn-primary btn-block mt-12" bindtap="saveTemplateXlsx">另存为excel</view>
     <text class="text-xs c-gray mt-8">用 Excel/WPS 打开后，这几列直接下拉选，也能自己打字填新值。</text>
 
     <view class="btn btn-outline btn-block mt-12" bindtap="copyTemplate">复制模板（粘贴到 Excel）</view>
