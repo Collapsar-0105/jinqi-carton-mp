@@ -31,14 +31,23 @@ Page({
     })
   },
 
-  // 模板生成后直接发到微信聊天（选「文件传输助手」），发完立刻删掉临时文件，手机里不留副本
+  // 生成后直接发到微信聊天（选「文件传输助手」）。
+  // 注意：安卓上 wx.shareFileMessage 的 success 回调可能比「文件真正发出去」更早触发，
+  // 此时立刻删临时文件，微信就会显示「红色感叹号、传送中断」（iOS 不复现）。
+  // 所以这里不主动删文件：文件名固定，下次生成直接覆盖同名文件，不会越积越多。
   shareTemplateFile(filePath, fileName) {
     const fs = wx.getFileSystemManager()
-    const cleanup = () => {
-      try { fs.unlinkSync(filePath) } catch (e) {}
+
+    // 发之前先确认文件真的写进去了（0 字节会导致发送中断）
+    try {
+      const st = fs.statSync(filePath)
+      if (!st || !st.size) throw new Error('empty')
+    } catch (e) {
+      wx.showToast({ title: '文件生成失败，请重试', icon: 'none' })
+      return
     }
+
     if (!wx.shareFileMessage) {
-      cleanup()
       wx.showModal({
         title: '当前微信不支持发文件',
         content: '这个功能需要较新版本的微信。请把微信更新到最新版，在手机上再试一次。',
@@ -46,16 +55,16 @@ Page({
       })
       return
     }
+
     wx.shareFileMessage({
       filePath,
       fileName,
       success: () => {
-        cleanup()
         wx.showToast({ title: '已发送到微信', icon: 'none' })
       },
       fail: () => {
-        cleanup()
-        wx.showToast({ title: '未发送', icon: 'none' })
+        // 不删文件：用户可能只是取消了，保留下来可以再点一次
+        wx.showToast({ title: '未发送，可再点一次', icon: 'none' })
       }
     })
   },

@@ -10,7 +10,7 @@
     <text class="text-xs c-gray mt-8">复制后到 Excel 的 A1 单元格粘贴，会自动分成 16 列（纯文本，无下拉）。</text>
 
     <view class="btn btn-outline btn-block mt-12" bindtap="saveTemplate">另存为 CSV 文件</view>
-    <text class="text-xs c-gray mt-8">同样直接发到微信，选「文件传输助手」。发送后手机里不留副本。</text>
+    <text class="text-xs c-gray mt-8">同样直接发到微信，选「文件传输助手」。</text>
   </view>
 
   <view class="card">
