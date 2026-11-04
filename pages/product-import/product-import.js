@@ -9,8 +9,7 @@ Page({
   data: {
     fontClass: '',
     text: '',
-    result: '',
-    savedPath: ''
+    result: ''
   },
 
   onShow() {
@@ -32,40 +31,63 @@ Page({
     })
   },
 
+  // 模板生成后直接发到微信聊天（选「文件传输助手」），发完立刻删掉临时文件，手机里不留副本
+  shareTemplateFile(filePath, fileName) {
+    const fs = wx.getFileSystemManager()
+    const cleanup = () => {
+      try { fs.unlinkSync(filePath) } catch (e) {}
+    }
+    if (!wx.shareFileMessage) {
+      cleanup()
+      wx.showModal({
+        title: '当前微信不支持发文件',
+        content: '这个功能需要较新版本的微信。请把微信更新到最新版，在手机上再试一次。',
+        showCancel: false
+      })
+      return
+    }
+    wx.shareFileMessage({
+      filePath,
+      fileName,
+      success: () => {
+        cleanup()
+        wx.showToast({ title: '已发送到微信', icon: 'none' })
+      },
+      fail: () => {
+        cleanup()
+        wx.showToast({ title: '未发送', icon: 'none' })
+      }
+    })
+  },
+
   saveTemplate() {
     const fs = wx.getFileSystemManager()
-    const path = wx.env.USER_DATA_PATH + '/产品导入模板.csv'
+    const fileName = '产品导入模板.csv'
+    const path = wx.env.USER_DATA_PATH + '/' + fileName
     const csv = [HEADER.join(',')].concat(SAMPLE_ROWS.map(r => r.join(','))).join('\n')
     try {
       fs.writeFileSync(path, csv, 'utf8')
-      this.setData({ savedPath: path })
-      wx.showModal({
-        title: '模板已生成',
-        content: '文件已保存。真机上可以用「转发文件」发到电脑，用 Excel 打开填写。',
-        showCancel: false
-      })
     } catch (e) {
       wx.showToast({ title: '生成失败：' + e.message, icon: 'none' })
+      return
     }
+    this.shareTemplateFile(path, fileName)
   },
 
   // 生成带下拉的 .xlsx（工艺/箱型/楞型/面纸颜色/代工模式可下拉选择，也能手填；工序列已去掉）
   saveTemplateXlsx() {
     const fs = wx.getFileSystemManager()
-    const path = wx.env.USER_DATA_PATH + '/产品导入模板(带下拉).xlsx'
+    const fileName = '产品导入模板(带下拉).xlsx'
+    const path = wx.env.USER_DATA_PATH + '/' + fileName
     try {
       const bytes = T.buildProductTemplateXlsx()
       // 微信 writeFileSync 接受 ArrayBuffer/Uint8Array 作为二进制写入
       fs.writeFileSync(path, bytes.buffer)
-      this.setData({ savedPath: path })
-      wx.showModal({
-        title: '模板已生成（带下拉）',
-        content: '已保存为 xlsx：工艺/箱型/楞型/面纸颜色/代工模式这几列在 Excel/WPS 里可直接下拉选择，也能自己打字填新值；工序列已去掉，会按箱型/代工方式自动生成。可转发到电脑填写，或在手机上用 Excel 打开。',
-        showCancel: false
-      })
     } catch (e) {
       wx.showToast({ title: '生成失败：' + (e.message || e.errMsg || e), icon: 'none' })
+      return
     }
+    this.shareTemplateFile(path, fileName)
   },
 
   onText(e) {

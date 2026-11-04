@@ -4,13 +4,13 @@
     <text class="text-sm c-gray">模板 16 列：编号、名称必填。工艺/箱型/楞型/面纸颜色/代工模式这几列可下拉选择，也能手填；工序列已去掉，按箱型/代工方式自动生成。</text>
 
     <view class="btn btn-primary btn-block mt-12" bindtap="saveTemplateXlsx">另存为excel</view>
-    <text class="text-xs c-gray mt-8">用 Excel/WPS 打开后，这几列直接下拉选，也能自己打字填新值。</text>
+    <text class="text-xs c-gray mt-8">点一下会打开微信聊天列表，选「文件传输助手」发过去，再到电脑上用 Excel/WPS 打开填写。工艺/箱型/楞型/面纸颜色/代工模式可直接下拉，也能自己打字填新值。</text>
 
     <view class="btn btn-outline btn-block mt-12" bindtap="copyTemplate">复制模板（粘贴到 Excel）</view>
     <text class="text-xs c-gray mt-8">复制后到 Excel 的 A1 单元格粘贴，会自动分成 16 列（纯文本，无下拉）。</text>
 
     <view class="btn btn-outline btn-block mt-12" bindtap="saveTemplate">另存为 CSV 文件</view>
-    <text wx:if="{{savedPath}}" class="text-xs c-gray mt-8">已保存：{{savedPath}}</text>
+    <text class="text-xs c-gray mt-8">同样直接发到微信，选「文件传输助手」。发送后手机里不留副本。</text>
   </view>
 
   <view class="card">
