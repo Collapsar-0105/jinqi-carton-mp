@@ -234,6 +234,16 @@ App({
     return JSON.stringify(merged)
   },
 
+  // 工作年设置是对象 { "2026": {start, end} }：按年份合并，云端优先，本地独有的年份保留
+  mergeWorkYearsJSON(localRaw, remoteRaw) {
+    const isObj = v => v && typeof v === 'object' && !Array.isArray(v)
+    const local = this._safeParse(localRaw, {})
+    const remote = this._safeParse(remoteRaw, {})
+    if (!isObj(remote)) return localRaw
+    if (!isObj(local)) return JSON.stringify(remote)
+    return JSON.stringify(Object.assign({}, local, remote))
+  },
+
   applyCloudPayload(payload) {
     if (!payload) return false
     this._applying = true
@@ -248,8 +258,11 @@ App({
           next = this.mergeCollJSON(localRaw, payload[k], 'id')
         } else if (k === 'customer_list' || k === 'supplier_list') {
           next = this.mergeCollJSON(localRaw, payload[k], 'name')
+        } else if (k === 'work_years') {
+          // 工作年按年份合并：云端优先（后改的覆盖），本地独有的年份保留
+          next = this.mergeWorkYearsJSON(localRaw, payload[k])
         } else if (localRaw) {
-          // 打样草稿 / 常备预警 / 工作年：本地有就保留本地，别被云端空值冲掉
+          // 打样草稿 / 常备预警：本地有就保留本地，别被云端空值冲掉
           next = localRaw
         }
         wx.setStorageSync(k, next)
