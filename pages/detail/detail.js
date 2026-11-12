@@ -15,8 +15,7 @@ Page({
     canStock: false,
     stockEarly: false,
     allStocked: false,
-    canBackActive: false,
-    addr: {}
+    canBackActive: false
   },
 
   onLoad(options) {
@@ -38,9 +37,6 @@ Page({
       wx.navigateBack()
       return
     }
-
-    const customer = app.getCustomer(order.customer) || {}
-    const addr = (customer.addresses && customer.addresses.length) ? customer.addresses[0] : {}
 
     const isSub = !!order.isSub
     const items = C.arr(order.items).map((it, idx) => {
@@ -103,31 +99,15 @@ Page({
         steps,
         progress,
         delivered,
-        shipments: (function() {
-          const addrList = app.itemAddrList(order, it)
-          return C.arr(order.shipments).map(s => {
-            const row = C.arr(s.items).find(r => r.index === idx)
-            if (!row) return null
-            const ai = (row.addrIndex == null) ? 0 : Number(row.addrIndex)
-            const a = addrList[ai] || {}
-            return {
-              date: s.date,
-              qty: row.qty,
-              // 多地址时写明送到哪；单地址不显示地址免得啰嗦
-              addrText: (addrList.length > 1) ? (a.address || '未指定地址') : ''
-            }
-          }).filter(Boolean)
-        })(),
+        // 送货记录不再按地址分组（地址已移除，1.9.101）
+        shipments: C.arr(order.shipments).map(s => {
+          const row = C.arr(s.items).find(r => r.index === idx)
+          if (!row) return null
+          return { date: s.date, qty: row.qty }
+        }).filter(Boolean),
         remainQty: app.shippableQty(order, it),
         producedQty: app.producedQtyOf(it),
         overQty: Math.max(0, app.producedQtyOf(it) - qty),
-        // 有分配记录但没分完 → 剩下的算未分配（客户还没定送到哪个地址，先备货）
-        unassigned: (function () {
-          const al = it.addrList || []
-          if (!al.length) return 0
-          const s = al.reduce((acc, a) => acc + (Number(a.qty) || 0), 0)
-          return Math.max(0, (Number(it.quantity) || 0) - s)
-        })(),
         // 只在「还有别的款没入库」时才给单款入库按钮；只剩最后一款交给底部按钮，避免两个按钮做同一件事
         canStockItem: !isSub && !it.stocked && order.status !== 'done' && app.canStockItem(it, order)
           && C.arr(order.items).filter(x => !x.stocked).length > 1,
@@ -143,7 +123,6 @@ Page({
         boards: C.arr(it.boards).filter(b => b && (b.L || b.W)).map((b, i) => Object.assign({}, b, {
           name: boardNames[i + 1] || ('附加纸板' + (i + 2))
         })),
-        addrList: app.itemAddrList(order, it),
         note
       })
     })
@@ -299,19 +278,24 @@ Page({
 
     const specs = C.boardSpecs(it)
     const multi = specs.length > 1
+    // 自厂生产默认送彩箱车间；外协代工留空，复制后手填
+    const delivery = it.factoryMode === '本厂生产' ? '彩箱车间' : ''
 
+    // 水箱类：BA / BC 楞纸板都能用，复制时统一输出「BA/BC」，不锁死档案里的默认楞型
+    const fluteText = it.boxType === '水箱' ? 'BA/BC' : (it.flute || '')
+
+    // 纸板单只保留产品型号（不带名称），不输出箱型；纸板行也不再带「需 N 张」
     const lines = [
-      '产品：' + it.productId + ' ' + it.productName,
-      '箱型：' + (it.boxType || ''),
-      '楞型：' + (it.flute || '')
+      '产品：' + it.productId,
+      '楞型：' + fluteText
     ]
     if (it.po) lines.push('PO：' + it.po)
     lines.push('面纸颜色：' + (it.paperColor || ''))
-    // 每种纸板各自标出要备多少张：多纸板时分开列清楚，别混成一个总数
-    C.boardLines(it, true).forEach(l => lines.push(l))
+    C.boardLines(it, false).forEach(l => lines.push(l))
     if (!multi) {
       lines.push('纸板数量：' + C.boardNeedQty(it, 'main') + ' 张')
     }
+    lines.push('送货：' + delivery)
     if (this.data.order.urgent) lines.unshift('【加急！加急！】')
 
     wx.setClipboardData({
@@ -346,9 +330,6 @@ Page({
     const idx = Number(e.currentTarget.dataset.item)
     const it = this.data.items[idx]
     if (!it) return
-    // 复制哪个地址的送货单（多地址时按钮各带一个）
-    const ai = Number(e.currentTarget.dataset.ai) || 0
-    const a = (it.addrList && it.addrList[ai]) ? it.addrList[ai] : (this.data.addr || {})
     const pads = C.arr(it.pads).map(p => p.type + ' ' + p.L + '×' + p.W + ' ×' + p.qty).join('；')
     const d = new Date()
 
@@ -362,11 +343,11 @@ Page({
     lines.push(
       '面纸颜色：' + (it.paperColor || ''),
       '尺寸：' + it._sizeText,
-      '垫片：' + (pads || '无'),
-      '收货地址：' + (a.address || '') + '  收货联系人：' + (a.contact || '') + ' ' + (a.phone || '')
+      '垫片：' + (pads || '无')
     )
     if (it.note) lines.push('备注：' + it.note)
-    lines.push('送货数：', '送货人：')
+    // 收货地址不再记录：送货后面留空，复制后手动填写
+    lines.push('送货：', '送货数：', '送货人：')
 
     wx.setClipboardData({
       data: lines.join('\n'),
@@ -515,12 +496,10 @@ Page({
 
   deliver(e) {
     const idx = Number(e.currentTarget.dataset.item)
-    const ai = Number(e.currentTarget.dataset.ai) || 0
     const it = this.data.items[idx]
     if (!it || it.remainQty <= 0) return
-    const addr = (it.addrList || [])[ai]
     wx.showModal({
-      title: '送货 · ' + it.productName + (addr && (it.addrList || []).length > 1 ? '（' + addr.address + '）' : ''),
+      title: '送货 · ' + it.productName,
       editable: true,
       fail: () => wx.showToast({ title: '输入框打不开，请更新微信', icon: 'none' }),
       placeholderText: '本次送货数量（这一款还剩 ' + it.remainQty + '）',
@@ -529,7 +508,7 @@ Page({
         const qty = parseInt(res.content)
         if (!qty || qty <= 0) { wx.showToast({ title: '请输入数量', icon: 'none' }); return }
         if (qty > it.remainQty) { wx.showToast({ title: '超过剩余数量', icon: 'none' }); return }
-        app.addShipment(this.data.orderId, [{ index: idx, qty, addrIndex: ai }], '送货 ' + qty + ' 个')
+        app.addShipment(this.data.orderId, [{ index: idx, qty }], '送货 ' + qty + ' 个')
 
         const updated = app.getOrder(this.data.orderId)
         // 常备预警：库存掉到阈值（300）以下就提示补货

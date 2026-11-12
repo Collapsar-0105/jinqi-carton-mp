@@ -83,7 +83,6 @@
         <view wx:for="{{it.shipments}}" wx:key="index" class="ship-row">
           <view class="ship-main">
             <text class="ship-date">{{item.date}}</text>
-            <text wx:if="{{item.addrText}}" class="ship-addr">{{item.addrText}}</text>
           </view>
           <text class="ship-qty">{{item.qty}} 个</text>
         </view>
@@ -96,36 +95,12 @@
           <text wx:if="{{it.remainQty <= 0 && !(it.splitQty > 0 && !order.isSub)}}" class="tag tag-done">已送完</text>
         </view>
 
-        <!-- 一个地址：保持原来的单个送货按钮 -->
-        <block wx:if="{{it.addrList.length <= 1}}">
-          <view class="deliver-row">
-            <text class="addr-line-text" wx:if="{{it.addrList[0].address}}">收货：{{it.addrList[0].address}}</text>
-            <block wx:if="{{it.remainQty > 0}}">
-              <view class="btn btn-sm btn-outline" bindtap="copyDelivery" data-item="{{ii}}" data-ai="0">复制送货信息</view>
-              <view class="btn btn-sm btn-primary" bindtap="deliver" data-item="{{ii}}" data-ai="0">送货</view>
-            </block>
-          </view>
-        </block>
-
-        <!-- 多个地址：每个地址一行，各自送货、各自复制 -->
-        <block wx:else>
-          <view wx:for="{{it.addrList}}" wx:key="index" wx:for-item="a" wx:for-index="ai" class="addr-deliver">
-            <view class="addr-deliver-main">
-              <text class="addr-deliver-name">{{a.address}}</text>
-              <text class="addr-deliver-qty">分配 {{a.qty}} · 已送 {{a.delivered}}</text>
-            </view>
-            <view wx:if="{{it.remainQty > 0}}" class="addr-deliver-btns">
-              <view class="btn btn-sm btn-outline" bindtap="copyDelivery" data-item="{{ii}}" data-ai="{{ai}}">复制</view>
-              <view class="btn btn-sm btn-primary" bindtap="deliver" data-item="{{ii}}" data-ai="{{ai}}">送货</view>
-            </view>
-          </view>
-          <text class="text-xs c-gray">送货数量不限死每个地址，按实际发多少记多少</text>
-        </block>
-
-        <!-- 有数量没分配地址：客户还没定送哪，先备货（1.9.52） -->
-        <view wx:if="{{it.unassigned > 0}}" class="unassigned-line">
-          <text class="tag tag-warn">{{it.unassigned}} 个未分配</text>
-          <text class="unassigned-hint">客户还没指定收货地址，先备货</text>
+        <!-- 地址已移除（1.9.101）：整款一个送货按钮 -->
+        <view class="deliver-row">
+          <block wx:if="{{it.remainQty > 0}}">
+            <view class="btn btn-sm btn-outline" bindtap="copyDelivery" data-item="{{ii}}">复制送货信息</view>
+            <view class="btn btn-sm btn-primary" bindtap="deliver" data-item="{{ii}}">送货</view>
+          </block>
         </view>
       </view>
     </view>

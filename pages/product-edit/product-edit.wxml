@@ -44,17 +44,6 @@
         </view>
       </view>
       <text wx:else class="text-xs c-gray">还没有客户，点「管理客户」先添加</text>
-
-      <view wx:if="{{addrOptions.length > 0}}" class="field" style="margin-top:10px;">
-        <text class="label">默认收货地址</text>
-        <picker mode="selector" range="{{addrOptions}}" range-key="label" value="{{addrIndex}}" bindchange="onAddrPreset">
-          <view class="input picker-value">
-            <text>{{addrOptions[addrIndex].label}}</text>
-            <text class="picker-arrow">›</text>
-          </view>
-        </picker>
-        <text class="text-xs c-gray">下单时会自动带出这个地址，可在订单里改（只对本单有效）</text>
-      </view>
     </view>
   </view>
 

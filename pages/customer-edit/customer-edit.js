@@ -10,8 +10,7 @@ Page({
     originalName: '',
     name: '',
     contact: '',
-    phone: '',
-    addresses: []
+    phone: ''
   },
 
   onUnload() {
@@ -37,8 +36,7 @@ Page({
           originalName: c.name,
           name: c.name,
           contact: c.contact || '',
-          phone: c.phone || '',
-          addresses: (c.addresses || []).map(a => ({ contact: a.contact || '', phone: a.phone || '', address: a.address || '' }))
+          phone: c.phone || ''
         })
       }
     }
@@ -46,22 +44,6 @@ Page({
 
   onField(e) {
     this.setData({ [e.currentTarget.dataset.field]: e.detail.value })
-  },
-
-  addAddress() {
-    this.setData({ addresses: this.data.addresses.concat([{ contact: '', phone: '', address: '' }]) })
-  },
-  removeAddress(e) {
-    const idx = Number(e.currentTarget.dataset.index)
-    const addresses = this.data.addresses.slice()
-    addresses.splice(idx, 1)
-    this.setData({ addresses })
-  },
-  onAddressField(e) {
-    const { index, field } = e.currentTarget.dataset
-    const addresses = this.data.addresses.slice()
-    addresses[Number(index)][field] = e.detail.value
-    this.setData({ addresses })
   },
 
   save() {
@@ -82,13 +64,6 @@ Page({
       name,
       contact: (this.data.contact || '').trim(),
       phone: (this.data.phone || '').trim(),
-      addresses: this.data.addresses
-        .filter(a => (a.address || '').trim())
-        .map(a => ({
-          contact: (a.contact || '').trim(),
-          phone: (a.phone || '').trim(),
-          address: (a.address || '').trim()
-        })),
       // 多设备合并按 updatedAt 定胜负，没有这个字段时排序依据退化
       updatedAt: Date.now()
     }

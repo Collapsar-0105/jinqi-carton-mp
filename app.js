@@ -326,8 +326,14 @@ App({
       this.setCloud({ ready: true, allowed: true, checking: false, admin: !!res.admin, role: res.role || (res.admin ? 'admin' : 'worker'), openid: res.openid || '', error: '', mode: 'cloud' })
       this._cloudBaseAt = Number(res.updatedAt) || 0
       this.flushPendingPush()
+      // 地址清理由本机发起：先把清过的数据推上云，再拉订单，避免旧地址又被拉回来
+      this.flushAddressPurge()
       // 云端为准：订单集合全量覆盖本地
-      this.syncOrdersFromCloud().then(() => { try { this.reloadCurrentPage() } catch (e) {} })
+      this.syncOrdersFromCloud().then(() => {
+        // 拉回来的单可能还带旧地址字段（云覆盖本地是合并语义），再清一次并补推
+        try { this.migrateRemoveAddresses(); this.flushAddressPurge() } catch (e) {}
+        try { this.reloadCurrentPage() } catch (e) {}
+      })
       try { wx.setStorageSync('role', res.role || (res.admin ? 'admin' : 'worker')) } catch (e) {}
       this.promptUserName()
       this.backfillOrders()
@@ -471,7 +477,7 @@ App({
         const list = JSON.parse(raw)
         if (Array.isArray(list) && list.some(c => typeof c === 'string')) {
           this.saveCustomers(list.map(c => (typeof c === 'string'
-            ? { name: c, contact: '', phone: '', addresses: [] }
+            ? { name: c, contact: '', phone: '' }
             : c)))
         }
       }
@@ -493,6 +499,7 @@ App({
       this.migrateProducts()
       this.migrateOrderSteps()
       this.migrateTrapezoidSize()
+      this.migrateRemoveAddresses()
     } catch (e) {}
   },
 
@@ -679,6 +686,73 @@ App({
     this.saveData(data)
     // 订单云端是一单一文档，本地清了还要把云端那份也清掉
     dirty.forEach(id => this.pushOrderCloud(id))
+  },
+
+  // 收货地址彻底移除（1.9.101）：客户 addresses、产品 addrPreset、订单 addrList 与送货 addrIndex 全部清掉。
+  // 本地立刻清；云端要等 initCloud 就绪后再推一次（flushAddressPurge），否则旧地址会留在云上。
+  migrateRemoveAddresses() {
+    // 客户
+    let cChanged = false
+    const customers = this.getCustomers().map(c => {
+      if (!c || !('addresses' in c)) return c
+      const o = Object.assign({}, c)
+      delete o.addresses
+      // 更新时间打到最新：和云端合并时本地这份才算「新」，否则旧地址会被合并回来
+      o.updatedAt = Date.now()
+      cChanged = true
+      return o
+    })
+    if (cChanged) this._kvWrite('customer_list', customers)
+
+    // 产品
+    let pChanged = false
+    const products = this.getProducts().map(p => {
+      if (!p || !('addrPreset' in p)) return p
+      const o = Object.assign({}, p)
+      delete o.addrPreset
+      o.updatedAt = Date.now()
+      pChanged = true
+      return o
+    })
+    if (pChanged) this._kvWrite('product_archive', products)
+
+    // 订单：地址分配、订单级地址、送货记录里的地址序号
+    const data = this.getData()
+    const dirty = []
+    C.arr(data.orders).forEach(o => {
+      let hit = false
+      C.arr(o.items).forEach(it => {
+        if (!it) return
+        if ('addrList' in it) { delete it.addrList; hit = true }
+        if ('address' in it) { delete it.address; hit = true }
+      })
+      C.arr(o.shipments).forEach(s => {
+        C.arr(s.items).forEach(r => {
+          if (r && 'addrIndex' in r) { delete r.addrIndex; hit = true }
+        })
+      })
+      if (hit) { o.updatedAt = Date.now(); dirty.push(o.id) }
+    })
+    if (dirty.length) this._kvWrite('factory_data', data)
+
+    // 云端还没就绪，记下来等就绪后推
+    if (cChanged || pChanged || dirty.length) {
+      this._kvWrite('addr_purge_pending', { customers: cChanged, products: pChanged, orders: dirty })
+    }
+  },
+
+  // 云端就绪后，把清过地址的数据推上去（一次性）
+  flushAddressPurge() {
+    const pending = this._kvRead('addr_purge_pending', null)
+    if (!pending) return
+    const c = this.globalData.cloud
+    if (!c || !c.ready) return
+    try { wx.removeStorageSync('addr_purge_pending') } catch (e) {}
+    try {
+      if (pending.customers) this.saveCustomers(this.getCustomers())
+      if (pending.products) this.saveProducts(this.getProducts())
+      C.arr(pending.orders).forEach(id => this.pushOrderCloud(id))
+    } catch (e) {}
   },
 
   // 老数据的子单（旧「分批完成」留下的）：母单已经全部入库/拆完的，收回成一个母单
@@ -1601,71 +1675,6 @@ App({
     return subs.length
   },
 
-  // ===== 收货地址（1.9.20）=====
-  // 某客户的全部收货地址
-  customerAddresses(name) {
-    const c = this.getCustomer(name)
-    return (c && Array.isArray(c.addresses)) ? c.addresses.filter(a => a && a.address) : []
-  },
-
-  // 产品档案里预设的地址，只有和订单客户一致才用；否则退回该客户第一个地址
-  defaultAddrFor(product, customerName) {
-    const list = this.customerAddresses(customerName)
-    if (!list.length) return null
-    const preset = product && product.addrPreset
-    if (preset && preset.address) {
-      if (!preset.customer || preset.customer === customerName) {
-        const same = list.find(a => a.address === preset.address)
-        if (same) return same
-        // 客户地址改过名字也认，直接用预设的
-        return { address: preset.address, contact: preset.contact || '', phone: preset.phone || '' }
-      }
-    }
-    return list[0]
-  },
-
-  // 订单明细的地址明细（老订单没有 addrList → 用客户第一个地址兜底，数量=订单数量）
-  itemAddrList(order, item) {
-    if (!item) return []
-    if (Array.isArray(item.addrList) && item.addrList.length) {
-      return item.addrList.map((a, i) => Object.assign({}, a, {
-        index: i,
-        qty: Number(a.qty) || 0,
-        delivered: this.deliveredOfAddr(order, item, i)
-      }))
-    }
-    const def = this.customerAddresses(order && order.customer)
-    const a = def.length ? def[0] : {}
-    return [{
-      index: 0,
-      address: a.address || '',
-      contact: a.contact || '',
-      phone: a.phone || '',
-      qty: Number(item.quantity) || 0,
-      delivered: this.deliveredOf(order, item)
-    }]
-  },
-
-  // 某一款送到某个地址的数量
-  deliveredOfAddr(order, item, addrIndex) {
-    const idx = (order.items || []).indexOf(item)
-    if (idx < 0) return 0
-    let n = 0
-    let found = false
-    ;C.arr(order.shipments).forEach(s => {
-      C.arr(s.items).forEach(r => {
-        if (Number(r.index) !== idx) return
-        const ai = (r.addrIndex == null) ? 0 : Number(r.addrIndex)
-        if (ai !== addrIndex) return
-        found = true
-        n += Number(r.qty) || 0
-      })
-    })
-    if (found) return n
-    // 老数据：没有地址的送货记录，全部算在第一个地址
-    if (addrIndex === 0) return Number(item.deliveredQty) || 0
-    return 0
-  },
   // 这款还能送多少：被整款拆到子单里的，母单这边可送量为 0
   shippableQty(order, item) {
     if (!item) return 0
@@ -1688,11 +1697,8 @@ App({
         const qty = Math.min(Number(r.qty), left)
         if (qty <= 0) return
         it.deliveredQty = (Number(it.deliveredQty) || 0) + qty
-        // 地址级已送不在这里冗余存储：itemAddrList → deliveredOfAddr 每次都从
-        // shipments 现算（唯一权威），冗余字段会和 shipments 漂移
         amount += qty * (Number(it.price) || 0)
-        const ai = (r.addrIndex == null ? 0 : Number(r.addrIndex))
-        list.push({ index: r.index, qty, addrIndex: ai })
+        list.push({ index: r.index, qty })
       })
       if (!list.length) return
       o.shipments = o.shipments || []
@@ -1772,9 +1778,15 @@ App({
     return this._kvRead('product_archive', [])
   },
 
+  // 收货地址已彻底移除（1.9.101）：产品的默认收货地址一并清掉
   saveProducts(list) {
-    this._kvWrite('product_archive', list || [])
-    this.syncColl('products', list)
+    const next = C.arr(list).map(p => {
+      const o = Object.assign({}, p)
+      delete o.addrPreset
+      return o
+    })
+    this._kvWrite('product_archive', next)
+    this.syncColl('products', next)
     this.cloudPush()
   },
 
@@ -1841,20 +1853,23 @@ App({
       if (raw) list = JSON.parse(raw)
     } catch (e) {}
     return C.arr(list).map(c => (typeof c === 'string'
-      ? { name: c, contact: '', phone: '', addresses: [] }
-      : Object.assign({ addresses: [] }, c)))
+      ? { name: c, contact: '', phone: '' }
+      : c))
   },
 
   getCustomer(name) {
     return this.getCustomers().find(c => c.name === name) || null
   },
 
+  // 收货地址已彻底移除（1.9.101）：写入时一并清掉，避免老数据被重新带回来
   saveCustomers(list) {
-    this._kvWrite('customer_list', C.arr(list).map(c =>
-      (typeof c === 'string'
-        ? { name: c, contact: '', phone: '', addresses: [] }
-        : c)))
-    this.syncColl('customers', list)
+    const next = C.arr(list).map(c => {
+      const o = (typeof c === 'string') ? { name: c, contact: '', phone: '' } : Object.assign({}, c)
+      delete o.addresses
+      return o
+    })
+    this._kvWrite('customer_list', next)
+    this.syncColl('customers', next)
     this.cloudPush()
   },
 

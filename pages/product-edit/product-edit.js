@@ -34,8 +34,6 @@ Page({
 
 
     history: [],
-    addrOptions: [],
-    addrIndex: 0,
 
     tang: 48,
     boardL: '',
@@ -179,43 +177,16 @@ Page({
         price: m.price ? String(m.price) : ''
       })),
       customer: obj.customer || '',
-      quantity: obj.quantity ? String(obj.quantity) : '',
-      _presetAddr: obj.addrPreset || null,
+      quantity: obj.quantity ? String(obj.quantity) : ''
     }, () => {
       this.refreshAll()
       this.recomputeBoard()
-      this.applyPresetAddr()
     })
-  },
-
-  // 载入产品时，把预设地址对上选项下标
-  applyPresetAddr() {
-    const preset = this.data._presetAddr
-    if (!preset || !preset.address) return
-    const list = this.data.addrOptions || []
-    const i = list.findIndex(a => a.address === preset.address && (!preset.customer || a.customer === preset.customer))
-    if (i > -1) this.setData({ addrIndex: i })
   },
 
   refreshAll() {
     const steps = this.data.steps
     const selectedCustomers = this.data.selectedCustomers
-
-    // 默认收货地址：只列该产品绑定客户的地址
-    const addrOptions = []
-    selectedCustomers.forEach(cn => {
-      app.customerAddresses(cn).forEach(a => {
-        addrOptions.push({
-          customer: cn,
-          address: a.address,
-          contact: a.contact || '',
-          phone: a.phone || '',
-          label: cn + ' · ' + a.address
-        })
-      })
-    })
-    let addrIndex = Number(this.data.addrIndex) || 0
-    if (addrIndex >= addrOptions.length) addrIndex = 0
 
     this.setData({
       stepOptions: C.STEPS
@@ -224,14 +195,8 @@ Page({
       customerOptions: this.data.customers.map(c => ({
         name: c.name,
         checked: selectedCustomers.indexOf(c.name) > -1
-      })),
-      addrOptions,
-      addrIndex
+      }))
     })
-  },
-
-  onAddrPreset(e) {
-    this.setData({ addrIndex: Number(e.detail.value) })
   },
 
   // ---------- 基本 ----------
@@ -567,11 +532,6 @@ Page({
       boardManual: !!d.boardManual,
       twoPiece: !!d.twoPiece,
       customers: d.selectedCustomers.slice(),
-      // 预设收货地址（只记客户+地址，订单里能对上就用）
-      addrPreset: (function() {
-        const a = (d.addrOptions || [])[Number(d.addrIndex) || 0]
-        return a ? { customer: a.customer, address: a.address, contact: a.contact || '', phone: a.phone || '' } : null
-      })(),
       steps: C.normalizeSteps(d.steps || []),
       materials: d.materials
         .filter(m => (m.name || '').trim())

@@ -62,12 +62,6 @@ Page({
       customer: this.data.customerNames[idx] || '其他',
       needOrderNo: (this.data.customerNames[idx] || '') === '许昌恒尔'
     }, () => {
-      // 换客户后：地址只能取新客户的，重新生成
-      const items = this.data.items.map(it => {
-        const p = app.getProduct(it.productId) || {}
-        return Object.assign({}, it, this.buildAddrState(this.data.customer, p, it.quantity))
-      })
-      this.setData({ items }, () => this.syncAddrDerived())
       // 换客户后已选产品可能不属于该客户，提示但不强制清空
       if (idx > 0 && this.data.items.length) {
         const names = this.data.items.map(i => i.productName)
@@ -190,10 +184,8 @@ Page({
     item.boardName = bNames[0] || ''
     item.boardNames = bNames.slice(1)
 
-    // 收货地址：默认带出产品档案预设的（必须属于本单客户）
-    Object.assign(item, this.buildAddrState(this.data.customer, p, ''))
-
-    this.setData({ items: this.data.items.concat([item]) }, () => this.syncAddrDerived())
+    // 收货地址已移除（1.9.101）：下单不再记地址
+    this.setData({ items: this.data.items.concat([item]) })
 
     if (p.stockItem && app.hasStockAlert(p.id)) {
       wx.showModal({
@@ -206,65 +198,6 @@ Page({
           if (a) { app.removeStockAlert(a.id); wx.showToast({ title: '预警已取消', icon: 'none' }) }
         }
       })
-    }
-  },
-
-  // ---------- 收货地址 ----------
-  buildAddrState(customerName, product, quantity) {
-    const opts = app.customerAddresses(customerName).map(a => ({
-      address: a.address, contact: a.contact || '', phone: a.phone || '', label: a.address
-    }))
-    const def = app.defaultAddrFor(product, customerName)
-    let idx = 0
-    if (def) {
-      const i = opts.findIndex(o => o.address === def.address)
-      if (i > -1) idx = i
-    }
-    const q = quantity ? String(quantity) : ''
-    const list = opts.map((o, i) => ({
-      address: o.address, contact: o.contact, phone: o.phone,
-      qty: i === idx ? q : ''
-    }))
-    return { addrOptions: opts, addrIndex: idx, addrList: list, addrSum: 0, unassignedQty: 0, addrTipText: '' }
-  },
-
-  // 汇总每款的地址分配（允许只分一部分，剩下的算未分配）
-  syncAddrDerived() {
-    const items = this.data.items.map(it => {
-      const list = it.addrList || []
-      const sum = list.reduce((s, a) => s + (Number(a.qty) || 0), 0)
-      const q = parseInt(it.quantity) || 0
-      const unassigned = Math.max(0, q - sum)
-      let tip = ''
-      if (list.length > 1) {
-        tip = unassigned > 0
-          ? ('已分配 ' + sum + ' / 订单 ' + q + '，剩余 ' + unassigned + ' 未分配（可留空先备货）')
-          : ('已全部分配 ' + sum + ' / 订单 ' + q)
-      }
-      return Object.assign({}, it, { addrSum: sum, unassignedQty: unassigned, addrTipText: tip })
-    })
-    this.setData({ items })
-  },
-
-  onAddrQty(e) {
-    const { index, ai } = e.currentTarget.dataset
-    const items = [...this.data.items]
-    const it = items[Number(index)]
-    if (!it || !it.addrList || !it.addrList[Number(ai)]) return
-    it.addrList[Number(ai)].qty = e.detail.value
-    this.setData({ items }, () => this.syncAddrDerived())
-  },
-
-  // 数量变了：单地址直接同步；多地址若还没分配，就全部预填给默认地址
-  setSingleAddrQty(it) {
-    const list = it.addrList || []
-    if (!list.length) return
-    const q = it.quantity ? String(it.quantity) : ''
-    if (list.length === 1) { list[0].qty = q; return }
-    const sum = list.reduce((s, a) => s + (Number(a.qty) || 0), 0)
-    if (!sum && q) {
-      const i = Number(it.addrIndex) || 0
-      if (list[i]) list[i].qty = q
     }
   },
 
@@ -286,8 +219,7 @@ Page({
     const { index, field } = e.currentTarget.dataset
     const items = [...this.data.items]
     items[index][field] = e.detail.value
-    if (field === 'quantity') this.setSingleAddrQty(items[index])
-    this.setData({ items }, () => this.syncAddrDerived())
+    this.setData({ items })
   },
 
   onItemFactoryMode(e) {
@@ -387,26 +319,11 @@ Page({
       if (it.factoryModeIndex === 1 && !it.factoryName) {
         wx.showToast({ title: '第 ' + (i + 1) + ' 款未选代工厂', icon: 'none' }); return
       }
-      // 地址分配：允许少分（剩下的算未分配，客户还没定送哪，先备货），但不能超过订单数量
-      const opts = it.addrOptions || []
-      if (opts.length) {
-        const q = parseInt(it.quantity) || 0
-        const sum = C.arr(it.addrList).reduce((s, a) => s + (Number(a.qty) || 0), 0)
-        if (sum > q) {
-          wx.showToast({ title: '第 ' + (i + 1) + ' 款分配 ' + sum + ' 超过数量 ' + q, icon: 'none' })
-          return
-        }
-      }
     }
 
     const order = {
       customer: d.customer || '其他',
       orderNo: (d.orderNo || '').trim(),
-      address: (() => {
-        const c = app.getCustomer(d.customerNames[d.customerIndex] || '')
-        const a = (c && c.addresses && c.addresses[0]) || {}
-        return a.address || ''
-      })(),
       status: 'active',
       items: d.items.map(it => ({
         productId: it.productId,
@@ -446,10 +363,7 @@ Page({
         factoryName: it.factoryModeIndex === 1 ? it.factoryName : '',
         factoryPrice: it.factoryModeIndex === 1 ? (Number(it.factoryPrice) || 0) : 0,
         stocked: false,
-        deliveredQty: 0,
-        addrList: C.arr(it.addrList)
-          .filter(a => Number(a.qty) > 0)
-          .map(a => ({ address: a.address, contact: a.contact || '', phone: a.phone || '', qty: Number(a.qty) }))
+        deliveredQty: 0
       })),
       shipments: [],
       createdAt: app.today()

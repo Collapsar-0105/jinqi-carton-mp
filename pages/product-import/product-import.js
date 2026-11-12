@@ -246,8 +246,13 @@ Page({
     const items = []
     let skipped = 0
 
+    // 兼容旧模板：1.9.101 之前是 16 列，第 14 列是「默认收货地址」（已废弃）。
+    // 按表头判断，整表统一去掉那一列；新模板 15 列不受影响。
+    const legacyWithAddr = String((rows[0] || []).join('')).indexOf('默认收货地址') > -1
+
     rows.forEach((cells, idx) => {
       const c = cells.map(x => (x == null ? '' : String(x).trim()))
+      if (legacyWithAddr && c.length >= 16) c.splice(13, 1)
       if (idx === 0 && c.join('').indexOf('编号') > -1) return
 
       const id = c[0]
@@ -298,16 +303,8 @@ Page({
         steps,
         outsource,
         customers: split(c[12]),
-        addrPreset: (function() {
-          const raw = String(c[13] || '').trim()
-          if (!raw) return null
-          const parts = raw.split('|')
-          const customer = parts.length > 1 ? parts[0].trim() : ''
-          const address = (parts.length > 1 ? parts[1] : parts[0]).trim()
-          return address ? { customer, address, contact: '', phone: '' } : null
-        })(),
-        price: Number(c[14]) || 0,
-        note: c[15] || '',
+        price: Number(c[13]) || 0,
+        note: c[14] || '',
         pads,
         materials: [],
         updatedAt: app.now()
@@ -326,7 +323,7 @@ Page({
     items.forEach(it => it.customers.forEach(cn => {
       if (names.indexOf(cn) === -1) { names.push(cn); added++ }
     }))
-    if (added) app.saveCustomers(names.map(n => ({ name: n, contact: '', phone: '', addresses: [] })))
+    if (added) app.saveCustomers(names.map(n => ({ name: n, contact: '', phone: '' })))
 
     const r = app.upsertProducts(items)
     const msg = '新增 ' + r.added + ' 款，更新 ' + r.updated + ' 款，共 ' + r.total + ' 款' +
@@ -353,7 +350,6 @@ Page({
         p.paperColor || '',
         pads, outMode, outSup,
         (p.customers || []).join('、'),
-        (p.addrPreset && p.addrPreset.address) ? ((p.addrPreset.customer || '') + '|' + p.addrPreset.address) : '',
         p.price || '', p.note || ''
       ].join('\t'))
     })

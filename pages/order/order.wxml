@@ -61,24 +61,6 @@
               class="ph-chip" bindtap="onPricePick" data-index="{{idx}}" data-price="{{po.price}}">¥{{po.price}}</view>
       </view>
 
-      <view wx:if="{{it.addrOptions.length > 0}}" class="field mt-8">
-        <text class="label">收货地址</text>
-
-        <!-- 客户只有一个地址：直接显示 -->
-        <view wx:if="{{it.addrOptions.length === 1}}" class="input picker-value">
-          <text>{{it.addrOptions[0].address}}</text>
-        </view>
-
-        <!-- 多个地址：全部列出来手动填分配数量；不填满也行，剩余算未分配（客户还没定送哪） -->
-        <view wx:else class="addr-panel">
-          <view wx:for="{{it.addrList}}" wx:key="address" wx:for-item="a" wx:for-index="ai" class="addr-line">
-            <text class="addr-name">{{a.address}}</text>
-            <input placeholder-style="color:#555;font-weight:600" class="input addr-qty" type="number" placeholder="0" value="{{a.qty}}" bindinput="onAddrQty" data-index="{{idx}}" data-ai="{{ai}}" />
-          </view>
-          <text class="addr-tip {{it.unassignedQty > 0 ? '' : 'ok'}}">{{it.addrTipText}}</text>
-        </view>
-      </view>
-
       <view class="field mt-8">
         <text class="label">生产安排</text>
         <picker mode="selector" range="{{factoryModes}}" value="{{it.factoryModeIndex}}" bindchange="onItemFactoryMode" data-index="{{idx}}">

@@ -100,7 +100,7 @@
   </view>
   <view class="card tips">
     <text class="section-title">说明</text>
-    <text class="tip">· 备份包含：订单（含收货地址分配、送货记录）、产品档案（含默认收货地址）、客户、供应商、代工厂、打样草稿、常备预警、工作年设置</text>
+    <text class="tip">· 备份包含：订单（含送货记录）、产品档案、客户、供应商、代工厂、打样草稿、常备预警、工作年设置</text>
     <text class="tip">· 备份包含订单、产品、客户、供应商、打样草稿等全部数据</text>
     <text class="tip">· 数据已存云端，所有设备登录同一环境即可同步；导出仅作离线备份</text>
     <text class="tip">· 当前版本 v{{version}}</text>
