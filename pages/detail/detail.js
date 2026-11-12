@@ -151,7 +151,6 @@ Page({
     this.setData({
       order: orderView,
       items,
-      addr,
       elapsed,
       totalQty,
       sentQty,
