@@ -156,7 +156,13 @@
         <input placeholder-style="color:#555;font-weight:600" class="bp-input" type="number" value="{{boardW}}" bindinput="onBoard" data-field="boardW" />
         <text class="bp-unit">mm</text>
       </view>
-      <view class="bp-row">
+      <view wx:if="{{manualBoard}}" class="bp-row">
+        <text class="bp-k">压线</text>
+        <picker mode="selector" range="{{creaseOptions}}" value="{{creaseIndex}}" bindchange="onCrease">
+          <text class="bp-v">{{creaseOptions[creaseIndex]}}</text>
+        </picker>
+      </view>
+      <view wx:if="{{boxTypes[boxTypeIndex] !== '连体'}}" class="bp-row">
         <text class="bp-k">箱舌</text>
         <input placeholder-style="color:#555;font-weight:600" class="bp-input" type="number" value="{{tang}}" bindinput="onTang" />
         <text class="bp-unit">mm</text>
@@ -165,20 +171,31 @@
         <text class="bp-k">楞型</text>
         <text class="bp-v">{{flutes[fluteIndex]}}</text>
       </view>
-      <view class="bp-row">
+      <view wx:if="{{boxTypes[boxTypeIndex] !== '连体'}}" class="bp-row">
         <text class="bp-k">成型方式</text>
         <text class="bp-v {{twoPiece ? 'c-red text-bold' : ''}}">{{twoPiece ? '两片成型' : '一片成型'}}</text>
       </view>
 
       <view class="bp-title bp-sub">附加纸板<text class="bp-reset" bindtap="addBoard">+ 添加纸板</text></view>
-      <view wx:for="{{boards}}" wx:key="index" class="bp-row">
-        <text class="bp-k">{{boardNames[index]}}</text>
-        <input placeholder-style="color:#555;font-weight:600" class="bp-input bp-input-sm" type="number" placeholder="长" value="{{item.L}}" bindinput="onBoardField" data-index="{{index}}" data-field="L" />
-        <text class="bp-unit">×</text>
-        <input placeholder-style="color:#555;font-weight:600" class="bp-input bp-input-sm" type="number" placeholder="宽" value="{{item.W}}" bindinput="onBoardField" data-index="{{index}}" data-field="W" />
-        <input placeholder-style="color:#555;font-weight:600" class="bp-input bp-input-sm" type="number" placeholder="张" value="{{item.qty}}" bindinput="onBoardField" data-index="{{index}}" data-field="qty" />
-        <text class="del" bindtap="removeBoard" data-index="{{index}}">✕</text>
-      </view>
+      <block wx:for="{{boards}}" wx:key="index">
+        <view class="bp-row">
+          <text class="bp-k">{{boardNames[index]}}</text>
+          <input placeholder-style="color:#555;font-weight:600" class="bp-input bp-input-sm" type="number" placeholder="长" value="{{item.L}}" bindinput="onBoardField" data-index="{{index}}" data-field="L" />
+          <text class="bp-unit">×</text>
+          <input placeholder-style="color:#555;font-weight:600" class="bp-input bp-input-sm" type="number" placeholder="宽" value="{{item.W}}" bindinput="onBoardField" data-index="{{index}}" data-field="W" />
+          <input placeholder-style="color:#555;font-weight:600" class="bp-input bp-input-sm" type="number" placeholder="张" value="{{item.qty}}" bindinput="onBoardField" data-index="{{index}}" data-field="qty" />
+          <text class="del" bindtap="removeBoard" data-index="{{index}}">✕</text>
+        </view>
+        <view wx:if="{{manualBoard}}" class="bp-row">
+          <text class="bp-k">压线</text>
+          <picker mode="selector" range="{{creaseOptions}}" value="{{item.creaseIndex}}" bindchange="onBoardCrease" data-index="{{index}}">
+            <text class="bp-v">{{creaseOptions[item.creaseIndex]}}</text>
+          </picker>
+        </view>
+      </block>
+      <text wx:if="{{boxTypes[boxTypeIndex] === '连体' && overBoardText}}" class="text-xs c-red" style="padding:6px 0;">
+        {{overBoardText}} 超过{{crafts[craftIndex]}}进纸上限 {{boardLimit}}mm，机器进不去，需要拆片
+      </text>
       <text wx:if="{{boards.length === 0}}" class="text-xs c-gray">一款只用一种纸板就不用加</text>
     </view>
 
@@ -236,27 +253,6 @@
       </view>
     </view>
   </view>
-
-  <view class="card">
-    <view class="flex-row mb-8">
-      <text class="section-title flex-1">采购物料</text>
-      <view class="btn btn-outline btn-sm" bindtap="addMaterial">+ 添加</view>
-    </view>
-
-    <view wx:for="{{materials}}" wx:key="index" class="material-row">
-      <picker mode="selector" range="{{materialTypes}}" value="{{item.typeIndex}}" bindchange="onMaterialType" data-index="{{index}}">
-        <view class="input picker-value mat-type">{{materialTypes[item.typeIndex]}}</view>
-      </picker>
-      <input placeholder-style="color:#555;font-weight:600" class="input flex-1" placeholder="物料名称" value="{{item.name}}" bindinput="onMaterialName" data-index="{{index}}" />
-      <input placeholder-style="color:#555;font-weight:600" class="input" style="width:64px;" type="digit" placeholder="单价" value="{{item.price}}" bindinput="onMaterialPrice" data-index="{{index}}" />
-      <text class="del" bindtap="removeMaterial" data-index="{{index}}">✕</text>
-    </view>
-
-    <view wx:if="{{materials.length === 0}}" class="text-xs c-gray" style="padding:6px 0;">
-      还没绑定物料，下单时要手动加
-    </view>
-  </view>
-
 
   <view wx:if="{{mode === 'sample'}}" class="footer" style="bottom:{{footerBottom}}px;">
     <view wx:if="{{draftId}}" class="btn btn-outline flex-1" bindtap="remove">删除草稿</view>

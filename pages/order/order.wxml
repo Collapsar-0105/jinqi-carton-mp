@@ -91,16 +91,28 @@
         <text wx:for="{{it.pads}}" wx:key="index" wx:for-item="pd" class="pads-item">{{pd.type}} {{pd.L}}×{{pd.W}} ×{{pd.qty}}</text>
       </view>
 
-      <view wx:if="{{it.purchases.length > 0}}" class="purchase-box">
-        <text class="pb-title">采购物料</text>
-        <view wx:for="{{it.purchases}}" wx:key="name" wx:for-item="p" wx:for-index="pi" class="pb-row">
-          <view class="flex-1">
-            <text class="pb-type">{{p.type}}</text>
-            <text class="pb-name">{{p.name}}</text>
-            <text class="pb-sup">{{p.supplier || '未定供应商'}}</text>
-          </view>
-          <input placeholder-style="color:#555;font-weight:600" class="input" style="width:64px;" placeholder="数量" value="{{p.quantity}}" bindinput="onPurchaseField" data-item="{{idx}}" data-index="{{pi}}" data-field="quantity" />
+      <view class="purchase-box">
+        <view class="flex-row">
+          <text class="pb-title flex-1">采购物料</text>
+          <view class="btn btn-outline btn-sm" bindtap="addPurchase" data-item="{{idx}}">+ 添加</view>
         </view>
+        <block wx:for="{{it.purchases}}" wx:key="index" wx:for-item="p" wx:for-index="pi">
+          <view class="pb-row">
+            <picker mode="selector" range="{{materialTypes}}" value="{{p.typeIndex}}" bindchange="onPurchaseType" data-item="{{idx}}" data-index="{{pi}}">
+              <view class="input picker-value mat-type">{{p.type}}</view>
+            </picker>
+            <input placeholder-style="color:#555;font-weight:600" class="input flex-1" placeholder="物料名称" value="{{p.name}}" bindinput="onPurchaseField" data-item="{{idx}}" data-index="{{pi}}" data-field="name" />
+            <text class="del" bindtap="removePurchase" data-item="{{idx}}" data-index="{{pi}}">✕</text>
+          </view>
+          <view class="pb-row">
+            <picker class="flex-1" mode="selector" range="{{p.supplierNames}}" value="{{p.supplierIndex}}" bindchange="onPurchaseSupplier" data-item="{{idx}}" data-index="{{pi}}">
+              <view class="input picker-value">{{p.supplier || '选供应商'}}</view>
+            </picker>
+            <input placeholder-style="color:#555;font-weight:600" class="input" style="width:70px;" type="digit" placeholder="单价" value="{{p.price}}" bindinput="onPurchaseField" data-item="{{idx}}" data-index="{{pi}}" data-field="price" />
+            <input placeholder-style="color:#555;font-weight:600" class="input" style="width:64px;" type="number" placeholder="数量" value="{{p.quantity}}" bindinput="onPurchaseField" data-item="{{idx}}" data-index="{{pi}}" data-field="quantity" />
+          </view>
+        </block>
+        <text wx:if="{{!it.purchases.length}}" class="text-xs c-gray">要采购什么，点右上角「+ 添加」</text>
       </view>
     </view>
   </block>

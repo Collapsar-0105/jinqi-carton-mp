@@ -290,10 +290,12 @@ Page({
     ]
     if (it.po) lines.push('PO：' + it.po)
     lines.push('面纸颜色：' + (it.paperColor || ''))
-    C.boardLines(it, false).forEach(l => lines.push(l))
+    C.boardLines(it, false, true).forEach(l => lines.push(l))
     if (!multi) {
       lines.push('纸板数量：' + C.boardNeedQty(it, 'main') + ' 张')
     }
+    // 产品有备注就带出来（纸板厂按备注选料/加工）
+    if (it.note) lines.push('备注：' + it.note)
     lines.push('送货：' + delivery)
     if (this.data.order.urgent) lines.unshift('【加急！加急！】')
 

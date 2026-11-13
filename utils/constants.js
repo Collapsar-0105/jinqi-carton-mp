@@ -1,5 +1,5 @@
 // 版本号：每次发版改这里
-const APP_VERSION = '1.9.103'
+const APP_VERSION = '1.9.104'
 
 // 公共常量与小工具
 
@@ -27,7 +27,10 @@ const PAD_TYPES = ['3层', '5层', '蜂窝']
 const QTY_STEPS = ['纸板到货', '面纸印刷', '代工']
 
 // 采购物料类型（供应商按类型匹配）
-const MATERIAL_TYPES = ['面纸', '纸板', '胶水', '胶带', '油墨', '膜', '其他']
+const MATERIAL_TYPES = ['面纸', '纸板', '胶水', '胶带', '油墨', '膜', '印版', '其他']
+
+// 纸板压线：不填就不显示，复制纸板信息时追加【压线：xxx】
+const CREASES = ['不填', '内压线', '外压线', '双压线']
 
 // 代工类型：代工厂本质也是供应商
 const SERVICE_TYPES = ['代印', '成品箱']
@@ -172,7 +175,8 @@ function boardNeedQty(item, key) {
 
 // 纸板信息文本：主纸板 + 附加纸板（复制信息时统一用这个）
 // withQty 为 true 时，每种纸板后面标出要备多少张（多张纸板时必须分开标注）
-function boardLines(item, withQty) {
+// withCrease 为 true 时，填了压线的纸板后面追加【压线：内压线/外压线/双压线】
+function boardLines(item, withQty, withCrease) {
   const src = item || {}
   const lines = []
   const main = []
@@ -184,10 +188,11 @@ function boardLines(item, withQty) {
   const names = boardNames(1 + extra.length)
   const specs = boardSpecs(src)
   const qtyText = s => withQty ? ('，需 ' + boardNeedQty(src, s.key) + ' 张') : ''
-  lines.push((names.length ? names[0] + '尺寸：' : '纸板尺寸：') + (main.length ? main.join('×') + 'mm' : '') + qtyText(specs[0]))
+  const creaseText = v => (withCrease && v) ? ('【压线：' + v + '】') : ''
+  lines.push((names.length ? names[0] + '尺寸：' : '纸板尺寸：') + (main.length ? main.join('×') + 'mm' : '') + qtyText(specs[0]) + creaseText(src.crease))
   extra.forEach((b, i) => {
     const nm = names[i + 1] || ('附加纸板' + (i + 2))
-    lines.push(nm + '：' + (Number(b.L) || 0) + '×' + (Number(b.W) || 0) + 'mm × ' + (Number(b.qty) || 1) + '张' + qtyText(specs[i + 1]))
+    lines.push(nm + '：' + (Number(b.L) || 0) + '×' + (Number(b.W) || 0) + 'mm × ' + (Number(b.qty) || 1) + '张' + qtyText(specs[i + 1]) + creaseText(b.crease))
   })
   return lines
 }
@@ -257,6 +262,7 @@ module.exports = {
   PAD_TYPES,
   QTY_STEPS,
   MATERIAL_TYPES,
+  CREASES,
   SERVICE_TYPES,
   SUPPLIER_TYPES,
   STEPS,

@@ -18,6 +18,7 @@ Page({
 
     items: [],
 
+    materialTypes: C.MATERIAL_TYPES,
     factoryModes: ['本厂生产', '外协代工']
   },
 
@@ -88,14 +89,18 @@ Page({
 
     const last = app.getLastPrice(p.id)
     const history = app.getPriceHistory(p.id)
-    const suppliers = app.getSuppliers()
 
     // 纸板尺寸按公式重算，避免产品档案里的旧值不准
     const tang = p.tang != null ? Number(p.tang) : C.defaultTang(p.boxType || '')
-    // 手填纸板的箱型（梯形箱/连体/异型箱）：纸板尺寸直接用档案里的值，不按公式推
-    const manualBoard = C.MANUAL_BOARD_TYPES.indexOf(p.boxType || '') >= 0
+    // 手填纸板的箱型（梯形箱/连体/异型箱）：纸板尺寸直接用档案里的值，不按公式推。
+    // 连体箱本身就是两片/三片成型，不参与「一片/两片」判定，数量按一片算；
+    // 梯形/异型按进纸宽度算（草箱 2450 / 彩箱 1600）
     const board = manualBoard
-      ? { length: p.boardL || 0, width: p.boardW || 0, twoPiece: true }
+      ? {
+        length: p.boardL || 0,
+        width: p.boardW || 0,
+        twoPiece: p.boxType === '连体' ? p.craft === '彩箱' : (Number(p.boardL) || 0) > C.feedLimit(p.craft)
+      }
       : C.calcBoard(p.sizeL, p.sizeW, p.sizeH, tang, p.craft)
 
     const pads = (p.pads && p.pads.length)
@@ -128,19 +133,6 @@ Page({
       })
     })
 
-    const materials = C.arr(p.materials).map(m => {
-      const matched = suppliers.filter(s => (s.types || []).indexOf(m.type) > -1)
-      return {
-        type: m.type,
-        name: m.name,
-        price: m.price || 0,
-        supplier: (matched[0] || {}).name || '',
-        options: (matched.length ? matched : suppliers).map(s => s.name),
-        supplierIndex: 0,
-        quantity: ''
-      }
-    })
-
     const item = {
       key: 'k' + Date.now() + Math.floor(Math.random() * 1000),
       productId: p.id,
@@ -156,11 +148,13 @@ Page({
       boardL: board.length,
       boardW: board.width,
       twoPiece: board.twoPiece,
+      crease: p.crease || '',
       // 附加纸板（一款由多种不同规格纸板做成时，选产品就要一起带过来）
       boards: C.arr(p.boards).filter(b => b && (b.L || b.W)).map(b => ({
         L: Number(b.L) || 0,
         W: Number(b.W) || 0,
-        qty: Number(b.qty) || 1
+        qty: Number(b.qty) || 1,
+        crease: b.crease || ''
       })),
       po: '',
       pads,
@@ -172,7 +166,7 @@ Page({
       factoryName: '',
       factoryPrice: '',
       factories: app.getServiceSuppliers().map(s => s.name),
-      purchases: materials,
+      purchases: [],
       steps: stepList,
       // 该产品当前还剩多少可送（已入库未送完 + 超量多出来的），选品时算一次，
       // 填单过程中库存不会变，不用反复重算
@@ -241,6 +235,51 @@ Page({
     const { item, index, field } = e.currentTarget.dataset
     const items = [...this.data.items]
     items[item].purchases[index][field] = e.detail.value
+    this.setData({ items })
+  },
+
+  // 采购物料改成下单时手动加（已和产品档案解绑）
+  addPurchase(e) {
+    const idx = Number(e.currentTarget.dataset.item)
+    const items = [...this.data.items]
+    const names = app.getSuppliers().map(s => s.name)
+    items[idx].purchases = (items[idx].purchases || []).concat([{
+      typeIndex: 0,
+      type: C.MATERIAL_TYPES[0],
+      name: '',
+      supplierNames: names,
+      supplierIndex: 0,
+      supplier: '',
+      price: '',
+      quantity: ''
+    }])
+    this.setData({ items })
+  },
+
+  removePurchase(e) {
+    const { item, index } = e.currentTarget.dataset
+    const items = [...this.data.items]
+    items[Number(item)].purchases.splice(Number(index), 1)
+    this.setData({ items })
+  },
+
+  onPurchaseType(e) {
+    const { item, index } = e.currentTarget.dataset
+    const items = [...this.data.items]
+    const row = items[Number(item)].purchases[Number(index)]
+    const typeIndex = Number(e.detail.value)
+    row.typeIndex = typeIndex
+    row.type = C.MATERIAL_TYPES[typeIndex]
+    this.setData({ items })
+  },
+
+  onPurchaseSupplier(e) {
+    const { item, index } = e.currentTarget.dataset
+    const items = [...this.data.items]
+    const row = items[Number(item)].purchases[Number(index)]
+    const si = Number(e.detail.value)
+    row.supplierIndex = si
+    row.supplier = (row.supplierNames || [])[si] || ''
     this.setData({ items })
   },
 
@@ -340,11 +379,13 @@ Page({
       boardL: it.boardL,
       boardW: it.boardW,
       twoPiece: it.twoPiece,
+      crease: it.crease || '',
       // 附加纸板：从别处复制/带入的明细也要带上
       boards: C.arr(it.boards).filter(b => b && (b.L || b.W)).map(b => ({
         L: Number(b.L) || 0,
         W: Number(b.W) || 0,
-        qty: Number(b.qty) || 1
+        qty: Number(b.qty) || 1,
+        crease: b.crease || ''
       })),
         pads: it.pads || [],
         quantity: parseInt(it.quantity),

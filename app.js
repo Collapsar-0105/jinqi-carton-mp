@@ -162,6 +162,19 @@ App({
     SYNC_KEYS.forEach(k => {
       try { out[k] = wx.getStorageSync(k) || '' } catch (e) { out[k] = '' }
     })
+    // 测试数据永不上云：即使本机还留着，也不会再被推回去
+    const filt = (raw, keep) => {
+      try {
+        const list = JSON.parse(raw || '[]')
+        if (!Array.isArray(list)) return raw
+        const next = list.filter(keep)
+        return next.length === list.length ? raw : JSON.stringify(next)
+      } catch (e) { return raw }
+    }
+    if (out.customer_list) out.customer_list = filt(out.customer_list, c => !this._isTestName(c && c.name))
+    if (out.supplier_list) out.supplier_list = filt(out.supplier_list, s => !this._isTestName(s && s.name))
+    if (out.product_archive) out.product_archive = filt(out.product_archive, p => !this._isTestProduct(p))
+    if (out.stock_alerts) out.stock_alerts = filt(out.stock_alerts, a => !this._isTestProductId(a && a.productId))
     // 订单已经一单一个云端文档，整包里不必再塞一份（否则每次上传都是几十上百 KB）
     try {
       const d = this._safeParse(out.factory_data, null)
@@ -341,10 +354,14 @@ App({
       this.flushPendingPush()
       // 地址清理由本机发起：先把清过的数据推上云，再拉订单，避免旧地址又被拉回来
       this.flushAddressPurge()
+      // 测试数据（【测试】/测试客户·/TEST-* 等前缀）清干净并推上云
+      this.flushTestPurge()
+      // 手填纸板箱型（梯形/连体/异型）历史上被强制两片成型，先纠正再拉单
+      this.migrateManualBoardTwoPiece()
       // 云端为准：订单集合全量覆盖本地
       this.syncOrdersFromCloud().then(() => {
         // 拉回来的单可能还带旧地址字段（云覆盖本地是合并语义），再清一次并补推
-        try { this.migrateRemoveAddresses(); this.flushAddressPurge() } catch (e) {}
+        try { this.migrateRemoveAddresses(); this.flushAddressPurge(); this.purgeTestData(); this.flushTestPurge() } catch (e) {}
         try { this.reloadCurrentPage() } catch (e) {}
       })
       try { wx.setStorageSync('role', res.role || (res.admin ? 'admin' : 'worker')) } catch (e) {}
@@ -367,6 +384,9 @@ App({
       if (force || remoteAt > localAt || localEmpty || remoteByOther) {
         const payload = Object.assign({}, res.payload, { _updatedAt: remoteAt })
         this.applyCloudPayload(payload)
+        // 拉下来的旧数据里可能还带测试数据，合并后再清一次并补推
+        this.purgeTestData()
+        this.flushTestPurge()
     this.refreshCollFromCloud()
         this.setCloud({ lastSync: remoteAt })
         this.reloadCurrentPage()
@@ -513,6 +533,7 @@ App({
       this.migrateOrderSteps()
       this.migrateTrapezoidSize()
       this.migrateRemoveAddresses()
+      this.purgeTestData()
     } catch (e) {}
   },
 
@@ -754,9 +775,119 @@ App({
     }
   },
 
+  // 手填纸板的箱型（梯形箱/连体/异型箱）以前被无条件写成 twoPiece=true，纸板数量按「数量×2+5」算。
+  // 成型方式应按真实进纸宽度重算（草箱 2450 / 彩箱 1600），产品和已下订单各纠正一次。
+  migrateManualBoardTwoPiece() {
+    const isManual = t => C.MANUAL_BOARD_TYPES.indexOf(t || '') > -1
+
+    let pChanged = false
+    const products = this.getProducts().map(p => {
+      if (!p || !isManual(p.boxType)) return p
+      const should = p.boxType === '连体'
+        ? p.craft === '彩箱'
+        : (Number(p.boardL) || 0) > C.feedLimit(p.craft)
+      if (!!p.twoPiece === should) return p
+      const o = Object.assign({}, p)
+      o.twoPiece = should
+      pChanged = true
+      return o
+    })
+    if (pChanged) this.saveProducts(products)
+
+    const data = this.getData()
+    const dirty = []
+    C.arr(data.orders).forEach(o => {
+      let hit = false
+      C.arr(o.items).forEach(it => {
+        if (!it || !isManual(it.boxType)) return
+        const should = it.boxType === '连体'
+          ? it.craft === '彩箱'
+          : (Number(it.boardL) || 0) > C.feedLimit(it.craft)
+        if (!!it.twoPiece === should) return
+        it.twoPiece = should
+        hit = true
+      })
+      if (hit) { o.updatedAt = Date.now(); dirty.push(o.id) }
+    })
+    if (dirty.length) {
+      this._kvWrite('factory_data', data)
+      dirty.forEach(id => this.pushOrderCloud(id))
+    }
+  },
+
+  // ===== 测试数据清理 =====
+  // 只按固定前缀识别，避免误删真实数据：
+  //   客户/供应商：【测试】、测试客户·、测试供应商·
+  //   产品：id 以 TEST 开头，或名称以【测试】开头
+  _isTestName(n) {
+    return /^(【测试】|测试客户·|测试供应商·)/.test(String(n || ''))
+  },
+  _isTestProductId(id) {
+    return /^TEST/i.test(String(id || ''))
+  },
+  _isTestProduct(p) {
+    return !!p && (this._isTestProductId(p.id) || String(p.name || '').indexOf('【测试】') === 0)
+  },
+
+  // 清掉本机遗留的测试数据（客户/供应商/产品/预警/测试订单），并记住待推云
+  purgeTestData() {
+    let cChanged = false
+    const customers = C.arr(this.getCustomers())
+    const nextCustomers = customers.filter(c => !this._isTestName(c && c.name))
+    if (nextCustomers.length !== customers.length) { this._kvWrite('customer_list', nextCustomers); cChanged = true }
+
+    let sChanged = false
+    const suppliers = C.arr(this.getSuppliers())
+    const nextSuppliers = suppliers.filter(s => !this._isTestName(s && s.name))
+    if (nextSuppliers.length !== suppliers.length) { this._kvWrite('supplier_list', nextSuppliers); sChanged = true }
+
+    let pChanged = false
+    const products = C.arr(this.getProducts())
+    const nextProducts = products.filter(p => !this._isTestProduct(p))
+    if (nextProducts.length !== products.length) { this._kvWrite('product_archive', nextProducts); pChanged = true }
+
+    let aChanged = false
+    const alerts = C.arr(this.getStockAlerts())
+    const nextAlerts = alerts.filter(a => !this._isTestProductId(a && a.productId))
+    if (nextAlerts.length !== alerts.length) { this._kvWrite('stock_alerts', nextAlerts); aChanged = true }
+
+    const data = this.getData()
+    const dirty = []
+    C.arr(data.orders).forEach(o => {
+      if (!o || o.status === 'deleted') return
+      if (/^ORD-T/i.test(o.id || '') || this._isTestName(o.customer)) {
+        o.status = 'deleted'
+        o.updatedAt = Date.now()
+        dirty.push(o.id)
+      }
+    })
+    if (dirty.length) this._kvWrite('factory_data', data)
+
+    if (cChanged || sChanged || pChanged || aChanged || dirty.length) {
+      this._kvWrite('test_purge_pending', {
+        customers: cChanged, suppliers: sChanged, products: pChanged, alerts: aChanged, orders: dirty
+      })
+    }
+  },
+
+  // 云端就绪后，把清干净的名单推上去（一次性）
+  flushTestPurge() {
+    const p = this._kvRead('test_purge_pending', null)
+    if (!p) return
+    const c = this.globalData.cloud
+    if (!c || !c.ready) return
+    try { wx.removeStorageSync('test_purge_pending') } catch (e) {}
+    try {
+      if (p.customers) this.saveCustomers(this.getCustomers())
+      if (p.suppliers) this.saveSuppliers(this.getSuppliers())
+      if (p.products) this.saveProducts(this.getProducts())
+      if (p.alerts) this.saveStockAlerts(this.getStockAlerts())
+      C.arr(p.orders).forEach(id => this.pushOrderCloud(id))
+    } catch (e) {}
+  },
+
   // 云端就绪后，把清过地址的数据推上去（一次性）
-  flushAddressPurge() {
-    const pending = this._kvRead('addr_purge_pending', null)
+  flushAddressPurge() {    const pending = this._kvRead('addr_purge_pending', null)
     if (!pending) return
     const c = this.globalData.cloud
     if (!c || !c.ready) return
@@ -1805,6 +1936,45 @@ App({
 
   getProduct(id) {
     return this.getProducts().find(p => p.id === id) || null
+  },
+
+  // 产品档案保存后，把描述性字段同步到「未完成」订单里的同款产品。
+  // 不动数量、单价、工序进度、入库/送货状态，避免改坏生产记录。
+  syncProductToOpenOrders(product) {
+    if (!product || !product.id) return
+    const data = this.getData()
+    const dirty = []
+    C.arr(data.orders).forEach(o => {
+      if (!o || o.status === 'done' || o.status === 'deleted') return
+      let hit = false
+      C.arr(o.items).forEach(it => {
+        if (!it || it.productId !== product.id) return
+        it.productName = product.name || it.productName
+        it.craft = product.craft || it.craft
+        it.boxType = product.boxType || it.boxType
+        it.flute = product.flute || it.flute
+        if (product.paperColor != null) it.paperColor = product.paperColor
+        it.sizeL = Number(product.sizeL) || 0
+        it.sizeW = Number(product.sizeW) || 0
+        it.sizeH = Number(product.sizeH) || 0
+        it.tang = product.tang != null ? Number(product.tang) : it.tang
+        it.boardL = Number(product.boardL) || 0
+        it.boardW = Number(product.boardW) || 0
+        it.twoPiece = !!product.twoPiece
+        it.crease = product.crease || ''
+        it.boards = C.arr(product.boards).filter(b => b && (b.L || b.W)).map(b => ({
+          L: Number(b.L) || 0,
+          W: Number(b.W) || 0,
+          qty: Number(b.qty) || 1,
+          crease: b.crease || ''
+        }))
+        hit = true
+      })
+      if (hit) { o.updatedAt = Date.now(); dirty.push(o.id) }
+    })
+    if (!dirty.length) return
+    this._kvWrite('factory_data', data)
+    dirty.forEach(id => this.pushOrderCloud(id))
   },
 
   upsertProducts(items) {

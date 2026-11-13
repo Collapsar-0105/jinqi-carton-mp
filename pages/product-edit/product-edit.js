@@ -58,9 +58,12 @@ Page({
     supplierIndex: 0,
     stepOptions: [],
 
-    materialTypes: C.MATERIAL_TYPES,
-    materials: [],
-
+    creaseOptions: C.CREASES,
+    creaseIndex: 0,
+    crease: '',
+    // 连体箱片数固定，无法自动拆片：纸板超过进纸上限时红字提示
+    boardLimit: C.feedLimit('草箱'),
+    overBoardText: '',
     padTypes: C.PAD_TYPES,
     pads: [],
 
@@ -142,7 +145,10 @@ Page({
       paperColorIndex: Math.max(0, C.PAPER_COLORS.indexOf(obj.paperColor || '黄面')),
       boxTypeIndex,
       manualBoard: C.MANUAL_BOARD_TYPES.indexOf(boxType) >= 0,
-      boards: C.arr(obj.boards).map(b => ({ L: String(b.L || ''), W: String(b.W || ''), qty: String(b.qty || '1') })),
+      boards: C.arr(obj.boards).map(b => ({
+        L: String(b.L || ''), W: String(b.W || ''), qty: String(b.qty || '1'),
+        crease: b.crease || '', creaseIndex: Math.max(0, C.CREASES.indexOf(b.crease || '不填'))
+      })),
       // 纸板命名：多张纸板时主纸板=大板、第2张=小板、第3张起=附加纸板A/B…
       boardNames: C.boardNames(1 + (obj.boards || []).length).slice(1),
       fluteIndex,
@@ -155,7 +161,13 @@ Page({
       boardW: obj.boardW ? String(obj.boardW) : '',
       boardManual: false,
     formulaText: '',
-      twoPiece: !!obj.twoPiece,
+      // 连体箱的片数由工艺定：草箱 1大1小（一片）、彩箱 2大1小（两片）；
+      // 其他手填纸板箱型（梯形/异型）按进纸宽度算（草箱 2450 / 彩箱 1600）
+      twoPiece: obj.boxType === '连体'
+        ? obj.craft === '彩箱'
+        : (C.MANUAL_BOARD_TYPES.indexOf(obj.boxType || '') > -1
+          ? (Number(obj.boardL) || 0) > C.feedLimit(obj.craft || '草箱')
+          : !!obj.twoPiece),
       pads: (obj.pads && obj.pads.length ? obj.pads : (obj.padType ? [{ type: obj.padType, L: obj.padL, W: obj.padW, qty: obj.padQty }] : [])).map(x => ({
         typeIndex: Math.max(0, C.PAD_TYPES.indexOf(x.type)),
         L: x.L ? String(x.L) : '',
@@ -171,16 +183,13 @@ Page({
       note: obj.note || '',
       selectedCustomers: C.arr(obj.customers).slice(),
       steps,
-      materials: C.arr(obj.materials).map(m => ({
-        name: m.name,
-        typeIndex: Math.max(0, C.MATERIAL_TYPES.indexOf(m.type)),
-        price: m.price ? String(m.price) : ''
-      })),
+      creaseIndex: Math.max(0, C.CREASES.indexOf(obj.crease || '不填')),
       customer: obj.customer || '',
       quantity: obj.quantity ? String(obj.quantity) : ''
     }, () => {
       this.refreshAll()
       this.recomputeBoard()
+      this.refreshBoardLimit()
     })
   },
 
@@ -322,8 +331,13 @@ Page({
   onNote(e) { this.setData({ note: e.detail.value }) },
 
   onCraft(e) {
-    const craft = this.data.crafts[Number(e.detail.value)]
-    this.setData({ craft }, () => { this.syncOutsourceOptions(); this.applyAutoSteps(); this.refreshAll() })
+    // craftIndex 必须一起更新：选择框显示（crafts[craftIndex]）和保存（C.CRAFTS[craftIndex]）都读它
+    const craftIndex = Number(e.detail.value)
+    const craft = this.data.crafts[craftIndex]
+    const patch = { craftIndex, craft }
+    // 连体箱片数跟着工艺走：草箱 1大1小（一片）、彩箱 2大1小（两片）
+    if (this.data.boxTypes[this.data.boxTypeIndex] === '连体') patch.twoPiece = craft === '彩箱'
+    this.setData(patch, () => { this.syncOutsourceOptions(); this.applyAutoSteps(); this.refreshAll(); this.refreshBoardLimit() })
   },
 
   onPaperColor(e) {
@@ -340,16 +354,30 @@ Page({
     const dfltFlute = C.defaultFlute(boxType)
     const fluteIndex = dfltFlute ? Math.max(0, C.FLUTES.indexOf(dfltFlute)) : this.data.fluteIndex
 
+    // 连体箱默认带一块小板：草箱 1大1小、彩箱 2大1小
+    const isLianTi = boxType === '连体'
+    const nextBoards = (isLianTi && C.arr(this.data.boards).length === 0)
+      ? [{ L: '', W: '', qty: '1', crease: '', creaseIndex: 0 }]
+      : this.data.boards
+
     this.setData({
       boxTypeIndex,
       manualBoard,
       fluteIndex,
       tang,
       boardManual: manualBoard,
-      twoPiece: manualBoard ? true : this.data.twoPiece
+      boards: nextBoards,
+      // 连体箱片数由工艺定：草箱 1大1小（一片）、彩箱 2大1小（两片）
+      twoPiece: isLianTi
+        ? this.data.craft === '彩箱'
+        : (manualBoard
+          ? (Number(this.data.boardL) || 0) > C.feedLimit(this.data.craft)
+          : this.data.twoPiece)
     }, () => {
+      if (isLianTi) this.syncBoardNames(nextBoards)
       this.applyAutoSteps()
       if (!manualBoard) this.recomputeBoard()
+      this.refreshBoardLimit()
     })
   },
 
@@ -390,14 +418,14 @@ Page({
   },
 
   addBoard() {
-    const boards = (this.data.boards || []).concat([{ L: '', W: '', qty: '1' }])
-    this.setData({ boards }, () => this.syncBoardNames(boards))
+    const boards = (this.data.boards || []).concat([{ L: '', W: '', qty: '1', crease: '', creaseIndex: 0 }])
+    this.setData({ boards }, () => { this.syncBoardNames(boards); this.refreshBoardLimit() })
   },
 
   removeBoard(e) {
     const index = Number(e.currentTarget.dataset.index)
     const boards = C.arr(this.data.boards).filter((_, i) => i !== index)
-    this.setData({ boards }, () => this.syncBoardNames(boards))
+    this.setData({ boards }, () => { this.syncBoardNames(boards); this.refreshBoardLimit() })
   },
 
   onBoardField(e) {
@@ -407,16 +435,54 @@ Page({
     const row = Object.assign({}, boards[index] || {})
     row[field] = e.detail.value
     boards[index] = row
-    this.setData({ boards })
+    this.setData({ boards }, () => this.refreshBoardLimit())
+  },
+
+  // 连体箱片数按工艺固定（草 1大1小 / 彩 2大1小），无法自动拆片：
+  // 纸板长超过进纸上限（草箱 2450 / 彩箱 1600）时红字提示
+  refreshBoardLimit() {
+    const limit = C.feedLimit(this.data.craft)
+    const over = []
+    if ((Number(this.data.boardL) || 0) > limit) over.push('大板')
+    C.arr(this.data.boards).forEach((b, i) => {
+      if ((Number(b && b.L) || 0) > limit) over.push((this.data.boardNames || [])[i] || ('附加纸板' + (i + 1)))
+    })
+    this.setData({ boardLimit: limit, overBoardText: over.join('、') })
   },
 
   onBoard(e) {
     const field = e.currentTarget.dataset.field
     const value = e.detail.value
     this.setData({ [field]: value, boardManual: true }, () => {
+      // 连体箱不参与几片成型判定（本身就是两片/三片）
+      if (this.data.boxTypes[this.data.boxTypeIndex] === '连体') {
+        this.refreshBoardLimit()
+        return
+      }
       const length = Number(this.data.boardL) || 0
-      this.setData({ twoPiece: length > C.feedLimit(this.data.craft) })
+      this.setData({ twoPiece: length > C.feedLimit(this.data.craft) }, () => this.refreshBoardLimit())
     })
+  },
+
+  // 主纸板压线
+  onCrease(e) {
+    const creaseIndex = Number(e.detail.value)
+    this.setData({
+      creaseIndex,
+      crease: C.CREASES[creaseIndex] === '不填' ? '' : (C.CREASES[creaseIndex] || '')
+    })
+  },
+
+  // 附加纸板压线
+  onBoardCrease(e) {
+    const index = Number(e.currentTarget.dataset.index)
+    const creaseIndex = Number(e.detail.value)
+    const boards = C.arr(this.data.boards).slice()
+    const row = Object.assign({}, boards[index] || {})
+    row.creaseIndex = creaseIndex
+    row.crease = C.CREASES[creaseIndex] === '不填' ? '' : (C.CREASES[creaseIndex] || '')
+    boards[index] = row
+    this.setData({ boards }, () => this.refreshBoardLimit())
   },
 
   recomputeBoard() {
@@ -476,40 +542,6 @@ Page({
   },
 
   // ---------- 物料 ----------
-  addMaterial() {
-    const materials = [...this.data.materials]
-    materials.push({ name: '', typeIndex: 0, price: '' })
-    this.setData({ materials })
-  },
-
-  removeMaterial(e) {
-    const idx = Number(e.currentTarget.dataset.index)
-    const materials = [...this.data.materials]
-    materials.splice(idx, 1)
-    this.setData({ materials })
-  },
-
-  onMaterialName(e) {
-    const idx = Number(e.currentTarget.dataset.index)
-    const materials = [...this.data.materials]
-    materials[idx].name = e.detail.value
-    this.setData({ materials })
-  },
-
-  onMaterialType(e) {
-    const idx = Number(e.currentTarget.dataset.index)
-    const materials = [...this.data.materials]
-    materials[idx].typeIndex = Number(e.detail.value)
-    this.setData({ materials })
-  },
-
-  onMaterialPrice(e) {
-    const idx = Number(e.currentTarget.dataset.index)
-    const materials = [...this.data.materials]
-    materials[idx].price = e.detail.value
-    this.setData({ materials })
-  },
-
   // ---------- 组装 ----------
   buildProduct() {
     const d = this.data
@@ -531,15 +563,9 @@ Page({
       boardW: parseInt(d.boardW) || 0,
       boardManual: !!d.boardManual,
       twoPiece: !!d.twoPiece,
+      crease: C.CREASES[d.creaseIndex] === '不填' ? '' : (C.CREASES[d.creaseIndex] || ''),
       customers: d.selectedCustomers.slice(),
       steps: C.normalizeSteps(d.steps || []),
-      materials: d.materials
-        .filter(m => (m.name || '').trim())
-        .map(m => ({
-          name: m.name.trim(),
-          type: C.MATERIAL_TYPES[m.typeIndex],
-          price: Number(m.price) || 0
-        })),
       pads: d.pads.filter(x => x.qty > 0 || x.L || x.W).map(x => ({
         type: C.PAD_TYPES[x.typeIndex] || C.PAD_TYPES[0],
         L: parseInt(x.L) || 0,
@@ -550,7 +576,8 @@ Page({
       boards: C.arr(d.boards).filter(b => b && (b.L || b.W)).map(b => ({
         L: Number(b.L) || 0,
         W: Number(b.W) || 0,
-        qty: Number(b.qty) || 1
+        qty: Number(b.qty) || 1,
+        crease: b.crease || ''
       })),
       stockAlertQty: d.stockItem ? (Number(d.stockAlertQty) || 0) : 0,
       outsource: d.outsourceEnabled ? { mode: d.outsourceMode || (d.craft === '彩箱' ? '成品箱' : ''), supplier: (d.outsource && d.outsource.supplier) || '' } : { mode: '', supplier: '' },
@@ -594,7 +621,9 @@ Page({
     const dupName = all.find(x => x.name === p.name && x.id !== originId)
     if (dupName) { wx.showToast({ title: '名称已存在（' + dupName.id + '）', icon: 'none' }); return }
 
-    app.upsertProducts([this.buildProduct()])
+    app.upsertProducts([p])
+    // 产品档案改了，未完成的订单里同款产品同步更新（数量/单价/工序进度不动）
+    app.syncProductToOpenOrders(p)
     // 允许改编号（用户 2026-10-25 决定）：改编号后必须删掉旧编号的产品，
     // 否则 upsert 按新 id 新增、旧 id 产品原地残留，变成列表里删不掉的「幽灵产品」
     if (this.data.isEdit && originId && p.id !== originId) {
