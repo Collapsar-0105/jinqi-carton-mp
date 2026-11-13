@@ -93,6 +93,7 @@ Page({
     // 纸板尺寸按公式重算，避免产品档案里的旧值不准
     const tang = p.tang != null ? Number(p.tang) : C.defaultTang(p.boxType || '')
     // 手填纸板的箱型（梯形箱/连体/异型箱）：纸板尺寸直接用档案里的值，不按公式推。
+    const manualBoard = C.MANUAL_BOARD_TYPES.indexOf(p.boxType || '') >= 0
     // 连体箱本身就是两片/三片成型，不参与「一片/两片」判定，数量按一片算；
     // 梯形/异型按进纸宽度算（草箱 2450 / 彩箱 1600）
     const board = manualBoard

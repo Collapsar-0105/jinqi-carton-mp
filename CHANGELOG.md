@@ -3,6 +3,16 @@
 > 纸箱厂生产管理小程序。版本号定义在 `utils/constants.js` 的 `APP_VERSION`，每次上传前必须递增。
 > 历史交接背景见 `HANDOVER.md`。
 
+## 1.9.113（2026-11-13）
+
+### 热修：新建订单添加不了产品（1.9.104 引入）
+1.9.104 改造「手填纸板箱型」的成型方式时，`addItem` 里定义 `manualBoard` 的那一行被误删，
+点到产品就抛 `ReferenceError: manualBoard is not defined`，产品加不进订单。
+
+- 补回 `const manualBoard = C.MANUAL_BOARD_TYPES.indexOf(p.boxType || '') >= 0`
+- 已逐项核查 order / detail / product-edit / app 中被删除变量的残留，无其他遗漏
+- 静态检查 101 文件通过
+
 ## 1.9.112（2026-11-13）
 
 ### 销量只统计已送货数量
