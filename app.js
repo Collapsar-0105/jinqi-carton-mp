@@ -9,6 +9,16 @@ const SYNC_KEYS = [
   'work_years', 'factory_list'
 ]
 
+// ===== 演示/测试数据名单（2026-11-13）=====
+// 第一批种子数据的名称和 ID 里没有「测试」二字，前缀规则识别不了，只能列名单。
+// 只删这些明确是演示用的记录；真实客户/产品不在此列。
+const SEED_PRODUCT_IDS = [
+  'CB500D', 'CB320H', 'CB600S', 'CX4C', 'CX2C', 'TX200', 'CB800S', 'CX6L'
+]
+const SEED_CUSTOMER_NAMES = [
+  '宏远纸品（广州仓）', '恒信食品', '联泰电器', '昌隆五金', '泰丰日化'
+]
+
 App({
   globalData: {
     // mode: 'local' 本地 / 'checking' 正在查授权 / 'pending' 未授权（等管理员）/ 'cloud' 已授权
@@ -230,7 +240,7 @@ App({
         return next.length === list.length ? raw : JSON.stringify(next)
       } catch (e) { return raw }
     }
-    if (out.customer_list) out.customer_list = filt(out.customer_list, c => !this._isTestName(c && c.name))
+    if (out.customer_list) out.customer_list = filt(out.customer_list, c => !this._isTestCustomer(c && c.name))
     if (out.supplier_list) out.supplier_list = filt(out.supplier_list, s => !this._isTestName(s && s.name))
     if (out.product_archive) out.product_archive = filt(out.product_archive, p => !this._isTestProduct(p))
     if (out.stock_alerts) out.stock_alerts = filt(out.stock_alerts, a => !this._isTestProductId(a && a.productId))
@@ -880,11 +890,18 @@ App({
   // 只按固定前缀识别，避免误删真实数据：
   //   客户/供应商：【测试】、测试客户·、测试供应商·
   //   产品：id 以 TEST 开头，或名称以【测试】开头
+  // 只按前缀判断（供应商用这个；客户另有名单）
   _isTestName(n) {
     return /^(【测试】|测试客户·|测试供应商·)/.test(String(n || ''))
   },
+  // 客户：前缀 + 第一批演示数据名单（这批名称里没有「测试」）
+  _isTestCustomer(n) {
+    const name = String(n || '')
+    return this._isTestName(name) || SEED_CUSTOMER_NAMES.indexOf(name) > -1
+  },
   _isTestProductId(id) {
-    return /^TEST/i.test(String(id || ''))
+    const v = String(id || '')
+    return /^TEST/i.test(v) || SEED_PRODUCT_IDS.indexOf(v) > -1
   },
   _isTestProduct(p) {
     return !!p && (this._isTestProductId(p.id) || String(p.name || '').indexOf('【测试】') === 0)
@@ -894,7 +911,7 @@ App({
   purgeTestData() {
     let cChanged = false
     const customers = C.arr(this.getCustomers())
-    const nextCustomers = customers.filter(c => !this._isTestName(c && c.name))
+    const nextCustomers = customers.filter(c => !this._isTestCustomer(c && c.name))
     if (nextCustomers.length !== customers.length) { this._kvWrite('customer_list', nextCustomers); cChanged = true }
 
     let sChanged = false
@@ -916,7 +933,7 @@ App({
     const dirty = []
     C.arr(data.orders).forEach(o => {
       if (!o || o.status === 'deleted') return
-      if (/^ORD-T/i.test(o.id || '') || this._isTestName(o.customer)) {
+      if (/^ORD-T/i.test(o.id || '') || this._isTestCustomer(o.customer)) {
         o.status = 'deleted'
         o.updatedAt = Date.now()
         dirty.push(o.id)
