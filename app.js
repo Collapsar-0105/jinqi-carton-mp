@@ -101,24 +101,49 @@ App({
       this._verChecking = false
       if (!res || !res.ok || !res.minVersion) return
       if (C.compareVersion(C.APP_VERSION, res.minVersion) >= 0) return
-      this.blockOldVersion(res.minVersion)
+      this.blockOldVersion(res.minVersion, res.latestVersion)
     }).catch(() => { this._verChecking = false })
   },
 
-  blockOldVersion(minVersion) {
+  blockOldVersion(minVersion, latestVersion) {
     if (this._verBlocking) return
     this._verBlocking = true
+    const latest = latestVersion || minVersion
     wx.showModal({
       title: '需要更新',
-      content: '当前版本 ' + C.APP_VERSION + ' 已停用，请更新到 ' + minVersion + ' 后再使用。\n\n更新方法：删掉小程序，重新搜索打开；或在微信「发现-小程序」里长按删除后重进。',
+      content: '当前版本 ' + C.APP_VERSION + ' 已停用，最新版本 ' + latest + '。\n\n必须更新后才能使用。点「清除数据并更新」会清掉本机缓存，下次打开从云端重新同步。',
       showCancel: false,
-      confirmText: '退出',
-      success: () => {
-        this._verBlocking = false
-        if (wx.exitMiniProgram) { try { wx.exitMiniProgram() } catch (e) {} }
+      confirmText: '清除数据并更新',
+      success: res => {
+        if (!res.confirm) { this._verBlocking = false; return }
+        this.clearLocalAndUpdate(latest)
       },
       fail: () => { this._verBlocking = false }
     })
+  },
+
+  // 清本机缓存 → 尝试应用已下载的新版本 → 退出，用户重开即加载新版
+  clearLocalAndUpdate(latest) {
+    wx.showLoading({ title: '正在清理…', mask: true })
+    try { wx.clearStorageSync() } catch (e) {}
+    this._kv = {}
+    try { this.clearCache() } catch (e) {}
+    let mgr = this._updateMgr
+    if (!mgr && wx.getUpdateManager) { try { mgr = wx.getUpdateManager() } catch (e) {} }
+    setTimeout(() => {
+      wx.hideLoading()
+      // 新版本已下载时，applyUpdate 会直接重启到新版
+      if (mgr && mgr.applyUpdate) {
+        try { mgr.applyUpdate() } catch (e) {}
+      }
+      wx.showModal({
+        title: '本机数据已清除',
+        content: '请点「退出」后重新打开小程序。\n\n如果打开后仍提示版本过低，说明微信还没拿到 ' + latest + '：在微信「发现-小程序」里长按删除，再搜索进入即可。',
+        showCancel: false,
+        confirmText: '退出',
+        success: () => { if (wx.exitMiniProgram) { try { wx.exitMiniProgram() } catch (e) {} } }
+      })
+    }, 400)
   },
 
   // 触发微信官方的隐私授权弹窗（底部半屏那张：小程序名 + 申请什么 + 用途 + 拒绝/允许）
