@@ -68,8 +68,6 @@ Page({
     padTypes: C.PAD_TYPES,
     pads: [],
 
-    stockItem: false,
-
     price: '',
     note: '',
 
