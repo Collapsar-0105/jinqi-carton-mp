@@ -164,7 +164,7 @@
       </view>
       <view wx:if="{{manualBoard && crease}}" class="bp-row">
         <text class="bp-k">压线位置</text>
-        <input placeholder-style="color:#555;font-weight:600" class="input flex-1" placeholder="如 170+650+235+220+405" value="{{creaseValue}}" bindinput="onCreaseValue" />
+        <input placeholder-style="color:#555;font-weight:600" class="input flex-1" value="{{creaseValue}}" bindinput="onCreaseValue" />
       </view>
       <view wx:if="{{boxTypes[boxTypeIndex] !== '连体'}}" class="bp-row">
         <text class="bp-k">箱舌</text>
@@ -198,7 +198,7 @@
         </view>
         <view wx:if="{{manualBoard && item.crease}}" class="bp-row">
           <text class="bp-k">压线位置</text>
-          <input placeholder-style="color:#555;font-weight:600" class="input flex-1" placeholder="如 170+650+235+220+405" value="{{item.creaseValue}}" bindinput="onBoardCreaseValue" data-index="{{index}}" />
+          <input placeholder-style="color:#555;font-weight:600" class="input flex-1" value="{{item.creaseValue}}" bindinput="onBoardCreaseValue" data-index="{{index}}" />
         </view>
       </block>
       <text wx:if="{{boxTypes[boxTypeIndex] === '连体' && overBoardText}}" class="text-xs c-red" style="padding:6px 0;">
