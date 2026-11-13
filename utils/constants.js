@@ -1,5 +1,5 @@
 // 版本号：每次发版改这里
-const APP_VERSION = '1.9.105'
+const APP_VERSION = '1.9.106'
 
 // 公共常量与小工具
 
@@ -188,11 +188,16 @@ function boardLines(item, withQty, withCrease) {
   const names = boardNames(1 + extra.length)
   const specs = boardSpecs(src)
   const qtyText = s => withQty ? ('，需 ' + boardNeedQty(src, s.key) + ' 张') : ''
-  const creaseText = (t, v) => (withCrease && t) ? ('【压线：' + t + (v || '') + '】') : ''
-  lines.push((names.length ? names[0] + '尺寸：' : '纸板尺寸：') + (main.length ? main.join('×') + 'mm' : '') + qtyText(specs[0]) + creaseText(src.crease, src.creaseValue))
+  // 压线单独一行：内压线：170+650+235+220+405（只选了类型没填位置时就是「内压线：」）
+  const pushCrease = (t, v) => {
+    if (withCrease && t) lines.push(t + '：' + (v || ''))
+  }
+  lines.push((names.length ? names[0] + '尺寸：' : '纸板尺寸：') + (main.length ? main.join('×') + 'mm' : '') + qtyText(specs[0]))
+  pushCrease(src.crease, src.creaseValue)
   extra.forEach((b, i) => {
     const nm = names[i + 1] || ('附加纸板' + (i + 2))
-    lines.push(nm + '：' + (Number(b.L) || 0) + '×' + (Number(b.W) || 0) + 'mm × ' + (Number(b.qty) || 1) + '张' + qtyText(specs[i + 1]) + creaseText(b.crease, b.creaseValue))
+    lines.push(nm + '：' + (Number(b.L) || 0) + '×' + (Number(b.W) || 0) + 'mm × ' + (Number(b.qty) || 1) + '张' + qtyText(specs[i + 1]))
+    pushCrease(b.crease, b.creaseValue)
   })
   return lines
 }
