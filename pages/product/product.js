@@ -34,7 +34,8 @@ Page({
         const id = it.productId
         if (!id) return
         if (!stat[id]) stat[id] = { qty: 0, last: '' }
-        stat[id].qty += Number(it.quantity) || 0
+        // 销量只算已送货数量：没送出去的库存不算销量
+        stat[id].qty += Number(it.deliveredQty) || 0
         const d = o.createdAt || ''
         if (d > stat[id].last) stat[id].last = d
       })

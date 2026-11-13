@@ -26,7 +26,8 @@ Page({
     const orders = app.getAllOrders().filter(o =>
       o.customer === name && !o.isSample && o.status !== 'deleted')
 
-    const sales = o => (o.items || []).reduce((s, it) => s + (Number(it.quantity) || 0), 0)
+    // 销量只算已送货数量：没送出去的不算
+    const sales = o => (o.items || []).reduce((s, it) => s + (Number(it.deliveredQty) || 0), 0)
 
     const idx = this.data.sortIndex
     orders.sort((a, b) => {
