@@ -1962,11 +1962,13 @@ App({
         it.boardW = Number(product.boardW) || 0
         it.twoPiece = !!product.twoPiece
         it.crease = product.crease || ''
+        it.creaseValue = product.creaseValue || ''
         it.boards = C.arr(product.boards).filter(b => b && (b.L || b.W)).map(b => ({
           L: Number(b.L) || 0,
           W: Number(b.W) || 0,
           qty: Number(b.qty) || 1,
-          crease: b.crease || ''
+          crease: b.crease || '',
+          creaseValue: b.creaseValue || ''
         }))
         hit = true
       })

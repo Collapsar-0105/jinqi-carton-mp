@@ -61,6 +61,7 @@ Page({
     creaseOptions: C.CREASES,
     creaseIndex: 0,
     crease: '',
+    creaseValue: '',
     // 连体箱片数固定，无法自动拆片：纸板超过进纸上限时红字提示
     boardLimit: C.feedLimit('草箱'),
     overBoardText: '',
@@ -147,7 +148,8 @@ Page({
       manualBoard: C.MANUAL_BOARD_TYPES.indexOf(boxType) >= 0,
       boards: C.arr(obj.boards).map(b => ({
         L: String(b.L || ''), W: String(b.W || ''), qty: String(b.qty || '1'),
-        crease: b.crease || '', creaseIndex: Math.max(0, C.CREASES.indexOf(b.crease || '不填'))
+        crease: b.crease || '', creaseValue: b.creaseValue || '',
+        creaseIndex: Math.max(0, C.CREASES.indexOf(b.crease || '不填'))
       })),
       // 纸板命名：多张纸板时主纸板=大板、第2张=小板、第3张起=附加纸板A/B…
       boardNames: C.boardNames(1 + (obj.boards || []).length).slice(1),
@@ -184,6 +186,7 @@ Page({
       selectedCustomers: C.arr(obj.customers).slice(),
       steps,
       creaseIndex: Math.max(0, C.CREASES.indexOf(obj.crease || '不填')),
+      creaseValue: obj.creaseValue || '',
       customer: obj.customer || '',
       quantity: obj.quantity ? String(obj.quantity) : ''
     }, () => {
@@ -485,6 +488,20 @@ Page({
     this.setData({ boards }, () => this.refreshBoardLimit())
   },
 
+  // 压线位置（如 170+650+235+220+405）
+  onCreaseValue(e) {
+    this.setData({ creaseValue: e.detail.value })
+  },
+
+  onBoardCreaseValue(e) {
+    const index = Number(e.currentTarget.dataset.index)
+    const boards = C.arr(this.data.boards).slice()
+    const row = Object.assign({}, boards[index] || {})
+    row.creaseValue = e.detail.value
+    boards[index] = row
+    this.setData({ boards })
+  },
+
   recomputeBoard() {
     if (this.data.manualBoard) {
       this.setData({
@@ -564,6 +581,7 @@ Page({
       boardManual: !!d.boardManual,
       twoPiece: !!d.twoPiece,
       crease: C.CREASES[d.creaseIndex] === '不填' ? '' : (C.CREASES[d.creaseIndex] || ''),
+      creaseValue: C.CREASES[d.creaseIndex] === '不填' ? '' : String(d.creaseValue || '').trim(),
       customers: d.selectedCustomers.slice(),
       steps: C.normalizeSteps(d.steps || []),
       pads: d.pads.filter(x => x.qty > 0 || x.L || x.W).map(x => ({
@@ -577,7 +595,8 @@ Page({
         L: Number(b.L) || 0,
         W: Number(b.W) || 0,
         qty: Number(b.qty) || 1,
-        crease: b.crease || ''
+        crease: b.crease || '',
+        creaseValue: b.crease ? String(b.creaseValue || '').trim() : ''
       })),
       stockAlertQty: d.stockItem ? (Number(d.stockAlertQty) || 0) : 0,
       outsource: d.outsourceEnabled ? { mode: d.outsourceMode || (d.craft === '彩箱' ? '成品箱' : ''), supplier: (d.outsource && d.outsource.supplier) || '' } : { mode: '', supplier: '' },

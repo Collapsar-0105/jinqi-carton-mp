@@ -149,12 +149,14 @@ Page({
       boardW: board.width,
       twoPiece: board.twoPiece,
       crease: p.crease || '',
+      creaseValue: p.creaseValue || '',
       // 附加纸板（一款由多种不同规格纸板做成时，选产品就要一起带过来）
       boards: C.arr(p.boards).filter(b => b && (b.L || b.W)).map(b => ({
         L: Number(b.L) || 0,
         W: Number(b.W) || 0,
         qty: Number(b.qty) || 1,
-        crease: b.crease || ''
+        crease: b.crease || '',
+        creaseValue: b.creaseValue || ''
       })),
       po: '',
       pads,
@@ -380,12 +382,14 @@ Page({
       boardW: it.boardW,
       twoPiece: it.twoPiece,
       crease: it.crease || '',
+      creaseValue: it.creaseValue || '',
       // 附加纸板：从别处复制/带入的明细也要带上
       boards: C.arr(it.boards).filter(b => b && (b.L || b.W)).map(b => ({
         L: Number(b.L) || 0,
         W: Number(b.W) || 0,
         qty: Number(b.qty) || 1,
-        crease: b.crease || ''
+        crease: b.crease || '',
+        creaseValue: b.creaseValue || ''
       })),
         pads: it.pads || [],
         quantity: parseInt(it.quantity),
