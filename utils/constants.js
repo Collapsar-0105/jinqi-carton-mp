@@ -1,5 +1,5 @@
 // 版本号：每次发版改这里
-const APP_VERSION = '1.9.106'
+const APP_VERSION = '1.9.107'
 
 // 公共常量与小工具
 
@@ -59,6 +59,19 @@ const MAX_FEED_WIDTH = 2450
 
 // 常备预警阈值（个）：常备款现有库存 ≤ 这个数就预警，提示补货到该水平
 const STOCK_ALERT_THRESHOLD = 300
+
+// 版本号比较：a > b 返回 1，相等 0，a < b 返回 -1（按点分数字逐段比）
+function compareVersion(a, b) {
+  const pa = String(a || '').split('.').map(n => parseInt(n, 10) || 0)
+  const pb = String(b || '').split('.').map(n => parseInt(n, 10) || 0)
+  const len = Math.max(pa.length, pb.length)
+  for (let i = 0; i < len; i++) {
+    const x = pa[i] || 0
+    const y = pb[i] || 0
+    if (x !== y) return x > y ? 1 : -1
+  }
+  return 0
+}
 
 // 按工艺取进纸上限：彩箱走小机器 1600，草箱 2450
 function feedLimit(craft) {
@@ -274,6 +287,7 @@ module.exports = {
   MAX_FEED_WIDTH,
   STOCK_ALERT_THRESHOLD,
   feedLimit,
+  compareVersion,
   defaultTang,
   calcBoard,
   autoSteps,

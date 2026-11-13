@@ -22,6 +22,8 @@ App({
     this.ensureIdentity()
     // 版本更新检查：必须放在最前面，不能被下面的节流 return 拦掉
     this.checkUpdate()
+    // 版本闸门：低于云端最低版本直接拦下
+    this.checkVersionGate()
     const now = Date.now()
     // 10 秒节流：切回前台时能较快拿到最新的授权状态
     // （管理员在后台授权后，用户切回来不用等太久才看到订单）
@@ -85,6 +87,38 @@ App({
       // 老基础库没有这个接口，忽略即可
       this._updateMgr = null
     }
+  },
+
+  // ===== 版本闸门 =====
+  // 最低版本由云端下发（config/version → { min }），低于它禁止继续使用。
+  // 为什么不下发到本地常量：旧客户端读的是自己那份常量，永远是旧的，拦不住自己。
+  checkVersionGate() {
+    const c = this.globalData.cloud
+    if (!c || !c.ready) return
+    if (this._verChecking) return
+    this._verChecking = true
+    this.cloudCall('version').then(res => {
+      this._verChecking = false
+      if (!res || !res.ok || !res.minVersion) return
+      if (C.compareVersion(C.APP_VERSION, res.minVersion) >= 0) return
+      this.blockOldVersion(res.minVersion)
+    }).catch(() => { this._verChecking = false })
+  },
+
+  blockOldVersion(minVersion) {
+    if (this._verBlocking) return
+    this._verBlocking = true
+    wx.showModal({
+      title: '需要更新',
+      content: '当前版本 ' + C.APP_VERSION + ' 已停用，请更新到 ' + minVersion + ' 后再使用。\n\n更新方法：删掉小程序，重新搜索打开；或在微信「发现-小程序」里长按删除后重进。',
+      showCancel: false,
+      confirmText: '退出',
+      success: () => {
+        this._verBlocking = false
+        if (wx.exitMiniProgram) { try { wx.exitMiniProgram() } catch (e) {} }
+      },
+      fail: () => { this._verBlocking = false }
+    })
   },
 
   // 触发微信官方的隐私授权弹窗（底部半屏那张：小程序名 + 申请什么 + 用途 + 拒绝/允许）
@@ -350,6 +384,8 @@ App({
         return null
       }
       this.setCloud({ ready: true, allowed: true, checking: false, admin: !!res.admin, role: res.role || (res.admin ? 'admin' : 'worker'), openid: res.openid || '', error: '', mode: 'cloud' })
+      // 云端就绪后立刻做版本闸门检查（首屏 onShow 时云端可能还没连上）
+      this.checkVersionGate()
       this._cloudBaseAt = Number(res.updatedAt) || 0
       this.flushPendingPush()
       // 地址清理由本机发起：先把清过的数据推上云，再拉订单，避免旧地址又被拉回来

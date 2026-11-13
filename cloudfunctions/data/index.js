@@ -344,6 +344,18 @@ exports.main = async (event) => {
     return { ok: true, removed: (r1 && r1.stats && r1.stats.removed) || 0 }
   }
 
+  // 版本闸门：app_data/version = { min: '1.9.107', latest: '1.9.107' }
+  // 客户端启动时比对，低于 min 直接拦下（最低版本由云端下发，旧客户端无法绕过）
+  // 注意：push 只写 app_data/main，不会覆盖这个独立文档
+  if (action === 'version') {
+    const d = await getDoc(DATA, 'version')
+    return {
+      ok: true,
+      minVersion: (d && d.min) || '',
+      latestVersion: (d && (d.latest || d.min)) || ''
+    }
+  }
+
   if (action === 'pull') {
     const d = await getDoc(DATA, DOC)
     return {
