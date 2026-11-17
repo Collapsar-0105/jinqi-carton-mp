@@ -113,6 +113,7 @@ Page({
       }
     } else {
       this.setData({
+        seriesOptions: this.buildSeriesOptions(),
         fluteIndex: 0,
         steps: C.defaultSteps('草箱'),
         tang: C.defaultTang(C.BOX_TYPES[0])
@@ -120,10 +121,17 @@ Page({
     }
   },
 
+  // 已有系列：去重、按拼音序（新建和编辑都要用）
+  buildSeriesOptions() {
+    const map = {}
+    app.getProducts().forEach(x => { if (x && x.series) map[x.series] = 1 })
+    return Object.keys(map).sort((a, b) => String(a).localeCompare(String(b), 'zh'))
+  },
+
   onShow() {
     this.setData({ fontClass: app.getFontClass() })
     this.syncOutsourceOptions()
-    this.setData({ customers: app.getCustomers() }, () => this.refreshAll())
+    this.setData({ customers: app.getCustomers(), seriesOptions: this.buildSeriesOptions() }, () => this.refreshAll())
   },
 
   loadFrom(obj) {
@@ -139,9 +147,7 @@ Page({
     const craftName = C.CRAFTS[craftIndex] || '草箱'
     const history = obj.id ? app.getPriceHistory(obj.id) : []
     // 已有系列（去重、按拼音序），供下拉选择；手输新值也能用
-    const seriesMap = {}
-    app.getProducts().forEach(x => { if (x && x.series) seriesMap[x.series] = 1 })
-    const seriesOptions = Object.keys(seriesMap).sort((a, b) => String(a).localeCompare(String(b), 'zh'))
+    const seriesOptions = this.buildSeriesOptions()
 
     this.setData({
       id: obj.id || '',
