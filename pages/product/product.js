@@ -15,7 +15,8 @@ Page({
     groupIndex: 0,
     sortModes: SORT_MODES,
     sortIndex: 0,
-    collapsed: {}
+    collapsed: {},
+    seriesOpen: {}
   },
 
   onShow() {
@@ -78,10 +79,34 @@ Page({
     })
 
     const groupIndex = this.data.groupIndex
+    const collapsed = this.data.collapsed || {}
+    const seriesOpen = this.data.seriesOpen || {}
+
+    // 一组产品按系列再分组：有系列的在前（按名称），没系列的放最后
+    const splitSeries = (items, prefix) => {
+      const map = {}
+      const order = []
+      items.forEach(p => {
+        const s = p.series || ''
+        if (!(s in map)) { map[s] = []; order.push(s) }
+        map[s].push(p)
+      })
+      order.sort((a, b) => {
+        if (!a !== !b) return a ? -1 : 1
+        return String(a).localeCompare(String(b), 'zh-Hans-CN')
+      })
+      return order.map(s => {
+        const key = prefix + '|s:' + s
+        // 没有系列的产品不折叠、也不显示系列头，直接挂在客户下面
+        const named = !!s
+        return { title: named ? s : '', key, items: map[s], collapsed: named ? !seriesOpen[key] : false }
+      })
+    }
+
     let sections = []
 
     if (groupIndex === 3) {
-      sections = [{ title: '全部产品', key: 'all', items: list }]
+      sections = [{ title: '全部产品', key: 'all', series: [{ title: '', key: 'all|all', items: list, collapsed: false }] }]
     } else if (groupIndex === 0) {
       const customers = app.getCustomers().map(c => c.name)
       const used = {}
@@ -89,12 +114,12 @@ Page({
         const items = list.filter(p => (p.customers || []).indexOf(name) > -1)
         if (items.length) {
           used[name] = true
-          sections.push({ title: name, key: name, items })
+          sections.push({ title: name, key: 'c:' + name, series: splitSeries(items, 'c:' + name) })
         }
       })
       const orphans = list.filter(p => !p.customers || p.customers.length === 0 ||
         p.customers.every(c => !used[c]))
-      if (orphans.length) sections.push({ title: '未挂客户', key: 'none', items: orphans })
+      if (orphans.length) sections.push({ title: '未挂客户', key: 'none', series: splitSeries(orphans, 'none') })
     } else {
       const keyOf = groupIndex === 1
         ? (p => p.craft || '草箱')
@@ -105,11 +130,17 @@ Page({
         if (!map[k]) map[k] = []
         map[k].push(p)
       })
-      sections = Object.keys(map).sort().map(k => ({ title: k, key: k, items: map[k] }))
+      sections = Object.keys(map).sort().map(k => ({
+        title: k,
+        key: k,
+        series: [{ title: '', key: k + '|all', items: map[k], collapsed: false }]
+      }))
     }
 
-    const collapsed = this.data.collapsed || {}
-    sections = sections.map(s => Object.assign({}, s, { collapsed: !!collapsed[s.key] }))
+    sections = sections.map(s => {
+      const count = (s.series || []).reduce((n, ser) => n + (ser.items || []).length, 0)
+      return Object.assign({}, s, { collapsed: !!collapsed[s.key], count })
+    })
 
     this.setData({ sections, count: list.length, total: all.length })
   },
@@ -133,8 +164,20 @@ Page({
     this.setData({ collapsed }, () => this.load())
   },
 
+  toggleSeriesGroup(e) {
+    const key = e.currentTarget.dataset.key
+    const seriesOpen = Object.assign({}, this.data.seriesOpen)
+    seriesOpen[key] = !seriesOpen[key]
+    this.setData({ seriesOpen }, () => this.load())
+  },
+
   expandAll() {
-    this.setData({ collapsed: {} }, () => this.load())
+    // 全部展开：客户和系列都打开
+    const seriesOpen = {}
+    ;(this.data.sections || []).forEach(s => (s.series || []).forEach(ser => {
+      if (ser.title) seriesOpen[ser.key] = true
+    }))
+    this.setData({ collapsed: {}, seriesOpen }, () => this.load())
   },
 
   collapseAll() {
