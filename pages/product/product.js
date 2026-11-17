@@ -97,9 +97,8 @@ Page({
       })
       return order.map(s => {
         const key = prefix + '|s:' + s
-        // 没有系列的产品不折叠、也不显示系列头，直接挂在客户下面
-        const named = !!s
-        return { title: named ? s : '', key, items: map[s], collapsed: named ? !seriesOpen[key] : false }
+        // 没有系列的产品归到【散单】，和其他系列一样默认收起
+        return { title: s || '【散单】', key, items: map[s], collapsed: !seriesOpen[key] }
       })
     }
 
