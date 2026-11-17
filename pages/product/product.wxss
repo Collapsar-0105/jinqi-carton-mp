@@ -114,11 +114,17 @@
   box-shadow: 0 0 0 3px #e8445f, 0 2px 8px rgba(0, 0, 0, 0.07) !important;
   overflow: hidden;
 }
-.card.product-card > .flex-row:first-child {
+/* 卡片顶部分块：标题行（原来的 :first-child 改成显式类，
+   否则前面多一个系列标签后 :first-child 就匹配不到了） */
+.card.product-card > .p-head {
   background: #ffe3e8;
   border-bottom: 3px solid #e6bcc3;   /* = 加急卡 --age-mid 的原色 */
-  margin: -12px -14px 8px;
+  margin: 0 -14px 8px;
   padding: 12px 14px;
+}
+/* 没有系列标签时，标题行就是第一块，贴住卡片顶部 */
+.card.product-card > .p-head-top {
+  margin-top: -12px;
 }
 
 /* 系列层级 */
@@ -130,12 +136,14 @@
 .series-arrow { font-size: 12px; color: #999; }
 .series-name { flex: 1; color: #3a3a3c; font-weight: 700; }
 .series-count { font-size: 12px; color: #8e8e93; }
-/* 卡片上的系列强调标签 */
-.p-series {
-  display: inline-block;
-  margin-bottom: 6px;
-  padding: 2px 10px;
-  border-radius: 6px;
-  font-size: 12px; font-weight: 700;
-  color: #e94560; background: #fff0f3;
+/* 卡片上的系列强调条：和标题行同色，拼成一整块顶部底色 */
+.card.product-card > .p-series {
+  display: block;
+  margin: -12px -14px 0;
+  padding: 9px 14px 5px;
+  background: #ffe3e8;
+  color: #b3164a;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
 }
