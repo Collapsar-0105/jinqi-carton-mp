@@ -86,6 +86,8 @@ Page({
   },
 
   onLoad(options) {
+    // 这是编辑表单，云同步落地时不要重建本页（否则输入内容会被清空）
+    this.noAutoReload = true
     // 键盘弹起时隐藏底部按钮，避免输入框被挡
     const sys = wx.getDeviceInfo ? wx.getDeviceInfo() : wx.getSystemInfoSync()
     this.setData({ isIOS: sys.platform === 'ios' })

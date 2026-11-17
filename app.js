@@ -527,14 +527,10 @@ App({
       if (typeof cur.loadOrder === 'function') return cur.loadOrder()
       if (typeof cur.load === 'function') return cur.load()
       if (typeof cur.loadLocal === 'function') return cur.loadLocal()
-      if (cur.route) wx.reLaunch({ url: '/' + cur.route })
-    } catch (e) {
-      try {
-        const pages = getCurrentPages()
-        const cur = pages[pages.length - 1]
-        if (cur && !cur.noAutoReload && cur.route) wx.reLaunch({ url: '/' + cur.route })
-      } catch (e2) {}
-    }
+      // 这里绝对不能用 reLaunch 兜底：
+      // reLaunch 会清空整个页面栈，用户按返回就直接退出小程序，
+      // 正在填的表单也会被清掉。页面靠自己的 onShow 刷新即可。
+    } catch (e) {}
   },
 
   // 每天首次启动自动快照，保留 3 份
