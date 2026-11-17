@@ -639,13 +639,16 @@ Page({
     if (dupName) { wx.showToast({ title: '名称已存在（' + dupName.id + '）', icon: 'none' }); return }
 
     app.upsertProducts([p])
-    // 产品档案改了，未完成的订单里同款产品同步更新（数量/单价/工序进度不动）
-    app.syncProductToOpenOrders(p)
     // 允许改编号（用户 2026-10-25 决定）：改编号后必须删掉旧编号的产品，
     // 否则 upsert 按新 id 新增、旧 id 产品原地残留，变成列表里删不掉的「幽灵产品」
     if (this.data.isEdit && originId && p.id !== originId) {
       app.removeProduct(originId)
+      // 编号改了，订单里指向旧编号的明细一起改过来，否则销量统计和档案同步会断
+      app.remapProductId(originId, p.id)
     }
+    // 产品档案改了，未完成的订单里同款产品同步更新（数量/单价/工序进度不动）
+    // 放在改号之后：先改引用，再按新编号同步字段
+    app.syncProductToOpenOrders(p)
     wx.showToast({ title: '已保存', icon: 'success' })
     setTimeout(() => wx.navigateBack(), 500)
   },

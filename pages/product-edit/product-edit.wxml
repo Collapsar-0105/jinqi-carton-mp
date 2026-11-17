@@ -22,8 +22,8 @@
 
     <view class="field">
       <text class="label">产品编号 *</text>
-      <input placeholder-style="color:#555;font-weight:600" class="input" placeholder="如：P001" value="{{id}}" disabled="{{isEdit && mode === 'product'}}" bindinput="onId" />
-      <text wx:if="{{isEdit && mode === 'product'}}" class="text-xs c-gray">编号是产品的唯一标识，已下单后不可修改</text>
+      <input placeholder-style="color:#555;font-weight:600" class="input" placeholder="如：P001" value="{{id}}" bindinput="onId" />
+      <text wx:if="{{isEdit && mode === 'product'}}" class="text-xs c-gray">编号可修改；改了以后，已下单的订单里这款产品会一起换成新编号</text>
     </view>
 
     <view class="field">

@@ -2016,6 +2016,31 @@ App({
     return this.getProducts().find(p => p.id === id) || null
   },
 
+  // 产品改编号后，把订单里指向旧编号的明细改到新编号（含已完成订单，只改引用不改数量）
+  remapProductId(oldId, newId) {
+    if (!oldId || !newId || oldId === newId) return 0
+    const data = this.getData()
+    const dirty = []
+    let count = 0
+    C.arr(data.orders).forEach(o => {
+      if (!o || o.status === 'deleted') return
+      let hit = false
+      C.arr(o.items).forEach(it => {
+        if (it && it.productId === oldId) {
+          it.productId = newId
+          hit = true
+          count++
+        }
+      })
+      if (hit) { o.updatedAt = Date.now(); dirty.push(o.id) }
+    })
+    if (dirty.length) {
+      this._kvWrite('factory_data', data)
+      dirty.forEach(id => this.pushOrderCloud(id))
+    }
+    return count
+  },
+
   // 产品档案保存后，把描述性字段同步到「未完成」订单里的同款产品。
   // 不动数量、单价、工序进度、入库/送货状态，避免改坏生产记录。
   syncProductToOpenOrders(product) {
