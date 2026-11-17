@@ -267,9 +267,18 @@ Page({
       const boxType = (c[3] || '').trim() || C.BOX_TYPES[0]
       const flute = (c[4] || '').trim() || C.FLUTES[0]
       const tang = C.defaultTang(boxType)
-      const sizeL = parseInt(c[5]) || 0
-      const sizeW = parseInt(c[6]) || 0
-      const sizeH = parseInt(c[7]) || 0
+      let sizeL = parseInt(c[5]) || 0
+      let sizeW = parseInt(c[6]) || 0
+      let sizeH = parseInt(c[7]) || 0
+      // 兼容「长」列直接写成 765*435*430、宽高留空：自动拆成三维
+      if (!sizeW && !sizeH) {
+        const mSize = String(c[5] || '').match(/^\s*(\d+)\s*[×xX*]\s*(\d+)\s*[×xX*]\s*(\d+)\s*$/)
+        if (mSize) {
+          sizeL = Number(mSize[1]) || 0
+          sizeW = Number(mSize[2]) || 0
+          sizeH = Number(mSize[3]) || 0
+        }
+      }
       const board = C.calcBoard(sizeL, sizeW, sizeH, tang, craft)
 
       const split = v => String(v || '').split(/[、；;|]/).map(s => s.trim()).filter(Boolean)
