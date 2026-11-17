@@ -363,7 +363,14 @@
 .series-wrap { position: relative; }
 .series-box { display: flex; align-items: center; padding: 0 10px; }
 .series-input { flex: 1; height: 40px; font-size: 28rpx; }
-.series-arrow { width: 30px; text-align: center; color: #8e8e93; font-size: 22rpx; }
+.series-arrow {
+  width: 40px; height: 34px; flex: 0 0 auto;
+  display: flex; align-items: center; justify-content: center;
+  color: #1c1c1e; font-size: 26rpx;
+  border-left: 1px solid rgba(0, 0, 0, 0.08);
+  margin-right: -6px;
+}
+.series-arrow:active { background: rgba(0, 0, 0, 0.06); border-radius: 8rpx; }
 .series-dropdown {
   position: absolute; left: 0; right: 0; top: 44px; z-index: 30;
   background: #fff; border-radius: 10px; box-shadow: 0 6px 18px rgba(0,0,0,.14);

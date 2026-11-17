@@ -51,7 +51,7 @@
       <view class="series-wrap">
         <view class="input series-box">
           <input class="series-input" placeholder-style="color:#555;font-weight:600" placeholder="不填则无系列，输入即新建" value="{{series}}" bindinput="onSeries" />
-          <text class="series-arrow" catchtap="toggleSeries">▾</text>
+          <text class="series-arrow" catchtap="toggleSeries">▼</text>
         </view>
         <view wx:if="{{seriesOpen}}" class="series-dropdown">
           <view wx:for="{{seriesOptions}}" wx:key="*this" class="series-option" catchtap="pickSeries" data-value="{{item}}">{{item}}</view>
