@@ -47,7 +47,7 @@
           <block wx:for="{{ser.items}}" wx:key="id" wx:for-item="p">
             <view class="card product-card" bindtap="goEdit" data-id="{{p.id}}">
               <view wx:if="{{p.series}}" class="p-series">{{p.series}}</view>
-              <view class="flex-row p-head {{p.series ? '' : 'p-head-top'}}">
+              <view class="flex-row p-head {{p.series ? 'p-head-tight' : 'p-head-top'}}">
                 <text class="p-id">{{p.id}}</text>
                 <text class="p-name flex-1">{{p.name}}</text>
                 <text class="p-price">{{p.priceText}}</text>

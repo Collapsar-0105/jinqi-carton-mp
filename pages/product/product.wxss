@@ -126,6 +126,10 @@
 .card.product-card > .p-head-top {
   margin-top: -12px;
 }
+/* 有系列条时，标题行去掉多余的上内边距，两行贴近 */
+.card.product-card > .p-head-tight {
+  padding-top: 4px;
+}
 
 /* 系列层级 */
 .series-title {
@@ -140,7 +144,7 @@
 .card.product-card > .p-series {
   display: block;
   margin: -12px -14px 0;
-  padding: 9px 14px 5px;
+  padding: 8px 14px 2px;
   background: #ffe3e8;
   color: #b3164a;
   font-size: 12px;
