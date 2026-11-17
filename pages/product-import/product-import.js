@@ -248,7 +248,10 @@ Page({
 
     // 兼容旧模板：1.9.101 之前是 16 列，第 14 列是「默认收货地址」（已废弃）。
     // 按表头判断，整表统一去掉那一列；新模板 15 列不受影响。
-    const legacyWithAddr = String((rows[0] || []).join('')).indexOf('默认收货地址') > -1
+    const headText = String((rows[0] || []).join(''))
+    const legacyWithAddr = headText.indexOf('默认收货地址') > -1
+    // 1.9.125 起模板加了「系列」列（第 14 列），旧模板没有这一列，按表头判断
+    const hasSeries = headText.indexOf('系列') > -1
 
     rows.forEach((cells, idx) => {
       const c = cells.map(x => (x == null ? '' : String(x).trim()))
@@ -303,8 +306,9 @@ Page({
         steps,
         outsource,
         customers: split(c[12]),
-        price: Number(c[13]) || 0,
-        note: c[14] || '',
+        series: hasSeries ? (c[13] || '').trim() : '',
+        price: Number(c[hasSeries ? 14 : 13]) || 0,
+        note: c[hasSeries ? 15 : 14] || '',
         pads,
         materials: [],
         updatedAt: app.now()
