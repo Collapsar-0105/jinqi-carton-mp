@@ -45,6 +45,20 @@
       </view>
       <text wx:else class="text-xs c-gray">还没有客户，点「管理客户」先添加</text>
     </view>
+
+    <view wx:if="{{selectedCustomers.length > 0}}" class="field">
+      <text class="label">系列</text>
+      <view class="series-wrap">
+        <view class="input series-box">
+          <input class="series-input" placeholder-style="color:#555;font-weight:600" placeholder="不填则无系列，输入即新建" value="{{series}}" bindinput="onSeries" />
+          <text class="series-arrow" catchtap="toggleSeries">▾</text>
+        </view>
+        <view wx:if="{{seriesOpen}}" class="series-dropdown">
+          <view wx:for="{{seriesOptions}}" wx:key="*this" class="series-option" catchtap="pickSeries" data-value="{{item}}">{{item}}</view>
+          <view wx:if="{{seriesOptions.length === 0}}" class="series-empty">还没有系列，直接输入即可新建</view>
+        </view>
+      </view>
+    </view>
   </view>
 
   <view class="card spec-card outsource-card">

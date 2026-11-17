@@ -358,3 +358,17 @@
 /* 附加纸板：输入框窄一点，一行放得下 长×宽 mm + 张数 */
 .bp-sub { margin-top: 10px; padding-top: 8px; border-top: 1px dashed #dfe6ef; }
 .bp-input-sm { width: 58px; }
+
+/* 系列：输入框 + 右侧下拉三角 */
+.series-wrap { position: relative; }
+.series-box { display: flex; align-items: center; padding: 0 10px; }
+.series-input { flex: 1; height: 40px; font-size: 28rpx; }
+.series-arrow { width: 30px; text-align: center; color: #8e8e93; font-size: 22rpx; }
+.series-dropdown {
+  position: absolute; left: 0; right: 0; top: 44px; z-index: 30;
+  background: #fff; border-radius: 10px; box-shadow: 0 6px 18px rgba(0,0,0,.14);
+  max-height: 260px; overflow-y: auto;
+}
+.series-option { padding: 11px 12px; font-size: 26rpx; border-bottom: 1px solid #f2f2f7; }
+.series-option:last-child { border-bottom: none; }
+.series-empty { padding: 12px; font-size: 24rpx; color: #8e8e93; }

@@ -2016,6 +2016,20 @@ App({
     return this.getProducts().find(p => p.id === id) || null
   },
 
+  // 客户-系列 排序：有客户的排前面；先比客户，再比系列，最后按编号
+  compareProductCustomerSeries(a, b) {
+    const pa = a || {}
+    const pb = b || {}
+    const ca = C.arr(pa.customers)[0] || ''
+    const cb = C.arr(pb.customers)[0] || ''
+    if (!ca !== !cb) return ca ? -1 : 1
+    let r = String(ca).localeCompare(String(cb), 'zh-Hans-CN')
+    if (r) return r
+    r = String(pa.series || '').localeCompare(String(pb.series || ''), 'zh-Hans-CN')
+    if (r) return r
+    return String(pa.id || '').localeCompare(String(pb.id || ''))
+  },
+
   // 产品改编号后，把订单里指向旧编号的明细改到新编号（含已完成订单，只改引用不改数量）
   remapProductId(oldId, newId) {
     if (!oldId || !newId || oldId === newId) return 0

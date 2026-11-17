@@ -62,6 +62,10 @@ Page({
     creaseIndex: 0,
     crease: '',
     creaseValue: '',
+    // 系列：勾选客户后才显示；可手输新建，也可点小三角从已有系列里选
+    series: '',
+    seriesOpen: false,
+    seriesOptions: [],
     // 连体箱片数固定，无法自动拆片：纸板超过进纸上限时红字提示
     boardLimit: C.feedLimit('草箱'),
     overBoardText: '',
@@ -134,10 +138,16 @@ Page({
     const steps = C.normalizeSteps((obj.steps && obj.steps.length) ? obj.steps : C.defaultSteps(obj.craft || '草箱'))
     const craftName = C.CRAFTS[craftIndex] || '草箱'
     const history = obj.id ? app.getPriceHistory(obj.id) : []
+    // 已有系列（去重、按拼音序），供下拉选择；手输新值也能用
+    const seriesMap = {}
+    app.getProducts().forEach(x => { if (x && x.series) seriesMap[x.series] = 1 })
+    const seriesOptions = Object.keys(seriesMap).sort((a, b) => String(a).localeCompare(String(b), 'zh'))
 
     this.setData({
       id: obj.id || '',
       name: obj.name || '',
+      seriesOptions,
+      series: obj.series || '',
       craftIndex,
       craft: craftName,
       history,
@@ -330,6 +340,13 @@ Page({
     this.setData({ pads })
   },
   onNote(e) { this.setData({ note: e.detail.value }) },
+
+  // 系列：手输即新建，点小三角从已有系列里挑
+  onSeries(e) { this.setData({ series: e.detail.value }) },
+  toggleSeries() { this.setData({ seriesOpen: !this.data.seriesOpen }) },
+  pickSeries(e) {
+    this.setData({ series: e.currentTarget.dataset.value || '', seriesOpen: false })
+  },
 
   onCraft(e) {
     // craftIndex 必须一起更新：选择框显示（crafts[craftIndex]）和保存（C.CRAFTS[craftIndex]）都读它
@@ -581,6 +598,7 @@ Page({
       crease: C.CREASES[d.creaseIndex] === '不填' ? '' : (C.CREASES[d.creaseIndex] || ''),
       creaseValue: C.CREASES[d.creaseIndex] === '不填' ? '' : String(d.creaseValue || '').trim(),
       customers: d.selectedCustomers.slice(),
+      series: (d.series || '').trim(),
       steps: C.normalizeSteps(d.steps || []),
       pads: d.pads.filter(x => x.qty > 0 || x.L || x.W).map(x => ({
         type: C.PAD_TYPES[x.typeIndex] || C.PAD_TYPES[0],

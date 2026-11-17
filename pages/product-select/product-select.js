@@ -33,7 +33,8 @@ Page({
           priceText: p.price ? '¥' + p.price : '未定价'
         })
       })
-      .sort((a, b) => String(a.id).localeCompare(String(b.id)))
+      // 默认按「客户-系列」排序：同客户下按系列聚在一起
+      .sort((a, b) => app.compareProductCustomerSeries(a, b))
 
     this.setData({ list })
   },

@@ -11,6 +11,7 @@
         <text class="p-price">{{item.priceText}}</text>
       </view>
       <view class="p-spec">{{item.summary}}</view>
+      <view wx:if="{{item.series}}" class="p-spec">系列：{{item.series}}</view>
     </view>
   </block>
 
