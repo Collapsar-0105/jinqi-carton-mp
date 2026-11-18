@@ -329,6 +329,11 @@ Page({
       return
     }
 
+    // 导入前记撤销点：产品档案顶部会出现「撤销：导入产品」，点一下整体回滚
+    // （先记客户再记产品，撤销时先还原产品、再还原客户）
+    app.recordUndo('customers', app.getCustomers(), '导入产品（客户）')
+    app.recordUndo('products', app.getProducts(), '导入产品')
+
     // 客户自动补全
     const known = app.getCustomers()
     const names = known.map(x => x.name)
