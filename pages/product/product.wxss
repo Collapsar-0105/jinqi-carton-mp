@@ -41,10 +41,20 @@
 }
 
 .group-title {
-  padding: 14px 16px 2px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0 6px;
+  padding: 12px 14px;
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
   font-size: 14px;
-  color: #999;
-  font-weight: bold;
+  color: #1c1c1e;
+  font-weight: 700;
+}
+.group-title:active {
+  background: #f2f2f7;
 }
 
 .product-card {
@@ -90,10 +100,9 @@
 /* 分组展开收起 */
 .expand-bar { display: flex; gap: 14px; padding: 4px 16px 6px; }
 .expand-btn { font-size: 14px; color: #2b5bb3; font-weight: 600; }
-.group-title { display: flex; align-items: center; gap: 6px; }
-.group-arrow { font-size: 14px; color: #666; }
-.group-name { font-weight: 700; }
-.group-count { margin-left: auto; font-size: 14px; color: #666; }
+.group-arrow { font-size: 12px; color: #8e8e93; }
+.group-name { flex: 1; font-weight: 700; }
+.group-count { margin-left: auto; font-size: 12px; color: #8e8e93; font-weight: 600; }
 
 .cust-line { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 4px; }
 .outsource-tag { flex: 0 0 auto; font-size: 14px; font-weight: 700; color: #e94560; background: #fff0f3; border-radius: 8px; padding: 2px 8px; }
@@ -133,13 +142,20 @@
 
 /* 系列层级 */
 .series-title {
-  display: flex; align-items: center; gap: 6px;
-  padding: 10px 16px 4px 24px;
-  font-size: 13px; color: #666; font-weight: 600;
+  display: flex; align-items: center; gap: 8px;
+  margin: 6px 10px 4px 18px;
+  padding: 9px 12px;
+  background: #f7f8fa;
+  border: 1px solid #ececf0;
+  border-radius: 10px;
+  font-size: 13px; color: #3a3a3c; font-weight: 700;
 }
-.series-arrow { font-size: 12px; color: #999; }
-.series-name { flex: 1; color: #3a3a3c; font-weight: 700; }
-.series-count { font-size: 12px; color: #8e8e93; }
+.series-title:active {
+  background: #ececf0;
+}
+.series-arrow { font-size: 11px; color: #8e8e93; }
+.series-name { flex: 1; }
+.series-count { font-size: 12px; color: #8e8e93; font-weight: 600; }
 /* 卡片上的系列强调条：和标题行同色，拼成一整块顶部底色 */
 .card.product-card > .p-series {
   display: block;
