@@ -160,17 +160,18 @@ Page({
 
   toggleGroup(e) {
     const key = e.currentTarget.dataset.key
-    const openGroups = Object.assign({}, this.data.openGroups)
-    if (openGroups[key]) delete openGroups[key]
-    else openGroups[key] = true
-    this.setData({ openGroups }, () => this.load())
+    const open = Object.assign({}, this.data.openGroups)
+    // 客户层也是手风琴：开一个客户，其它客户全部收起；关的时候只关自己
+    const openGroups = open[key] ? (delete open[key], open) : { [key]: true }
+    // 切换客户时把上一组的系列一起收起，避免下次打开直接弹出一堆产品
+    this.setData({ openGroups, seriesOpen: {} }, () => this.load())
   },
 
   toggleSeriesGroup(e) {
     const key = e.currentTarget.dataset.key
-    const open = this.data.seriesOpen || {}
-    // 手风琴：开一个系列，其它系列全部收起
-    const seriesOpen = open[key] ? {} : { [key]: true }
+    const open = Object.assign({}, this.data.seriesOpen)
+    // 手风琴：开一个系列，其它系列全部收起；关的时候只关自己
+    const seriesOpen = open[key] ? (delete open[key], open) : { [key]: true }
     this.setData({ seriesOpen }, () => this.load())
   },
 
