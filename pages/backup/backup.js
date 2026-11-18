@@ -25,9 +25,32 @@ Page({
     cloud: { mode: 'local', error: '', lastSyncText: '-' },
     cloudEnv: '',
     workYears: [],
+    autoBackups: [],
   },
 
   // 非管理员：危险操作一律拦住
+  // 恢复某天的自动备份（只覆盖产品和客户，订单不动）
+  restoreAuto(e) {
+    if (!this.requireAdmin()) return
+    const key = e.currentTarget.dataset.key
+    const item = (this.data.autoBackups || []).find(x => x.key === key)
+    if (!item) return
+    wx.showModal({
+      title: '恢复到 ' + item.date,
+      content: '把「产品档案」和「客户名单」恢复成这一天的状态：产品 ' + item.products + ' 款、客户 ' + item.customers + ' 个。\n订单和送货记录不受影响。',
+      confirmText: '恢复',
+      success: res => {
+        if (!res.confirm) return
+        const ok = app.restoreAutoBackup(key)
+        wx.showToast({ title: ok ? '已恢复' : '恢复失败', icon: ok ? 'success' : 'none' })
+        if (ok) {
+          this.setData({ autoBackups: app.getAutoBackups() })
+          this.onShow()
+        }
+      }
+    })
+  },
+
   requireAdmin() {
     if (this.data.isAdmin) return true
     wx.showToast({ title: '只有管理员可以操作', icon: 'none' })
@@ -178,6 +201,7 @@ Page({
 
   onShow() {
     this.loadWorkYears()
+    this.setData({ autoBackups: app.getAutoBackups() })
     // 启动异常直接摆出来，别让用户靠猜
     try {
       const errs = (app.globalData.launchErrors || [])

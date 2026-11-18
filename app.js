@@ -533,6 +533,45 @@ App({
     } catch (e) {}
   },
 
+  // 自动备份列表（每天首次启动存一份，最多 3 份）
+  getAutoBackups() {
+    const out = []
+    ;['auto_backup_1', 'auto_backup_2', 'auto_backup_3'].forEach(key => {
+      let snap = null
+      try {
+        const raw = wx.getStorageSync(key)
+        snap = raw ? JSON.parse(raw) : null
+      } catch (e) { snap = null }
+      if (!snap) return
+      let products = 0
+      let customers = 0
+      try { products = C.arr(JSON.parse(snap.product_archive || '[]')).length } catch (e) {}
+      try { customers = C.arr(JSON.parse(snap.customer_list || '[]')).length } catch (e) {}
+      out.push({ key, date: snap.date || '未知日期', products, customers })
+    })
+    return out
+  },
+
+  // 用自动备份恢复「产品档案 + 客户名单」（导入回滚用；订单不动）
+  restoreAutoBackup(key) {
+    let snap = null
+    try {
+      const raw = wx.getStorageSync(key)
+      snap = raw ? JSON.parse(raw) : null
+    } catch (e) { return false }
+    if (!snap) return false
+    // 恢复前先记撤销点：恢复本身也能再撤回去
+    this.recordUndo('customers', this.getCustomers(), '恢复备份（客户）')
+    this.recordUndo('products', this.getProducts(), '恢复备份（产品）')
+    let list = []
+    let cust = []
+    try { list = JSON.parse(snap.product_archive || '[]') } catch (e) { list = [] }
+    try { cust = JSON.parse(snap.customer_list || '[]') } catch (e) { cust = [] }
+    this.saveProducts(C.arr(list))
+    this.saveCustomers(C.arr(cust))
+    return true
+  },
+
   // 每天首次启动自动快照，保留 3 份
   autoBackup() {
     try {

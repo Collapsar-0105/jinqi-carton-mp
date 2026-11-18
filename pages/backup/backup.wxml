@@ -71,6 +71,19 @@
   </view>
 
   <view wx:if="{{isAdmin}}" class="card">
+    <text class="section-title">自动备份</text>
+    <text class="text-xs c-gray">每天首次启动自动存一份，最多 3 份。恢复只覆盖「产品档案 + 客户名单」，订单不受影响。</text>
+    <view wx:for="{{autoBackups}}" wx:key="key" class="flex-row mt-12" style="align-items: center;">
+      <view class="flex-1">
+        <view><text style="font-weight: 600;">{{item.date}}</text></view>
+        <view class="mt-4"><text class="text-xs c-gray">产品 {{item.products}} 款 · 客户 {{item.customers}} 个</text></view>
+      </view>
+      <view class="btn btn-outline btn-sm" catchtap="restoreAuto" data-key="{{item.key}}">恢复</view>
+    </view>
+    <text wx:if="{{autoBackups.length === 0}}" class="text-xs c-gray">还没有自动备份</text>
+  </view>
+
+  <view wx:if="{{isAdmin}}" class="card">
     <text class="section-title">导出备份</text>
     <text class="text-xs c-gray">生成一个 json 文件，直接发送到微信聊天（建议发给「文件传输助手」），换手机时再导入。</text>
     <view class="btn btn-primary btn-block mt-12" bindtap="exportData">导出并发送到聊天</view>
