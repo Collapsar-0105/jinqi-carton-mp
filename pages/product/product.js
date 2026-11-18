@@ -15,7 +15,7 @@ Page({
     groupIndex: 0,
     sortModes: SORT_MODES,
     sortIndex: 0,
-    collapsed: {},
+    openGroups: {},
     seriesOpen: {}
   },
 
@@ -79,8 +79,10 @@ Page({
     })
 
     const groupIndex = this.data.groupIndex
-    const collapsed = this.data.collapsed || {}
+    const openGroups = this.data.openGroups || {}
     const seriesOpen = this.data.seriesOpen || {}
+    // 搜索时自动展开，否则结果都被折叠着看不见
+    const searching = !!String(this.data.keyword || '').trim()
 
     // 一组产品按系列再分组：有系列的在前（按名称），没系列的放最后
     const splitSeries = (items, prefix) => {
@@ -98,7 +100,7 @@ Page({
       return order.map(s => {
         const key = prefix + '|s:' + s
         // 没有系列的产品归到【散单】，和其他系列一样默认收起
-        return { title: s || '【散单】', key, items: map[s], collapsed: !seriesOpen[key] }
+        return { title: s || '【散单】', key, items: map[s], collapsed: searching ? false : !seriesOpen[key] }
       })
     }
 
@@ -138,7 +140,7 @@ Page({
 
     sections = sections.map(s => {
       const count = (s.series || []).reduce((n, ser) => n + (ser.items || []).length, 0)
-      return Object.assign({}, s, { collapsed: !!collapsed[s.key], count })
+      return Object.assign({}, s, { collapsed: searching ? false : !openGroups[s.key], count })
     })
 
     this.setData({ sections, count: list.length, total: all.length })
@@ -158,31 +160,33 @@ Page({
 
   toggleGroup(e) {
     const key = e.currentTarget.dataset.key
-    const collapsed = Object.assign({}, this.data.collapsed)
-    collapsed[key] = !collapsed[key]
-    this.setData({ collapsed }, () => this.load())
+    const openGroups = Object.assign({}, this.data.openGroups)
+    if (openGroups[key]) delete openGroups[key]
+    else openGroups[key] = true
+    this.setData({ openGroups }, () => this.load())
   },
 
   toggleSeriesGroup(e) {
     const key = e.currentTarget.dataset.key
-    const seriesOpen = Object.assign({}, this.data.seriesOpen)
-    seriesOpen[key] = !seriesOpen[key]
+    const open = this.data.seriesOpen || {}
+    // 手风琴：开一个系列，其它系列全部收起
+    const seriesOpen = open[key] ? {} : { [key]: true }
     this.setData({ seriesOpen }, () => this.load())
   },
 
   expandAll() {
     // 全部展开：客户和系列都打开
+    const openGroups = {}
     const seriesOpen = {}
-    ;(this.data.sections || []).forEach(s => (s.series || []).forEach(ser => {
-      if (ser.title) seriesOpen[ser.key] = true
-    }))
-    this.setData({ collapsed: {}, seriesOpen }, () => this.load())
+    ;(this.data.sections || []).forEach(s => {
+      openGroups[s.key] = true
+      ;(s.series || []).forEach(ser => { if (ser.title) seriesOpen[ser.key] = true })
+    })
+    this.setData({ openGroups, seriesOpen }, () => this.load())
   },
 
   collapseAll() {
-    const collapsed = {}
-    this.data.sections.forEach(s => { collapsed[s.key] = true })
-    this.setData({ collapsed }, () => this.load())
+    this.setData({ openGroups: {}, seriesOpen: {} }, () => this.load())
   },
 
   goNew() {
