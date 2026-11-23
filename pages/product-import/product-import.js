@@ -253,6 +253,15 @@ Page({
     // 1.9.125 起模板加了「系列」列（第 14 列），旧模板没有这一列，按表头判断
     const hasSeries = headText.indexOf('系列') > -1
 
+    // 去重索引：已有产品的编号/名称 + 本次文件里已出现的编号/名称
+    const existed = app.getProducts()
+    const existName = {}
+    existed.forEach(p => { if (p && p.id && p.name) existName[p.name] = p.id })
+    const idPos = {}
+    const seenName = {}
+    let dupRows = 0
+    let nameRows = 0
+
     rows.forEach((cells, idx) => {
       const c = cells.map(x => (x == null ? '' : String(x).trim()))
       if (legacyWithAddr && c.length >= 16) c.splice(13, 1)
@@ -261,6 +270,11 @@ Page({
       const id = c[0]
       const name = c[1]
       if (!id || !name) { skipped++; return }
+
+      // 同名不同编号：会建出两款重名产品，直接跳过（和产品编辑页的校验一致）
+      if ((existName[name] && existName[name] !== id) ||
+          (seenName[name] && seenName[name] !== id)) { nameRows++; return }
+      seenName[name] = id
 
       // 这几项是「可下拉选择，也可手动输入」：填了就用填的（即使是表外自定义值），空才回退默认
       const craft = (c[2] || '').trim() || '草箱'
@@ -298,7 +312,7 @@ Page({
       // 工序：永远按规则自动生成（草箱→纸板到货/生产；彩箱→纸板到货/面纸印刷/裱纸；代印/成品箱另算）
       const steps = C.buildSteps({ craft, boxType, outsource })
 
-      items.push({
+      const item = {
         id,
         name,
         craft,
@@ -320,7 +334,15 @@ Page({
         pads,
         materials: [],
         updatedAt: app.now()
-      })
+      }
+      // 文件内同编号重复：保留最后一次，不产生两条记录
+      if (idPos[id] !== undefined) {
+        const prev = items[idPos[id]]
+        if (prev && prev.name !== name && seenName[prev.name] === id) delete seenName[prev.name]
+        items[idPos[id]] = item
+        dupRows++
+      }
+      else { idPos[id] = items.length; items.push(item) }
     })
 
     if (!items.length) {
@@ -344,6 +366,8 @@ Page({
 
     const r = app.upsertProducts(items)
     const msg = '新增 ' + r.added + ' 款，更新 ' + r.updated + ' 款，共 ' + r.total + ' 款' +
+      (dupRows ? '；合并重复编号 ' + dupRows + ' 行' : '') +
+      (nameRows ? '；跳过重名 ' + nameRows + ' 行' : '') +
       (skipped ? '；跳过 ' + skipped + ' 行' : '') +
       (added ? '；新增客户 ' + added + ' 个' : '')
     this.setData({ result: msg })

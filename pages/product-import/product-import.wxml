@@ -45,5 +45,7 @@
     <view class="rule-row"><text class="rule-k">代工模式</text><text class="rule-v">代印 / 成品箱（可下拉，也可手填）；留空 = 不代工</text></view>
     <view class="rule-row"><text class="rule-k">工序</text><text class="rule-v">已删除：按箱型 / 代工方式自动生成，不用填</text></view>
     <view class="rule-row"><text class="rule-k">客户</text><text class="rule-v">顿号分隔，会自动加进客户名单</text></view>
+    <view class="rule-row"><text class="rule-k">系列</text><text class="rule-v">可留空；留空的产品归到【散单】</text></view>
+    <view class="rule-row"><text class="rule-k">重复行</text><text class="rule-v">同编号只保留最后一条；同名但编号不同会跳过，不会建出重复产品</text></view>
   </view>
 </view>
