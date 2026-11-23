@@ -104,9 +104,6 @@ Page({
       let changed = false
       data.orders.forEach(o => {
         if (o.factoryName === this.data.originalName) { o.factoryName = name; changed = true }
-        ;(o.purchases || []).forEach(p => {
-          if (p.supplier === this.data.originalName) { p.supplier = name; changed = true }
-        })
       })
       if (changed) app.saveData(data)
     }

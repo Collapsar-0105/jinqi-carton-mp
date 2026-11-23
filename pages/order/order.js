@@ -18,7 +18,6 @@ Page({
 
     items: [],
 
-    materialTypes: C.MATERIAL_TYPES,
     factoryModes: ['本厂生产', '外协代工']
   },
 
@@ -86,9 +85,6 @@ Page({
   addItem(productId) {
     const p = app.getProduct(productId)
     if (!p) { wx.showToast({ title: '产品不存在', icon: 'none' }); return }
-
-    const last = app.getLastPrice(p.id)
-    const history = app.getPriceHistory(p.id)
 
     // 纸板尺寸按公式重算，避免产品档案里的旧值不准
     const tang = p.tang != null ? Number(p.tang) : C.defaultTang(p.boxType || '')
@@ -162,14 +158,9 @@ Page({
       po: '',
       pads,
       quantity: '',
-      price: last ? String(last.price) : (p.price ? String(p.price) : ''),
-      priceOptions: history,
-      priceHint: last ? '返单 · 上次 ¥' + last.price : '新单 · 请核价',
       factoryModeIndex: 0,
       factoryName: '',
-      factoryPrice: '',
       factories: app.getServiceSuppliers().map(s => s.name),
-      purchases: [],
       steps: stepList,
       // 该产品当前还剩多少可送（已入库未送完 + 超量多出来的），选品时算一次，
       // 填单过程中库存不会变，不用反复重算
@@ -234,58 +225,6 @@ Page({
     this.setData({ items })
   },
 
-  onPurchaseField(e) {
-    const { item, index, field } = e.currentTarget.dataset
-    const items = [...this.data.items]
-    items[item].purchases[index][field] = e.detail.value
-    this.setData({ items })
-  },
-
-  // 采购物料改成下单时手动加（已和产品档案解绑）
-  addPurchase(e) {
-    const idx = Number(e.currentTarget.dataset.item)
-    const items = [...this.data.items]
-    const names = app.getSuppliers().map(s => s.name)
-    items[idx].purchases = (items[idx].purchases || []).concat([{
-      typeIndex: 0,
-      type: C.MATERIAL_TYPES[0],
-      name: '',
-      supplierNames: names,
-      supplierIndex: 0,
-      supplier: '',
-      price: '',
-      quantity: ''
-    }])
-    this.setData({ items })
-  },
-
-  removePurchase(e) {
-    const { item, index } = e.currentTarget.dataset
-    const items = [...this.data.items]
-    items[Number(item)].purchases.splice(Number(index), 1)
-    this.setData({ items })
-  },
-
-  onPurchaseType(e) {
-    const { item, index } = e.currentTarget.dataset
-    const items = [...this.data.items]
-    const row = items[Number(item)].purchases[Number(index)]
-    const typeIndex = Number(e.detail.value)
-    row.typeIndex = typeIndex
-    row.type = C.MATERIAL_TYPES[typeIndex]
-    this.setData({ items })
-  },
-
-  onPurchaseSupplier(e) {
-    const { item, index } = e.currentTarget.dataset
-    const items = [...this.data.items]
-    const row = items[Number(item)].purchases[Number(index)]
-    const si = Number(e.detail.value)
-    row.supplierIndex = si
-    row.supplier = (row.supplierNames || [])[si] || ''
-    this.setData({ items })
-  },
-
   copyOrderInfo(e) {
     const idx = Number(e.currentTarget.dataset.index)
     const it = this.data.items[idx]
@@ -323,14 +262,6 @@ Page({
     wx.navigateTo({ url: '/pages/suppliers/suppliers' })
   },
 
-  // 选历史价
-  onPricePick(e) {
-    const { index, price } = e.currentTarget.dataset
-    const items = [...this.data.items]
-    items[Number(index)].price = String(price)
-    this.setData({ items })
-  },
-
   // 清空可选字段
   clearCustomer() {
     this.setData({ customerIndex: 0, customer: '其他' })
@@ -354,9 +285,6 @@ Page({
       const it = d.items[i]
       if (!it.quantity || parseInt(it.quantity) <= 0) {
         wx.showToast({ title: '第 ' + (i + 1) + ' 款数量未填', icon: 'none' }); return
-      }
-      if (it.price === '' || Number(it.price) < 0) {
-        wx.showToast({ title: '第 ' + (i + 1) + ' 款单价未填', icon: 'none' }); return
       }
       if (it.factoryModeIndex === 1 && !it.factoryName) {
         wx.showToast({ title: '第 ' + (i + 1) + ' 款未选代工厂', icon: 'none' }); return
@@ -395,19 +323,9 @@ Page({
         pads: it.pads || [],
         quantity: parseInt(it.quantity),
         splitQty: 0,
-        price: Number(it.price),
         steps: it.steps,
-        purchases: it.purchases.filter(p => (p.name || '').trim()).map(p => ({
-          type: p.type,
-          name: p.name,
-          supplier: p.supplier,
-          price: p.price,
-          quantity: p.quantity,
-          status: 'pending'
-        })),
         factoryMode: d.factoryModes[it.factoryModeIndex],
         factoryName: it.factoryModeIndex === 1 ? it.factoryName : '',
-        factoryPrice: it.factoryModeIndex === 1 ? (Number(it.factoryPrice) || 0) : 0,
         stocked: false,
         deliveredQty: 0
       })),

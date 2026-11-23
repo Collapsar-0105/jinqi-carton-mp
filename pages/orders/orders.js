@@ -374,7 +374,6 @@ Page({
   },
 
   goNew() { wx.navigateTo({ url: '/pages/order/order' }) },
-  goSamples() { wx.navigateTo({ url: '/pages/samples/samples' }) },
   goAlerts() { wx.navigateTo({ url: '/pages/stock-alerts/stock-alerts' }) },
   goBackup() { wx.navigateTo({ url: '/pages/backup/backup' }) },
 

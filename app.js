@@ -5,8 +5,7 @@ const C = require('./utils/constants.js')
 
 const SYNC_KEYS = [
   'factory_data', 'product_archive', 'customer_list', 'supplier_list',
-  'sample_drafts', 'stock_alerts',
-  'work_years', 'factory_list'
+  'stock_alerts', 'work_years', 'factory_list'
 ]
 
 // ===== 演示/测试数据名单（2026-11-13）=====
@@ -216,6 +215,7 @@ App({
     step('身份确认', this.ensureIdentity)
     step('自动备份', this.autoBackup)
     step('数据迁移', this.migrate)
+    step('清理金额与旧模块', this.purgeMoneyAndModules)
     step('云初始化', this.initCloud)
     step('网络监听', this.watchNetwork)
     this.globalData.launchErrors = this._launchErrors
@@ -344,7 +344,7 @@ App({
           // 工作年按年份合并：云端优先（后改的覆盖），本地独有的年份保留
           next = this.mergeWorkYearsJSON(localRaw, payload[k])
         } else if (localRaw) {
-          // 打样草稿 / 常备预警：本地有就保留本地，别被云端空值冲掉
+          // 常备预警：本地有就保留本地，别被云端空值冲掉
           next = localRaw
         }
         wx.setStorageSync(k, next)
@@ -421,6 +421,7 @@ App({
       this.setCloud({ ready: true, allowed: true, checking: false, admin: !!res.admin, role: res.role || (res.admin ? 'admin' : 'worker'), openid: res.openid || '', error: '', mode: 'cloud' })
       // 云端就绪后立刻做版本闸门检查（首屏 onShow 时云端可能还没连上）
       this.checkVersionGate()
+      this.flushSampleRemovals()
       this._cloudBaseAt = Number(res.updatedAt) || 0
       this.flushPendingPush()
       // 地址清理由本机发起：先把清过的数据推上云，再拉订单，避免旧地址又被拉回来
@@ -458,6 +459,8 @@ App({
         // 拉下来的旧数据里可能还带测试数据，合并后再清一次并补推
         this.purgeTestData()
         this.flushTestPurge()
+        // 云端订单可能还带价格字段/打样单，落地后再清一次（幂等）
+        this.purgeMoneyAndModules()
     this.refreshCollFromCloud()
         this.setCloud({ lastSync: remoteAt })
         this.reloadCurrentPage()
@@ -572,6 +575,74 @@ App({
     return true
   },
 
+  // 一次性清理（2026-11-23）：价格/金额字段全部删除，打样单与采购物料模块下线
+  // 只跑一次（purge_money_v1），跑完把本机结果推回云端
+  // 幂等：本地已清就什么也不做；云同步把字段带回来时会再清一次
+  purgeMoneyAndModules() {
+    const data = this.getData()
+    const orders = C.arr(data.orders)
+    const keep = []
+    const sampleIds = []
+    let changed = false
+    orders.forEach(o => {
+      if (!o) return
+      if (o.isSample) { sampleIds.push(o.id); changed = true; return }
+      ;['price', 'amount', 'total', 'totalAmount'].forEach(k => {
+        if (o[k] !== undefined) { delete o[k]; changed = true }
+      })
+      C.arr(o.items).forEach(it => {
+        if (!it) return
+        ;['price', 'factoryPrice', 'amount'].forEach(k => {
+          if (it[k] !== undefined) { delete it[k]; changed = true }
+        })
+      })
+      C.arr(o.shipments).forEach(sh => {
+        if (sh && sh.amount !== undefined) { delete sh.amount; changed = true }
+      })
+      keep.push(o)
+    })
+    if (changed) {
+      data.orders = keep
+      this.saveData(data)
+      keep.forEach(o => { try { this.pushOrderCloud(o.id) } catch (e) {} })
+      // 打样订单：云端文档可能还没删掉，先记下来，云就绪/同步后再删
+      if (sampleIds.length) {
+        let pend = []
+        try { pend = this._kvRead('pending_sample_removals', []) || [] } catch (e) { pend = [] }
+        sampleIds.forEach(id => { if (pend.indexOf(id) < 0) pend.push(id) })
+        this._kvWrite('pending_sample_removals', pend)
+      }
+      sampleIds.forEach(id => { try { this.removeOrderCloud(id) } catch (e) {} })
+      this._subsCache = null
+    }
+    // 产品参考单价
+    const products = this.getProducts()
+    let pChanged = false
+    products.forEach(p => { if (p && p.price !== undefined) { delete p.price; pChanged = true } })
+    if (pChanged) this.saveProducts(products)
+    // 打样草稿 / 采购物料：本机清掉（云端两个集合本来就是空的）
+    try { wx.removeStorageSync('sample_drafts') } catch (e) {}
+    try { wx.removeStorageSync('purchases') } catch (e) {}
+    this.flushSampleRemovals()
+  },
+
+  // 把待删的打样订单从云端真正删掉（云没就绪就留着，下次再删）
+  flushSampleRemovals() {
+    const c = this.globalData.cloud
+    if (!c || !c.ready) return
+    let ids = []
+    try { ids = this._kvRead('pending_sample_removals', []) || [] } catch (e) { ids = [] }
+    if (!ids.length) return
+    const rest = []
+    ids.forEach(id => {
+      try {
+        const r = cloudOrders.remove(id)
+        if (r && r.then) r.catch(() => rest.push(id))
+      } catch (e) { rest.push(id) }
+    })
+    this._kvWrite('pending_sample_removals', rest)
+  },
+
   // 每天首次启动自动快照，保留 3 份
   autoBackup() {
     try {
@@ -583,7 +654,6 @@ App({
         product_archive: wx.getStorageSync('product_archive') || '',
         customer_list: wx.getStorageSync('customer_list') || '',
         supplier_list: wx.getStorageSync('supplier_list') || '',
-            sample_drafts: wx.getStorageSync('sample_drafts') || ''
       }
       for (let i = 3; i > 1; i--) {
         const prev = wx.getStorageSync('auto_backup_' + (i - 1))
@@ -668,7 +738,6 @@ App({
         twoPiece: !!o.twoPiece,
         pads: o.pads || [],
         quantity: qty,
-        price: Number(o.price) || 0,
         steps: C.arr(o.steps)
           .map(s => ({
             name: s.name,
@@ -676,11 +745,9 @@ App({
             doneQty: s.status === 'done' ? qty : 0
           }))
           .filter(s => ['压痕', '烫金', 'UV', '压纹', '送货'].indexOf(s.name) === -1),
-        purchases: o.purchases || [],
         boards: C.arr(o.boards).map(b => ({ L: Number(b.L) || 0, W: Number(b.W) || 0, qty: Number(b.qty) || 1 })),
         factoryMode: o.factoryMode || '本厂生产',
         factoryName: o.factoryName || '',
-        factoryPrice: o.factoryPrice || 0,
         stocked: o.status === 'done',
         deliveredQty: o.status === 'done' ? qty : 0
       }
@@ -689,12 +756,11 @@ App({
         customer: o.customer || '',
         orderNo: o.orderNo || '',
         status: o.status === 'done' ? 'done' : 'active',
-        isSample: !!o.isSample,
         createdAt: o.createdAt || '',
         deliveredAt: o.deliveredAt || '',
         items: [item],
         shipments: (o.status === 'done' && qty)
-          ? [{ date: o.deliveredAt || o.createdAt || '', amount: (Number(o.price) || 0) * qty, items: [{ index: 0, qty }] }]
+          ? [{ date: o.deliveredAt || o.createdAt || '', items: [{ index: 0, qty }] }]
           : []
       }
     })
@@ -764,9 +830,6 @@ App({
           delete it.factoryDeliveryDate
           changed = true
         }
-        ;C.arr(it.purchases).forEach(p => {
-          if (p.promiseDate != null) { delete p.promiseDate; changed = true }
-        })
         if (it.colorText != null) { delete it.colorText; changed = true }
         if (it.difficulty || it.difficultyValues || it.paperLayers || it.paperText || it.nailCount != null) {
           delete it.difficulty
@@ -778,13 +841,6 @@ App({
         }
       })
     })
-    // 打样草稿里的「要求交期」
-    const drafts = this.getDrafts()
-    let draftChanged = false
-    ;C.arr(drafts).forEach(d => {
-      if (d.deliveryDate != null) { delete d.deliveryDate; draftChanged = true }
-    })
-    if (draftChanged) this.saveDrafts(drafts)
     data.stepv = 7
     if (changed) this.saveData(data)
     this.migrateOldSubs()
@@ -1916,7 +1972,7 @@ App({
           if (pi < 0) return null
           return { index: pi, qty: row.qty }
         }).filter(Boolean)
-        if (items.length) mergedShipments.push({ date: sh.date, amount: sh.amount, items, merged: true })
+        if (items.length) mergedShipments.push({ date: sh.date, items, merged: true })
       })
     })
     parent.shipments = (parent.shipments || []).concat(mergedShipments)
@@ -1944,7 +2000,6 @@ App({
   addShipment(orderId, rows, label) {
     const order = this.updateOrder(orderId, o => {
       const items = o.items || []
-      let amount = 0
       const list = []
       rows.forEach(r => {
         const it = items[r.index]
@@ -1954,12 +2009,11 @@ App({
         const qty = Math.min(Number(r.qty), left)
         if (qty <= 0) return
         it.deliveredQty = (Number(it.deliveredQty) || 0) + qty
-        amount += qty * (Number(it.price) || 0)
         list.push({ index: r.index, qty })
       })
       if (!list.length) return
       o.shipments = o.shipments || []
-      o.shipments.push({ date: this.today(), amount, items: list })
+      o.shipments.push({ date: this.today(), items: list })
       // 实际入库的全部送完才算完成（超量的也要送完）
       if (items.every(it => (Number(it.deliveredQty) || 0) >= this.producedQtyOf(it))) {
         o.status = 'done'
@@ -1981,53 +2035,6 @@ App({
     parent.updatedAt = Date.now()
     this.persistLocal(data)
     this.pushOrderCloud(parent.id)
-  },
-
-  // 最近一次该产品的成交价
-  getLastPrice(productId) {
-    if (!productId) return null
-    const priced = []
-    this.getAllOrders().forEach(o => C.arr(o.items).forEach(it => {
-      if (it.productId === productId && Number(it.price) > 0) {
-        priced.push({
-          price: Number(it.price),
-          date: o.createdAt || '',
-          orderId: o.id,
-          customer: o.customer,
-          delivered: o.status === 'done'
-        })
-      }
-    }))
-    if (!priced.length) return null
-    priced.sort((a, b) => {
-      if (a.date !== b.date) return String(a.date).localeCompare(String(b.date))
-      return String(a.orderId).localeCompare(String(b.orderId))
-    })
-    const last = priced[priced.length - 1]
-    return { price: last.price, date: last.date, orderId: last.orderId, customer: last.customer, delivered: last.delivered }
-  },
-
-  // 历史成交价（去重，最近在前）
-  getPriceHistory(productId) {
-    const map = {}
-    this.getAllOrders().forEach(o => {
-      C.arr(o.items).forEach(it => {
-        if (it.productId !== productId) return
-        const price = Number(it.price) || 0
-        if (!price) return
-        const key = String(price)
-        const rec = { price, date: o.createdAt || '', orderId: o.id }
-        if (!map[key] ||
-            rec.date > map[key].date ||
-            (rec.date === map[key].date && String(rec.orderId) > String(map[key].orderId))) {
-          map[key] = rec
-        }
-      })
-    })
-    return Object.keys(map).map(k => map[k]).sort((a, b) => {
-      if (a.date !== b.date) return String(b.date).localeCompare(String(a.date))
-      return String(b.orderId).localeCompare(String(a.orderId))
-    })
   },
 
   // ================= 产品 =================
@@ -2091,7 +2098,7 @@ App({
   },
 
   // 产品档案保存后，把描述性字段同步到「未完成」订单里的同款产品。
-  // 不动数量、单价、工序进度、入库/送货状态，避免改坏生产记录。
+  // 不动数量、工序进度、入库/送货状态，避免改坏生产记录。
   syncProductToOpenOrders(product) {
     if (!product || !product.id) return
     const data = this.getData()
@@ -2152,34 +2159,6 @@ App({
 
   removeProduct(id) {
     this.saveProducts(this.getProducts().filter(p => p.id !== id))
-  },
-
-  // ================= 打样草稿 =================
-  getDrafts() {
-    return this._kvRead('sample_drafts', [])
-  },
-
-  saveDrafts(list) {
-    this._kvWrite('sample_drafts', list || [])
-    this.syncColl('drafts', list)
-    this.cloudPush()
-  },
-
-  getDraft(id) {
-    return this.getDrafts().find(d => d.id === id) || null
-  },
-
-  upsertDraft(draft) {
-    const list = this.getDrafts()
-    const idx = list.findIndex(d => d.id === draft.id)
-    if (idx > -1) list[idx] = draft
-    else list.unshift(draft)
-    this.saveDrafts(list)
-    return draft
-  },
-
-  removeDraft(id) {
-    this.saveDrafts(this.getDrafts().filter(d => d.id !== id))
   },
 
   // ================= 客户 =================
@@ -2244,15 +2223,10 @@ App({
     this.cloudPush()
   },
 
-  // 代工信息记在订单明细上（item.factoryName/factoryPrice），
+  // 代工信息记在订单明细上（item.factoryName）
   // 所以统计某代工厂一律按明细汇总，不要读订单层
   factoryItems(order, name) {
     return C.arr(order.items).filter(it => it.factoryName === name)
-  },
-
-  factoryAmount(order, name) {
-    return this.factoryItems(order, name).reduce((s, it) =>
-      s + (Number(it.factoryPrice) || 0) * (Number(it.quantity) || 0), 0)
   },
 
 

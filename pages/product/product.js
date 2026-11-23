@@ -2,7 +2,7 @@ const app = getApp()
 const C = require('../../utils/constants.js')
 
 const GROUP_MODES = ['按客户', '按工艺', '按箱型', '不分类']
-const SORT_MODES = ['客户-系列', '编号', '名称', '单价（高→低）', '销量（高→低）', '最近下单', '最近更新']
+const SORT_MODES = ['客户-系列', '编号', '名称', '销量（高→低）', '最近下单', '最近更新']
 
 Page({
   data: {
@@ -22,7 +22,7 @@ Page({
   onShow() {
     if (wx.getStorageSync('role') === 'worker') { wx.switchTab({ url: '/pages/orders/orders' }); return } // __workerGuard
     const tb = this.getTabBar && this.getTabBar()
-    if (tb) tb.setData({ selected: 2 })
+    if (tb) tb.setData({ selected: 1 })
     this.setData({ fontClass: app.getFontClass(), undoLabel: app.undoLabel() })
     this.load()
   },
@@ -58,7 +58,6 @@ Page({
           summary: [p.craft || '草箱', p.boxType, p.flute, size]
             .filter(Boolean).join(' · '),
           customerText: (p.customers && p.customers.length) ? p.customers.join('、') : '',
-          priceText: p.price ? '¥' + p.price : '未定价',
           outsourceLabel: (p.outsource && p.outsource.mode) ? (p.outsource.mode + (p.outsource.supplier ? ' · ' + p.outsource.supplier : '')) : '',
           salesQty: st.qty,
           lastOrder: st.last,
@@ -71,10 +70,9 @@ Page({
       if (sortIndex === 0) return app.compareProductCustomerSeries(a, b)
       if (sortIndex === 1) return String(a.id).localeCompare(String(b.id))
       if (sortIndex === 2) return String(a.name).localeCompare(String(b.name), 'zh')
-      if (sortIndex === 3) return (Number(b.price) || 0) - (Number(a.price) || 0)
-      if (sortIndex === 4) return b.salesQty - a.salesQty
-      if (sortIndex === 5) return String(b.lastOrder || '').localeCompare(String(a.lastOrder || ''))
-      if (sortIndex === 6) return String(b.updatedAt || '').localeCompare(String(a.updatedAt || ''))
+      if (sortIndex === 3) return b.salesQty - a.salesQty
+      if (sortIndex === 4) return String(b.lastOrder || '').localeCompare(String(a.lastOrder || ''))
+      if (sortIndex === 5) return String(b.updatedAt || '').localeCompare(String(a.updatedAt || ''))
       return String(a.id).localeCompare(String(b.id))
     })
 

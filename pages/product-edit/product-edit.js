@@ -7,8 +7,6 @@ Page({
     kbHeight: 0,
     footerBottom: 0,
     isIOS: false,
-    mode: 'product',        // product | sample
-    draftId: '',
     isEdit: false,
     id: '',
     name: '',
@@ -72,12 +70,7 @@ Page({
     padTypes: C.PAD_TYPES,
     pads: [],
 
-    price: '',
     note: '',
-
-    // 打样单专用
-    customer: '',
-    quantity: '',
     today: ''
   },
 
@@ -94,16 +87,9 @@ Page({
     this.kbHandler = res => this.setData({ kbHeight: res.height, footerBottom: this.data.isIOS ? res.height : 0 })
     if (wx.onKeyboardHeightChange) wx.onKeyboardHeightChange(this.kbHandler)
 
-    const mode = (options && options.mode === 'sample') ? 'sample' : 'product'
-    this.setData({ mode, today: app.today() })
+    this.setData({ today: app.today() })
 
-    if (options && options.draftId) {
-      const d = app.getDraft(options.draftId)
-      if (d) {
-        this.setData({ draftId: d.id })
-        this.loadFrom(d)
-      }
-    } else if (options && options.id) {
+    if (options && options.id) {
       const p = app.getProduct(options.id)
       if (p) {
         this.setData({ isEdit: true })
@@ -147,7 +133,6 @@ Page({
     const boxTypeIndex = Math.max(0, C.BOX_TYPES.indexOf(boxType))
     const steps = C.normalizeSteps((obj.steps && obj.steps.length) ? obj.steps : C.defaultSteps(obj.craft || '草箱'))
     const craftName = C.CRAFTS[craftIndex] || '草箱'
-    const history = obj.id ? app.getPriceHistory(obj.id) : []
     // 已有系列（去重、按拼音序），供下拉选择；手输新值也能用
     const seriesOptions = this.buildSeriesOptions()
 
@@ -158,7 +143,6 @@ Page({
       series: obj.series || '',
       craftIndex,
       craft: craftName,
-      history,
       paperColorIndex: Math.max(0, C.PAPER_COLORS.indexOf(obj.paperColor || '黄面')),
       boxTypeIndex,
       manualBoard: C.MANUAL_BOARD_TYPES.indexOf(boxType) >= 0,
@@ -197,7 +181,6 @@ Page({
       outsource: obj.outsource || { mode: '', supplier: '' },
       outsourceEnabled: !!(obj.outsource && obj.outsource.mode),
       outsourceMode: (obj.outsource && obj.outsource.mode) || '',
-      price: obj.price ? String(obj.price) : '',
       note: obj.note || '',
       selectedCustomers: C.arr(obj.customers).slice(),
       steps,
@@ -231,7 +214,6 @@ Page({
   onField(e) { this.setData({ [e.currentTarget.dataset.field]: e.detail.value }) },
   onId(e) { this.setData({ id: e.detail.value }) },
   onName(e) { this.setData({ name: e.detail.value }) },
-  onPrice(e) { this.setData({ price: e.detail.value }) },
   syncOutsourceOptions() {
     const isColor = this.data.craft === '彩箱'
     const enabled = !!this.data.outsourceEnabled
@@ -624,7 +606,6 @@ Page({
       })),
       stockAlertQty: d.stockItem ? (Number(d.stockAlertQty) || 0) : 0,
       outsource: d.outsourceEnabled ? { mode: d.outsourceMode || (d.craft === '彩箱' ? '成品箱' : ''), supplier: (d.outsource && d.outsource.supplier) || '' } : { mode: '', supplier: '' },
-      price: Number(d.price) || 0,
       note: (d.note || '').trim(),
       // 必须毫秒数：多设备合并按 updatedAt 定胜负，app.now() 是日期字符串，
       // Number('YYYY-MM-DD') 是 NaN，比较时恒为 0，等于没有
@@ -672,79 +653,23 @@ Page({
       // 编号改了，订单里指向旧编号的明细一起改过来，否则销量统计和档案同步会断
       app.remapProductId(originId, p.id)
     }
-    // 产品档案改了，未完成的订单里同款产品同步更新（数量/单价/工序进度不动）
+    // 产品档案改了，未完成的订单里同款产品同步更新（数量/工序进度不动）
     // 放在改号之后：先改引用，再按新编号同步字段
     app.syncProductToOpenOrders(p)
     wx.showToast({ title: '已保存', icon: 'success' })
     setTimeout(() => wx.navigateBack(), 500)
   },
 
-  // ---------- 打样 ----------
-  saveDraft() {
-    const d = this.data
-    const p = this.buildProduct()
-    if (!p.name) { wx.showToast({ title: '请先填样品名称', icon: 'none' }); return }
-
-    const draft = Object.assign({}, p, {
-      id: d.draftId || ('SP' + Date.now()),
-      draftId: d.draftId || ('SP' + Date.now()),
-      name: p.name,
-      customer: (d.customer || '').trim(),
-      quantity: parseInt(d.quantity) || 0,
-      status: 'draft',
-      updatedAt: Date.now(),
-      createdAt: d.draftId ? (app.getDraft(d.draftId) || {}).createdAt || app.now() : app.now()
-    })
-    app.upsertDraft(draft)
-    this.setData({ draftId: draft.id })
-    wx.showToast({ title: '草稿已保存', icon: 'success' })
-  },
-
-  convert() {
-    const p = this.buildProduct()
-    if (!p.id) { wx.showToast({ title: '请填写产品编号', icon: 'none' }); return }
-    if (!p.name) { wx.showToast({ title: '请填写产品名称', icon: 'none' }); return }
-    if (p.steps.length === 0) { wx.showToast({ title: '请选择工序', icon: 'none' }); return }
-
-    const all = app.getProducts()
-    if (all.find(x => x.id === p.id)) {
-      wx.showToast({ title: '编号已存在', icon: 'none' }); return
-    }
-
-    const product = this.buildProduct()
-    app.upsertProducts([product])
-
-    if (this.data.draftId) {
-      const draft = app.getDraft(this.data.draftId) || {}
-      app.upsertDraft(Object.assign({}, draft, {
-        status: 'converted',
-        productId: product.id,
-        updatedAt: Date.now()
-      }))
-    }
-
-    wx.showModal({
-      title: '已转为产品档案',
-      content: '产品「' + product.id + ' ' + product.name + '」已归档，可以直接下单了。',
-      showCancel: false,
-      success: () => wx.navigateBack()
-    })
-  },
-
   remove() {
     const d = this.data
-    const isDraft = d.mode === 'sample' && d.draftId
     wx.showModal({
-      title: isDraft ? '删除草稿' : '删除产品',
-      content: isDraft ? '确定删除这份打样草稿吗？' : ('确定删除 ' + d.id + ' 吗？已下的订单不受影响。'),
+      title: '删除产品',
+      content: '确定删除 ' + d.id + ' 吗？已下的订单不受影响。',
       confirmColor: '#e94560',
       success: res => {
         if (!res.confirm) return
-        if (isDraft) app.removeDraft(d.draftId)
-        else {
-          app.recordUndo('products', app.getProducts(), '删除产品')
-          app.removeProduct(d.id)
-        }
+        app.recordUndo('products', app.getProducts(), '删除产品')
+        app.removeProduct(d.id)
         wx.showToast({ title: '已删除', icon: 'success' })
         setTimeout(() => wx.navigateBack(), 500)
       }

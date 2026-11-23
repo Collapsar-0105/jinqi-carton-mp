@@ -4,7 +4,6 @@
     <view class="flex-row">
       <view class="flex-1">
         <text class="cust">{{order.customer}}</text>
-        <text wx:if="{{order.isSample}}" class="tag tag-warn" style="margin-left:6px;">打样</text>
       </view>
       <view class="tag {{order.status === 'done' ? 'tag-done' : (order.status === 'paused' ? 'tag-warn' : 'tag-progress')}}">
         {{order.status === 'done' ? '已完成' : (order.status === 'paused' ? '已暂缓' : (order.status === 'stocked' ? '已入库' : '进行中'))}}

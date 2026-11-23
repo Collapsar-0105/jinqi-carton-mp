@@ -31,8 +31,7 @@ Page({
       .map(p => {
         const size = p.sizeL ? p.sizeL + '×' + p.sizeW + '×' + p.sizeH + 'mm' : ''
         return Object.assign({}, p, {
-          summary: [p.craft || '草箱', p.boxType, p.flute, size].filter(Boolean).join(' · '),
-          priceText: p.price ? '¥' + p.price : '未定价'
+          summary: [p.craft || '草箱', p.boxType, p.flute, size].filter(Boolean).join(' · ')
         })
       })
       // 默认按「客户-系列」排序：同客户下按系列聚在一起

@@ -10,7 +10,7 @@ Page({
   onShow() {
     if (wx.getStorageSync('role') === 'worker') { wx.switchTab({ url: '/pages/orders/orders' }); return } // __workerGuard
     const tb = this.getTabBar && this.getTabBar()
-    if (tb) tb.setData({ selected: 3 })
+    if (tb) tb.setData({ selected: 2 })
     this.setData({ fontClass: app.getFontClass() })
     this.refresh()
   },

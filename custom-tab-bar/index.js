@@ -1,6 +1,5 @@
 const ADMIN_LIST = [
   { pagePath: '/pages/orders/orders', text: '订单' },
-  { pagePath: '/pages/purchase/purchase', text: '采购' },
   { pagePath: '/pages/product/product', text: '产品档案' },
   { pagePath: '/pages/directory/directory', text: '往来单位' }
 ]

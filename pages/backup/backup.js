@@ -7,7 +7,6 @@ const KEYS = [
   'product_archive',
   'customer_list',
   'supplier_list',
-  'sample_drafts',
   'stock_alerts',
   'work_years',
   'factory_list'
@@ -300,7 +299,7 @@ Page({
         if (!r.confirm) return
         wx.showLoading({ title: '重置中' })
         const keys = ['factory_data','product_archive','customer_list','supplier_list',
-          'sample_drafts','stock_alerts','work_years','factory_list']
+          'stock_alerts','work_years','factory_list']
         app.cloudCall('clearData').then(() => {
           keys.forEach(k => { try { wx.removeStorageSync(k) } catch (e) {} })
       app.clearCache()

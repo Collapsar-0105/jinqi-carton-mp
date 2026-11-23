@@ -141,7 +141,6 @@ Page({
       createdAt: order.createdAt,
       status: order.status,
       isSub: !!order.isSub,
-      isSample: !!order.isSample,
       urgent: !!order.urgent,
       earlyFinish: !!order.earlyFinish,
       earlyReason: order.earlyReason || '',
@@ -313,8 +312,7 @@ Page({
       '箱型：' + (it.boxType || ''),
       '楞型：' + (it.flute || ''),
       '尺寸：' + it._sizeText,
-      '数量：' + (Number(it.quantity) || 0) + ' 个',
-      '单价：¥' + (Number(it.price) || 0) + '/个'
+      '数量：' + (Number(it.quantity) || 0) + ' 个'
     ]
     if (it.po) lines.splice(1, 0, 'PO：' + it.po)
     if (this.data.order.urgent) lines.unshift('【加急！加急！】')

@@ -55,7 +55,6 @@
 
   <view wx:if="{{!workerMode}}" class="bottom-actions">
     <view class="btn btn-primary new-order-btn" bindtap="goNew">＋ 新建订单</view>
-    <view class="btn btn-outline sample-btn" bindtap="goSamples">打样单</view>
   </view>
 
   <view class="sort-bar">

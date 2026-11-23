@@ -316,8 +316,7 @@ Page({
         outsource,
         customers: split(c[12]),
         series: hasSeries ? (c[13] || '').trim() : '',
-        price: Number(c[hasSeries ? 14 : 13]) || 0,
-        note: c[hasSeries ? 15 : 14] || '',
+        note: c[hasSeries ? 14 : 13] || '',
         pads,
         materials: [],
         updatedAt: app.now()
@@ -368,7 +367,7 @@ Page({
         p.paperColor || '',
         pads, outMode, outSup,
         (p.customers || []).join('、'),
-        p.price || '', p.note || ''
+        p.series || '', p.note || ''
       ].join('\t'))
     })
     wx.setClipboardData({

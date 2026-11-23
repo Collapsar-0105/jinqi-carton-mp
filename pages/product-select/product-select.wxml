@@ -16,7 +16,6 @@
           <view class="flex-row">
             <text class="p-id">{{item.id}}</text>
             <text class="p-name flex-1">{{item.name}}</text>
-            <text class="p-price">{{item.priceText}}</text>
           </view>
           <view class="p-spec">{{item.summary}}</view>
         </view>

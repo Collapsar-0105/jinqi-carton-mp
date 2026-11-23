@@ -4,13 +4,11 @@
   "pages": [
     "pages/identity/identity",
     "pages/orders/orders",
-    "pages/samples/samples",
     "pages/stock-alerts/stock-alerts",
     "pages/backup/backup",
     "pages/users/users",
     "pages/order/order",
     "pages/detail/detail",
-    "pages/purchase/purchase",
     "pages/product/product",
     "pages/product-edit/product-edit",
     "pages/product-select/product-select",
@@ -38,10 +36,6 @@
       {
         "pagePath": "pages/orders/orders",
         "text": "订单"
-      },
-      {
-        "pagePath": "pages/purchase/purchase",
-        "text": "采购"
       },
       {
         "pagePath": "pages/product/product",

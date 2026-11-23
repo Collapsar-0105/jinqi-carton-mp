@@ -43,23 +43,13 @@
         <input placeholder-style="color:#555;font-weight:600" class="input" placeholder="客户 PO / 批次号" value="{{it.po}}" bindinput="onPO" data-index="{{idx}}" />
       </view>
 
-      <view class="mt-8 qty-price-row">
-        <view class="field qp-cell">
+      <view class="mt-8">
+        <view class="field">
           <text class="label">数量 *</text>
           <input placeholder-style="color:#555;font-weight:600" class="input" type="digit" placeholder="个" value="{{it.quantity}}" bindinput="onItemField" data-index="{{idx}}" data-field="quantity" />
         </view>
-        <view class="field qp-cell">
-          <text class="label">单价（元/个）*</text>
-          <input placeholder-style="color:#555;font-weight:600" class="input" type="digit" placeholder="如 3.5" value="{{it.price}}" bindinput="onItemField" data-index="{{idx}}" data-field="price" />
-        </view>
       </view>
       <text wx:if="{{it.stockQty > 0}}" class="stock-hint">该产品有 {{it.stockQty}} 个库存</text>
-      <text class="text-xs c-gray">{{it.priceHint}}</text>
-      <view wx:if="{{it.priceOptions.length > 0}}" class="price-history">
-        <text class="ph-label">历史价</text>
-        <view wx:for="{{it.priceOptions}}" wx:key="price" wx:for-item="po"
-              class="ph-chip" bindtap="onPricePick" data-index="{{idx}}" data-price="{{po.price}}">¥{{po.price}}</view>
-      </view>
 
       <view class="field mt-8">
         <text class="label">生产安排</text>
@@ -80,7 +70,6 @@
           </picker>
           <text wx:if="{{it.factoryName}}" class="clear-inline" catchtap="clearFactory" data-index="{{idx}}">×</text>
           <view wx:else class="link" bindtap="goSuppliers">去添加代工厂</view>
-          <input placeholder-style="color:#555;font-weight:600" class="input" style="width:90px;" type="digit" placeholder="代工价" value="{{it.factoryPrice}}" bindinput="onItemField" data-index="{{idx}}" data-field="factoryPrice" />
         </view>
 
         <view class="copy-order" bindtap="copyOrderInfo" data-index="{{idx}}">复制订单信息</view>
@@ -91,29 +80,6 @@
         <text wx:for="{{it.pads}}" wx:key="index" wx:for-item="pd" class="pads-item">{{pd.type}} {{pd.L}}×{{pd.W}} ×{{pd.qty}}</text>
       </view>
 
-      <view class="purchase-box">
-        <view class="flex-row">
-          <text class="pb-title flex-1">采购物料</text>
-          <view class="btn btn-outline btn-sm" bindtap="addPurchase" data-item="{{idx}}">+ 添加</view>
-        </view>
-        <block wx:for="{{it.purchases}}" wx:key="index" wx:for-item="p" wx:for-index="pi">
-          <view class="pb-row">
-            <picker mode="selector" range="{{materialTypes}}" value="{{p.typeIndex}}" bindchange="onPurchaseType" data-item="{{idx}}" data-index="{{pi}}">
-              <view class="input picker-value mat-type">{{p.type}}</view>
-            </picker>
-            <input placeholder-style="color:#555;font-weight:600" class="input flex-1" placeholder="物料名称" value="{{p.name}}" bindinput="onPurchaseField" data-item="{{idx}}" data-index="{{pi}}" data-field="name" />
-            <text class="del" bindtap="removePurchase" data-item="{{idx}}" data-index="{{pi}}">✕</text>
-          </view>
-          <view class="pb-row">
-            <picker class="flex-1" mode="selector" range="{{p.supplierNames}}" value="{{p.supplierIndex}}" bindchange="onPurchaseSupplier" data-item="{{idx}}" data-index="{{pi}}">
-              <view class="input picker-value">{{p.supplier || '选供应商'}}</view>
-            </picker>
-            <input placeholder-style="color:#555;font-weight:600" class="input" style="width:70px;" type="digit" placeholder="单价" value="{{p.price}}" bindinput="onPurchaseField" data-item="{{idx}}" data-index="{{pi}}" data-field="price" />
-            <input placeholder-style="color:#555;font-weight:600" class="input" style="width:64px;" type="number" placeholder="数量" value="{{p.quantity}}" bindinput="onPurchaseField" data-item="{{idx}}" data-index="{{pi}}" data-field="quantity" />
-          </view>
-        </block>
-        <text wx:if="{{!it.purchases.length}}" class="text-xs c-gray">要采购什么，点右上角「+ 添加」</text>
-      </view>
     </view>
   </block>
 
