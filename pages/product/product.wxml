@@ -1,3 +1,4 @@
+<page-meta page-style="{{dragging ? 'overflow: hidden;' : ''}}"></page-meta>
 <view class="page {{fontClass}}">
   <view wx:if="{{undoLabel}}" class="undo-bar" bindtap="undoLast">↩ 撤销：{{undoLabel}}</view>
 
@@ -29,7 +30,15 @@
   </view>
 
   <block wx:for="{{sections}}" wx:key="key" wx:for-item="sec">
-    <view class="group-title" bindtap="toggleGroup" data-key="{{sec.key}}">
+    <view class="group-title {{dragging && index === dragIndex ? 'dragging' : ''}} {{dragging && index === dragTarget && index !== dragIndex ? 'drop-target' : ''}}"
+          style="{{dragging && index === dragIndex ? 'transform: translateY(' + dragDelta + 'px);' : ''}}"
+          bindtap="toggleGroup"
+          bindlongpress="onDragStart"
+          bindtouchmove="onDragMove"
+          bindtouchend="onDragEnd"
+          bindtouchcancel="onDragEnd"
+          data-key="{{sec.key}}"
+          data-index="{{index}}">
       <text class="group-arrow">{{sec.collapsed ? '▶' : '▼'}}</text>
       <text class="group-name">{{sec.title}}</text>
       <text class="group-count">{{sec.count}} 款</text>

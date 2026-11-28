@@ -16,7 +16,11 @@ Page({
     sortModes: SORT_MODES,
     sortIndex: 0,
     openGroups: {},
-    seriesOpen: {}
+    seriesOpen: {},
+    dragging: false,
+    dragIndex: -1,
+    dragDelta: 0,
+    dragTarget: -1
   },
 
   onShow() {
@@ -107,7 +111,17 @@ Page({
     if (groupIndex === 3) {
       sections = [{ title: '全部产品', key: 'all', series: [{ title: '', key: 'all|all', items: list, collapsed: false }] }]
     } else if (groupIndex === 0) {
-      const customers = app.getCustomers().map(c => c.name)
+      const rawCustomers = app.getCustomers().map(c => c.name)
+      // 客户分组顺序：按用户长按拖拽保存的顺序排，没排过的接在后面
+      const savedOrder = wx.getStorageSync('product_customer_order') || []
+      const customers = rawCustomers.slice().sort((a, b) => {
+        const ia = savedOrder.indexOf(a)
+        const ib = savedOrder.indexOf(b)
+        if (ia < 0 && ib < 0) return 0
+        if (ia < 0) return 1
+        if (ib < 0) return -1
+        return ia - ib
+      })
       const used = {}
       customers.forEach(name => {
         const items = list.filter(p => (p.customers || []).indexOf(name) > -1)
@@ -156,7 +170,57 @@ Page({
     this.setData({ sortIndex: Number(e.detail.value) }, () => this.load())
   },
 
+  // ===== 客户大标题：长按拖拽排序 =====
+  onDragStart(e) {
+    const index = Number(e.currentTarget.dataset.index)
+    const touch = (e.touches && e.touches[0]) || {}
+    if (!Number.isFinite(index) || index < 0) return
+    this._suppressTap = true
+    // 拖拽时先全部收起并重新渲染，保证每个标题等高，位移计算才准
+    this.setData({ openGroups: {}, seriesOpen: {} }, () => {
+      this.load()
+      setTimeout(() => {
+        wx.createSelectorQuery()
+          .selectAll('.group-title')
+          .boundingClientRect(rects => {
+            if (!rects || rects.length < 2) { this._suppressTap = false; return }
+            const pitch = rects[1].top - rects[0].top || 0
+            if (!pitch) { this._suppressTap = false; return }
+            this._drag = { index, pitch, startY: touch.clientY || 0 }
+            this.setData({ dragging: true, dragIndex: index, dragDelta: 0, dragTarget: index })
+          })
+          .exec()
+      }, 60)
+    })
+  },
+
+  onDragMove(e) {
+    const d = this._drag
+    if (!d) return
+    const y = (e.touches && e.touches[0] && e.touches[0].clientY) || 0
+    const delta = y - d.startY
+    let target = Math.round(d.index + delta / d.pitch)
+    target = Math.max(0, Math.min(this.data.sections.length - 1, target))
+    this.setData({ dragDelta: delta, dragTarget: target })
+  },
+
+  onDragEnd() {
+    const d = this._drag
+    if (!d) { this._suppressTap = false; return }
+    const target = this.data.dragTarget
+    const arr = this.data.sections.slice()
+    const moved = arr.splice(d.index, 1)[0]
+    arr.splice(target, 0, moved)
+    this._drag = null
+    // 只保存客户组（c: 开头）；落位后写本机，下次进来保持这个顺序
+    const keys = arr.filter(s => String(s.key).indexOf('c:') === 0).map(s => String(s.key).slice(2))
+    try { wx.setStorageSync('product_customer_order', keys) } catch (e) {}
+    this.setData({ dragging: false, dragIndex: -1, dragDelta: 0, dragTarget: -1 }, () => this.load())
+    setTimeout(() => { this._suppressTap = false }, 300)
+  },
+
   toggleGroup(e) {
+    if (this._suppressTap) return
     const key = e.currentTarget.dataset.key
     const open = Object.assign({}, this.data.openGroups)
     // 客户层也是手风琴：开一个客户，其它客户全部收起；关的时候只关自己

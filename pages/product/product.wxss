@@ -167,3 +167,15 @@
   font-weight: 700;
   letter-spacing: 0.5px;
 }
+
+/* 客户标题长按拖拽 */
+.group-title.dragging {
+  position: relative;
+  z-index: 30;
+  opacity: 0.96;
+  background: #ffffff;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+}
+.group-title.drop-target {
+  box-shadow: 0 0 0 2px #e94560 inset;
+}
