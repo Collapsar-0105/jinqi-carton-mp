@@ -45,31 +45,41 @@
     </view>
 
     <block wx:if="{{!sec.collapsed}}">
-      <block wx:for="{{sec.series}}" wx:key="key" wx:for-item="ser">
-        <view wx:if="{{ser.title}}" class="series-title" bindtap="toggleSeriesGroup" data-key="{{ser.key}}">
-          <text class="series-arrow">{{ser.collapsed ? '▶' : '▼'}}</text>
-          <text class="series-name">{{ser.title}}</text>
-          <text class="series-count">{{ser.items.length}} 款</text>
+      <block wx:for="{{sec.brands}}" wx:key="key" wx:for-item="br">
+        <view wx:if="{{br.title}}" class="brand-title" bindtap="toggleBrandGroup" data-key="{{br.key}}">
+          <text class="brand-arrow">{{br.collapsed ? '▶' : '▼'}}</text>
+          <text class="brand-name">{{br.title}}</text>
+          <text class="brand-count">{{br.count}} 款</text>
         </view>
 
-        <block wx:if="{{!ser.collapsed}}">
-          <block wx:for="{{ser.items}}" wx:key="id" wx:for-item="p">
-            <view class="card product-card" bindtap="goEdit" data-id="{{p.id}}">
-              <view wx:if="{{p.series}}" class="p-series">{{p.series}}</view>
-              <view class="flex-row p-head {{p.series ? 'p-head-tight' : 'p-head-top'}}">
-                <text class="p-id">{{p.id}}</text>
-                <text class="p-name flex-1">{{p.name}}</text>
-              </view>
-              <view class="p-spec">{{p.summary}}</view>
-              <view class="p-spec">销量 {{p.salesQty}} 个<text wx:if="{{p.lastOrder}}"> · 最近下单 {{p.lastOrder}}</text></view>
-              <view class="cust-line">
-                <text wx:if="{{p.customerText}}" class="p-spec">客户：{{p.customerText}}</text>
-                <text wx:if="{{p.outsourceLabel}}" class="outsource-tag">{{p.outsourceLabel}}</text>
-              </view>
-              <view wx:if="{{p.idleWarn}}" class="flex-row gap-4 mt-8">
-                <text class="tag tag-warn">久未下单</text>
-              </view>
+        <block wx:if="{{!br.collapsed}}">
+          <block wx:for="{{br.series}}" wx:key="key" wx:for-item="ser">
+            <view wx:if="{{ser.title}}" class="series-title" bindtap="toggleSeriesGroup" data-key="{{ser.key}}">
+              <text class="series-arrow">{{ser.collapsed ? '▶' : '▼'}}</text>
+              <text class="series-name">{{ser.title}}</text>
+              <text class="series-count">{{ser.items.length}} 款</text>
             </view>
+
+            <block wx:if="{{!ser.collapsed}}">
+              <block wx:for="{{ser.items}}" wx:key="id" wx:for-item="p">
+                <view class="card product-card" bindtap="goEdit" data-id="{{p.id}}">
+                  <view wx:if="{{p.brand || p.series}}" class="p-series">{{p.brand}}{{p.brand && p.series ? ' · ' : ''}}{{p.series}}</view>
+                  <view class="flex-row p-head {{p.brand || p.series ? 'p-head-tight' : 'p-head-top'}}">
+                    <text class="p-id">{{p.id}}</text>
+                    <text class="p-name flex-1">{{p.name}}</text>
+                  </view>
+                  <view class="p-spec">{{p.summary}}</view>
+                  <view class="p-spec">销量 {{p.salesQty}} 个<text wx:if="{{p.lastOrder}}"> · 最近下单 {{p.lastOrder}}</text></view>
+                  <view class="cust-line">
+                    <text wx:if="{{p.customerText}}" class="p-spec">客户：{{p.customerText}}</text>
+                    <text wx:if="{{p.outsourceLabel}}" class="outsource-tag">{{p.outsourceLabel}}</text>
+                  </view>
+                  <view wx:if="{{p.idleWarn}}" class="flex-row gap-4 mt-8">
+                    <text class="tag tag-warn">久未下单</text>
+                  </view>
+                </view>
+              </block>
+            </block>
           </block>
         </block>
       </block>

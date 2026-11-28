@@ -7,7 +7,7 @@
     <text class="text-xs c-gray mt-8">点一下会打开微信聊天列表，选「文件传输助手」发过去，再到电脑上用 Excel/WPS 打开填写。工艺/箱型/楞型/面纸颜色/代工模式可直接下拉，也能自己打字填新值。</text>
 
     <view class="btn btn-outline btn-block mt-12" bindtap="copyTemplate">复制模板（粘贴到 Excel）</view>
-    <text class="text-xs c-gray mt-8">复制后到 Excel 的 A1 单元格粘贴，会自动分成 15 列（纯文本，无下拉）。</text>
+    <text class="text-xs c-gray mt-8">复制后到 Excel 的 A1 单元格粘贴，会自动分成 16 列（纯文本，无下拉）。</text>
 
     <view class="btn btn-outline btn-block mt-12" bindtap="saveTemplate">另存为 CSV 文件</view>
     <text class="text-xs c-gray mt-8">同样直接发到微信，选「文件传输助手」。</text>
@@ -45,7 +45,8 @@
     <view class="rule-row"><text class="rule-k">代工模式</text><text class="rule-v">代印 / 成品箱（可下拉，也可手填）；留空 = 不代工</text></view>
     <view class="rule-row"><text class="rule-k">工序</text><text class="rule-v">已删除：按箱型 / 代工方式自动生成，不用填</text></view>
     <view class="rule-row"><text class="rule-k">客户</text><text class="rule-v">顿号分隔，会自动加进客户名单</text></view>
-    <view class="rule-row"><text class="rule-k">系列</text><text class="rule-v">可留空；留空的产品归到【散单】</text></view>
+    <view class="rule-row"><text class="rule-k">品牌</text><text class="rule-v">可留空；留空的产品归到【未分品牌】</text></view>
+    <view class="rule-row"><text class="rule-k">系列</text><text class="rule-v">可留空；同一品牌下再按系列分组，留空归到【散单】</text></view>
     <view class="rule-row"><text class="rule-k">重复行</text><text class="rule-v">同编号只保留最后一条；同名但编号不同会跳过，不会建出重复产品</text></view>
   </view>
 </view>

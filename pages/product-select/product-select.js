@@ -7,6 +7,7 @@ Page({
     keyword: '',
     list: [],
     groups: [],
+    brandOpen: {},
     seriesOpen: {},
     customer: ''
   },
@@ -37,26 +38,59 @@ Page({
       // 默认按「客户-系列」排序：同客户下按系列聚在一起
       .sort((a, b) => app.compareProductCustomerSeries(a, b))
 
-    // 按系列分组：默认只展开到系列层，点系列才看到具体产品
-    const open = this.data.seriesOpen || {}
-    const map = {}
-    const order = []
+    // 品牌 → 系列 → 产品：默认只展开到品牌层
+    const brandOpen = this.data.brandOpen || {}
+    const seriesOpen = this.data.seriesOpen || {}
+    const bmap = {}
+    const border = []
     list.forEach(p => {
-      const sr = p.series || ''
-      if (!(sr in map)) { map[sr] = []; order.push(sr) }
-      map[sr].push(p)
+      const b = p.brand || ''
+      if (!(b in bmap)) { bmap[b] = []; border.push(b) }
+      bmap[b].push(p)
     })
-    order.sort((a, b) => {
+    border.sort((a, b) => {
       if (!a !== !b) return a ? -1 : 1
       return String(a).localeCompare(String(b), 'zh-Hans-CN')
     })
-    // 搜索时直接展开，避免搜到了却看不见
-    const groups = order.map(sr => {
-      const key = 's:' + sr
-      return { title: sr || '【散单】', key, items: map[sr], collapsed: kw ? false : !open[key] }
+    const groups = border.map(b => {
+      const bkey = 'b:' + b
+      const items = bmap[b]
+      const smap = {}
+      const sorder = []
+      items.forEach(p => {
+        const sr = p.series || ''
+        if (!(sr in smap)) { smap[sr] = []; sorder.push(sr) }
+        smap[sr].push(p)
+      })
+      sorder.sort((x, y) => {
+        if (!x !== !y) return x ? -1 : 1
+        return String(x).localeCompare(String(y), 'zh-Hans-CN')
+      })
+      const series = sorder.map(sr => {
+        const skey = bkey + '|s:' + sr
+        return {
+          title: sr || '【散单】',
+          key: skey,
+          items: smap[sr],
+          collapsed: kw ? false : !seriesOpen[skey]
+        }
+      })
+      return {
+        title: b || '【未分品牌】',
+        key: bkey,
+        series,
+        count: items.length,
+        collapsed: kw ? false : !brandOpen[bkey]
+      }
     })
 
     this.setData({ list, groups })
+  },
+
+  toggleBrandGroup(e) {
+    const key = e.currentTarget.dataset.key
+    const open = Object.assign({}, this.data.brandOpen)
+    this.setData({ brandOpen: open[key] ? (delete open[key], open) : { [key]: true }, seriesOpen: {} }, () => this.load())
   },
 
   toggleSeriesGroup(e) {

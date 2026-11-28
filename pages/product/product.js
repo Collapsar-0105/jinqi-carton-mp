@@ -2,7 +2,7 @@ const app = getApp()
 const C = require('../../utils/constants.js')
 
 const GROUP_MODES = ['按客户', '按工艺', '按箱型', '不分类']
-const SORT_MODES = ['客户-系列', '编号', '名称', '销量（高→低）', '最近下单', '最近更新']
+const SORT_MODES = ['客户-品牌-系列', '编号', '名称', '销量（高→低）', '最近下单', '最近更新']
 
 Page({
   data: {
@@ -16,6 +16,7 @@ Page({
     sortModes: SORT_MODES,
     sortIndex: 0,
     openGroups: {},
+    brandOpen: {},
     seriesOpen: {},
     dragging: false,
     dragIndex: -1,
@@ -82,11 +83,12 @@ Page({
 
     const groupIndex = this.data.groupIndex
     const openGroups = this.data.openGroups || {}
+    const brandOpen = this.data.brandOpen || {}
     const seriesOpen = this.data.seriesOpen || {}
     // 搜索时自动展开，否则结果都被折叠着看不见
     const searching = !!String(this.data.keyword || '').trim()
 
-    // 一组产品按系列再分组：有系列的在前（按名称），没系列的放最后
+    // 一组产品按系列分组：有系列的在前（按名称），没系列的归【散单】
     const splitSeries = (items, prefix) => {
       const map = {}
       const order = []
@@ -101,15 +103,50 @@ Page({
       })
       return order.map(s => {
         const key = prefix + '|s:' + s
-        // 没有系列的产品归到【散单】，和其他系列一样默认收起
         return { title: s || '【散单】', key, items: map[s], collapsed: searching ? false : !seriesOpen[key] }
+      })
+    }
+
+    // 品牌层：有品牌的在前，没品牌归【未分品牌】；品牌下再按系列分
+    const splitBrands = (items, prefix) => {
+      const map = {}
+      const order = []
+      items.forEach(p => {
+        const b = p.brand || ''
+        if (!(b in map)) { map[b] = []; order.push(b) }
+        map[b].push(p)
+      })
+      order.sort((a, b) => {
+        if (!a !== !b) return a ? -1 : 1
+        return String(a).localeCompare(String(b), 'zh-Hans-CN')
+      })
+      return order.map(b => {
+        const key = prefix + '|b:' + b
+        return {
+          title: b || '【未分品牌】',
+          key,
+          series: splitSeries(map[b], key),
+          count: map[b].length,
+          collapsed: searching ? false : !brandOpen[key]
+        }
       })
     }
 
     let sections = []
 
     if (groupIndex === 3) {
-      sections = [{ title: '全部产品', key: 'all', series: [{ title: '', key: 'all|all', items: list, collapsed: false }] }]
+      // 不分类：保持扁平，不插品牌/系列层
+      sections = [{
+        title: '全部产品',
+        key: 'all',
+        brands: [{
+          title: '',
+          key: 'all',
+          count: list.length,
+          collapsed: false,
+          series: [{ title: '', key: 'all|all', items: list, collapsed: false }]
+        }]
+      }]
     } else if (groupIndex === 0) {
       const rawCustomers = app.getCustomers().map(c => c.name)
       // 客户分组顺序：按用户长按拖拽保存的顺序排，没排过的接在后面
@@ -127,12 +164,12 @@ Page({
         const items = list.filter(p => (p.customers || []).indexOf(name) > -1)
         if (items.length) {
           used[name] = true
-          sections.push({ title: name, key: 'c:' + name, series: splitSeries(items, 'c:' + name) })
+          sections.push({ title: name, key: 'c:' + name, brands: splitBrands(items, 'c:' + name) })
         }
       })
       const orphans = list.filter(p => !p.customers || p.customers.length === 0 ||
         p.customers.every(c => !used[c]))
-      if (orphans.length) sections.push({ title: '未挂客户', key: 'none', series: splitSeries(orphans, 'none') })
+      if (orphans.length) sections.push({ title: '未挂客户', key: 'none', brands: splitBrands(orphans, 'none') })
     } else {
       const keyOf = groupIndex === 1
         ? (p => p.craft || '草箱')
@@ -146,12 +183,18 @@ Page({
       sections = Object.keys(map).sort().map(k => ({
         title: k,
         key: k,
-        series: [{ title: '', key: k + '|all', items: map[k], collapsed: false }]
+        brands: [{
+          title: '',
+          key: k + '|all',
+          count: map[k].length,
+          collapsed: false,
+          series: [{ title: '', key: k + '|all|all', items: map[k], collapsed: false }]
+        }]
       }))
     }
 
     sections = sections.map(s => {
-      const count = (s.series || []).reduce((n, ser) => n + (ser.items || []).length, 0)
+      const count = (s.brands || []).reduce((n, b) => n + (b.count || 0), 0)
       return Object.assign({}, s, { collapsed: searching ? false : !openGroups[s.key], count })
     })
 
@@ -177,7 +220,7 @@ Page({
     if (!Number.isFinite(index) || index < 0) return
     this._suppressTap = true
     // 拖拽时先全部收起并重新渲染，保证每个标题等高，位移计算才准
-    this.setData({ openGroups: {}, seriesOpen: {} }, () => {
+    this.setData({ openGroups: {}, brandOpen: {}, seriesOpen: {} }, () => {
       this.load()
       setTimeout(() => {
         wx.createSelectorQuery()
@@ -229,6 +272,14 @@ Page({
     this.setData({ openGroups, seriesOpen: {} }, () => this.load())
   },
 
+  toggleBrandGroup(e) {
+    const key = e.currentTarget.dataset.key
+    const open = Object.assign({}, this.data.brandOpen)
+    // 品牌层手风琴：开一个品牌，其它品牌收起；关的时候只关自己
+    const brandOpen = open[key] ? (delete open[key], open) : { [key]: true }
+    this.setData({ brandOpen, seriesOpen: {} }, () => this.load())
+  },
+
   toggleSeriesGroup(e) {
     const key = e.currentTarget.dataset.key
     const open = Object.assign({}, this.data.seriesOpen)
@@ -238,18 +289,22 @@ Page({
   },
 
   expandAll() {
-    // 全部展开：客户和系列都打开
+    // 全部展开：客户、品牌、系列都打开
     const openGroups = {}
+    const brandOpen = {}
     const seriesOpen = {}
     ;(this.data.sections || []).forEach(s => {
       openGroups[s.key] = true
-      ;(s.series || []).forEach(ser => { if (ser.title) seriesOpen[ser.key] = true })
+      ;(s.brands || []).forEach(b => {
+        if (b.title) brandOpen[b.key] = true
+        ;(b.series || []).forEach(ser => { if (ser.title) seriesOpen[ser.key] = true })
+      })
     })
-    this.setData({ openGroups, seriesOpen }, () => this.load())
+    this.setData({ openGroups, brandOpen, seriesOpen }, () => this.load())
   },
 
   collapseAll() {
-    this.setData({ openGroups: {}, seriesOpen: {} }, () => this.load())
+    this.setData({ openGroups: {}, brandOpen: {}, seriesOpen: {} }, () => this.load())
   },
 
   goNew() {

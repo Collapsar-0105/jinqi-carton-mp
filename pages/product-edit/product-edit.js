@@ -61,6 +61,9 @@ Page({
     crease: '',
     creaseValue: '',
     // 系列：勾选客户后才显示；可手输新建，也可点小三角从已有系列里选
+    brand: '',
+    brandOpen: false,
+    brandOptions: [],
     series: '',
     seriesOpen: false,
     seriesOptions: [],
@@ -101,7 +104,8 @@ Page({
       }
     } else {
       this.setData({
-        seriesOptions: this.buildSeriesOptions(),
+        brandOptions: this.buildBrandOptions(),
+        seriesOptions: this.buildSeriesOptions(''),
         fluteIndex: 0,
         steps: C.defaultSteps('草箱'),
         tang: C.defaultTang(C.BOX_TYPES[0])
@@ -110,16 +114,31 @@ Page({
   },
 
   // 已有系列：去重、按拼音序（新建和编辑都要用）
-  buildSeriesOptions() {
+  buildBrandOptions() {
     const map = {}
-    app.getProducts().forEach(x => { if (x && x.series) map[x.series] = 1 })
+    app.getProducts().forEach(x => { if (x && x.brand) map[x.brand] = 1 })
+    return Object.keys(map).sort((a, b) => String(a).localeCompare(String(b), 'zh'))
+  },
+
+  // 系列选项按品牌过滤：选了品牌只列这个品牌下的系列，没选品牌列全部
+  buildSeriesOptions(brand) {
+    const map = {}
+    app.getProducts().forEach(x => {
+      if (!x || !x.series) return
+      if (brand && x.brand !== brand) return
+      map[x.series] = 1
+    })
     return Object.keys(map).sort((a, b) => String(a).localeCompare(String(b), 'zh'))
   },
 
   onShow() {
     this.setData({ fontClass: app.getFontClass() })
     this.syncOutsourceOptions()
-    this.setData({ customers: app.getCustomers(), seriesOptions: this.buildSeriesOptions() }, () => this.refreshAll())
+    this.setData({
+      customers: app.getCustomers(),
+      brandOptions: this.buildBrandOptions(),
+      seriesOptions: this.buildSeriesOptions(this.data.brand)
+    }, () => this.refreshAll())
   },
 
   loadFrom(obj) {
@@ -134,11 +153,13 @@ Page({
     const steps = C.normalizeSteps((obj.steps && obj.steps.length) ? obj.steps : C.defaultSteps(obj.craft || '草箱'))
     const craftName = C.CRAFTS[craftIndex] || '草箱'
     // 已有系列（去重、按拼音序），供下拉选择；手输新值也能用
-    const seriesOptions = this.buildSeriesOptions()
+    const seriesOptions = this.buildSeriesOptions(obj.brand || '')
 
     this.setData({
       id: obj.id || '',
       name: obj.name || '',
+      brandOptions: this.buildBrandOptions(),
+      brand: obj.brand || '',
       seriesOptions,
       series: obj.series || '',
       craftIndex,
@@ -332,6 +353,16 @@ Page({
   onNote(e) { this.setData({ note: e.detail.value }) },
 
   // 系列：手输即新建，点小三角从已有系列里挑
+  onBrand(e) {
+    const brand = e.detail.value
+    this.setData({ brand, seriesOptions: this.buildSeriesOptions(brand) })
+  },
+  toggleBrand() { this.setData({ brandOpen: !this.data.brandOpen }) },
+  pickBrand(e) {
+    const brand = e.currentTarget.dataset.value || ''
+    this.setData({ brand, brandOpen: false, seriesOptions: this.buildSeriesOptions(brand) })
+  },
+
   onSeries(e) { this.setData({ series: e.detail.value }) },
   toggleSeries() { this.setData({ seriesOpen: !this.data.seriesOpen }) },
   pickSeries(e) {
@@ -588,6 +619,7 @@ Page({
       crease: C.CREASES[d.creaseIndex] === '不填' ? '' : (C.CREASES[d.creaseIndex] || ''),
       creaseValue: C.CREASES[d.creaseIndex] === '不填' ? '' : String(d.creaseValue || '').trim(),
       customers: d.selectedCustomers.slice(),
+      brand: (d.brand || '').trim(),
       series: (d.series || '').trim(),
       steps: C.normalizeSteps(d.steps || []),
       pads: d.pads.filter(x => x.qty > 0 || x.L || x.W).map(x => ({

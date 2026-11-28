@@ -2067,6 +2067,9 @@ App({
     if (!ca !== !cb) return ca ? -1 : 1
     let r = String(ca).localeCompare(String(cb), 'zh-Hans-CN')
     if (r) return r
+    // 客户内先按品牌，再按系列
+    r = String(pa.brand || '').localeCompare(String(pb.brand || ''), 'zh-Hans-CN')
+    if (r) return r
     r = String(pa.series || '').localeCompare(String(pb.series || ''), 'zh-Hans-CN')
     if (r) return r
     return String(pa.id || '').localeCompare(String(pb.id || ''))

@@ -4,21 +4,31 @@
   </view>
 
   <block wx:for="{{groups}}" wx:key="key" wx:for-item="g">
-    <view class="series-title" bindtap="toggleSeriesGroup" data-key="{{g.key}}">
-      <text class="series-arrow">{{g.collapsed ? '▶' : '▼'}}</text>
-      <text class="series-name">{{g.title}}</text>
-      <text class="series-count">{{g.items.length}} 款</text>
+    <view class="brand-title" bindtap="toggleBrandGroup" data-key="{{g.key}}">
+      <text class="brand-arrow">{{g.collapsed ? '▶' : '▼'}}</text>
+      <text class="brand-name">{{g.title}}</text>
+      <text class="brand-count">{{g.count}} 款</text>
     </view>
 
     <block wx:if="{{!g.collapsed}}">
-      <block wx:for="{{g.items}}" wx:key="id" wx:for-item="item">
-        <view class="card item" bindtap="choose" data-id="{{item.id}}">
-          <view class="flex-row">
-            <text class="p-id">{{item.id}}</text>
-            <text class="p-name flex-1">{{item.name}}</text>
-          </view>
-          <view class="p-spec">{{item.summary}}</view>
+      <block wx:for="{{g.series}}" wx:key="key" wx:for-item="ser">
+        <view class="series-title" bindtap="toggleSeriesGroup" data-key="{{ser.key}}">
+          <text class="series-arrow">{{ser.collapsed ? '▶' : '▼'}}</text>
+          <text class="series-name">{{ser.title}}</text>
+          <text class="series-count">{{ser.items.length}} 款</text>
         </view>
+
+        <block wx:if="{{!ser.collapsed}}">
+          <block wx:for="{{ser.items}}" wx:key="id" wx:for-item="item">
+            <view class="card item" bindtap="choose" data-id="{{item.id}}">
+              <view class="flex-row">
+                <text class="p-id">{{item.id}}</text>
+                <text class="p-name flex-1">{{item.name}}</text>
+              </view>
+              <view class="p-spec">{{item.summary}}</view>
+            </view>
+          </block>
+        </block>
       </block>
     </block>
   </block>

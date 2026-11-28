@@ -29,6 +29,20 @@
     </view>
 
     <view wx:if="{{selectedCustomers.length > 0}}" class="field">
+      <text class="label">品牌</text>
+      <view class="series-wrap">
+        <view class="input series-box">
+          <input class="series-input" placeholder-style="color:#555;font-weight:600" placeholder="不填则无品牌，输入即新建" value="{{brand}}" bindinput="onBrand" />
+          <text class="series-arrow" catchtap="toggleBrand">▼</text>
+        </view>
+        <view wx:if="{{brandOpen}}" class="series-dropdown">
+          <view wx:for="{{brandOptions}}" wx:key="*this" class="series-option" catchtap="pickBrand" data-value="{{item}}">{{item}}</view>
+          <view wx:if="{{brandOptions.length === 0}}" class="series-empty">还没有品牌，直接输入即可新建</view>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{selectedCustomers.length > 0}}" class="field">
       <text class="label">系列</text>
       <view class="series-wrap">
         <view class="input series-box">

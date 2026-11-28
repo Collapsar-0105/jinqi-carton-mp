@@ -252,6 +252,8 @@ Page({
     const legacyWithAddr = headText.indexOf('默认收货地址') > -1
     // 1.9.125 起模板加了「系列」列（第 14 列），旧模板没有这一列，按表头判断
     const hasSeries = headText.indexOf('系列') > -1
+    // 1.9.135 起模板加了「品牌」列（在系列之前）
+    const hasBrand = headText.indexOf('品牌') > -1
 
     // 去重索引：已有产品的编号/名称 + 本次文件里已出现的编号/名称
     const existed = app.getProducts()
@@ -329,8 +331,9 @@ Page({
         steps,
         outsource,
         customers: split(c[12]),
-        series: hasSeries ? (c[13] || '').trim() : '',
-        note: c[hasSeries ? 14 : 13] || '',
+        brand: hasBrand ? (c[13] || '').trim() : '',
+        series: hasBrand ? (c[14] || '').trim() : (hasSeries ? (c[13] || '').trim() : ''),
+        note: c[hasBrand ? 15 : (hasSeries ? 14 : 13)] || '',
         pads,
         materials: [],
         updatedAt: app.now()
@@ -391,7 +394,7 @@ Page({
         p.paperColor || '',
         pads, outMode, outSup,
         (p.customers || []).join('、'),
-        p.series || '', p.note || ''
+        p.brand || '', p.series || '', p.note || ''
       ].join('\t'))
     })
     wx.setClipboardData({
